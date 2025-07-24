@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+
+# As input this script takes the best geneid scores
+			#temp_test_longest.csv
+			#temp_test_score.csv
+			#temp_test_og_longest.csv
+            #temp_test_og_score.csv
+            
+import pandas as pd
+import argparse
+
+def read_tables(og_score, og_length, re_score, re_length):
+    og_score_df = og_score.rename(columns={
+        'start': 'og_score_start',
+        'end': 'og_score_end',
+        'score': 'og_score_score',
+        'length': 'og_score_length'
+    })
+    og_length_df = og_length.rename(columns={
+        'start': 'og_length_start',
+        'end': 'og_length_end',
+        'score': 'og_length_score',
+        'length': 'og_length_length'
+    })
+    re_score_df = re_score.rename(columns={
+        'start': 're_score_start',
+        'end': 're_score_end',
+        'score': 're_score_score',
+        'length': 're_score_length'
+    })
+    re_length_df = re_length.rename(columns={
+        'start': 're_length_start',
+        'end': 're_length_end',
+        'score': 're_length_score',
+        'length': 're_length_length'
+    })
+
+    # Set index to transcript_name for all DataFrames
+    og_score_df.set_index('transcript_name', inplace=True)
+    og_length_df.set_index('transcript_name', inplace=True)
+    re_score_df.set_index('transcript_name', inplace=True)
+    re_length_df.set_index('transcript_name', inplace=True)
+    
+    re_score_df['TGA_site_score'] = re_score_df['gene_name'].str.split('_').str[2]
+    re_length_df['TGA_site_longest'] = re_length_df['gene_name'].str.split('_').str[2]
+    # Select only the renamed columns (and drop other duplicate columns if necessary)
+    og_score_df = og_score_df[['og_score_start', 'og_score_end', 'og_score_score', 'og_score_length']]
+    og_length_df = og_length_df[['og_length_start', 'og_length_end', 'og_length_score', 'og_length_length']]
+    re_score_df = re_score_df[['re_score_start', 're_score_end', 're_score_score', 're_score_length', 'TGA_site_score']]
+    re_length_df = re_length_df[['re_length_start', 're_length_end', 're_length_score', 're_length_length', 'TGA_site_longest']]
+
+    # Merge all DataFrames on transcript_name index
+    merged_df = og_score_df.join([og_length_df, re_score_df, re_length_df], how='outer')
+    
+    return merged_df
+
+def read_sel(gff):
+    df = pd.read_csv(gff, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
+    sel_df = df[df['type'] == 'Selenocysteine'].copy()
+    sel_df = sel_df.set_index('attributes')
+    sel_df = sel_df['type']
+
+    return sel_df
+
+def read_gff(gff):
+    df = pd.read_csv(gff, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
+    # Filter for CDS entries
+    cds_df = df[df['type'] == 'CDS']
+    # Group by attributes and get min start and max end
+    grouped = cds_df.groupby('attributes').agg({
+        'start': 'min',
+        'end': 'max'
+    }).reset_index()
+    grouped = grouped.set_index('attributes')
+    grouped = grouped.rename(columns={"start": "gtf_start", "end": "gtf_end"})
+
+    return grouped 
+
+def read_secis(secis):
+    df = pd.read_csv(secis, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
+    df = df.rename(columns={"start": "secis_start", "end": "secis_end"})
+    df = df[["secis_start", "secis_end", "chr"]]
+    df = df.set_index("chr")
+    return df
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Extract the coding regions of each transcript and input to coding_potential script")
+    # Add arguments for input and output directories
+    parser.add_argument('--og_score', type=str, required=True, help="Path to temp_test_og_score.csv")
+    parser.add_argument('--og_length', type=str, required=True, help="Path to temp_test_og_longest.csv")  
+    parser.add_argument('--re_score', type=str, required=True, help="Path to temp_test_score.csv")
+    parser.add_argument('--re_length', type=str, required=True, help="Path to temp_test_longest.csv")  
+    parser.add_argument('--gff', type=str, required=True, help="Path to gff relocated_to_transcript.gff")
+    parser.add_argument('--secis', type=str, required=True, help="Path to secis gff all_secis_positive.gff")
+    
+    args = parser.parse_args()
+    sel_df = read_sel(args.gff)
+    gff_df = read_gff(args.gff)
+    print(gff_df)
+    secis_df = read_secis(args.secis)
+    print(secis_df)
+    og_score = pd.read_csv(args.og_score)
+    og_length = pd.read_csv(args.og_length)
+    re_score = pd.read_csv(args.re_score)
+    re_length = pd.read_csv(args.re_length)
+    
+
+    merged = read_tables(og_score, og_length, re_score, re_length) 
+    sel_df_filtered = sel_df.loc[sel_df.index.intersection(merged.index)]
+    gff_df_filtered = gff_df.loc[gff_df.index.intersection(merged.index)]
+    secis_df_filtered = secis_df.loc[secis_df.index.intersection(merged.index)] 
+    merged = merged.join(sel_df_filtered, how='left')
+    merged = merged.join(gff_df_filtered, how='left')
+    merged = merged.join(secis_df_filtered, how='left') 
+    merged.to_csv("compare_coding_potential_170725.csv")
+    
+    
+#Command to execute code
+"""
+python create_og_re_table.py --og_score temp_test_og_score.csv --og_length temp_test_og_longest.csv --re_score temp_test_score.csv --re_length temp_test_longest.csv --gff /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/relocated_to_transcript.gff --secis /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/all_secis_positive.gff
+python create_og_re_table.py --og_score temp_test_og_score.csv --og_length temp_test_og_longest.csv --re_score temp_test_score.csv --re_length temp_test_longest.csv --gff /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/relocated_start_stop.gff --secis /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/all_secis_positive.gff
+"""

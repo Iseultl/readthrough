@@ -1,0 +1,144 @@
+#!/usr/bin/env nextflow
+
+// Enable DSL2
+nextflow.enable.dsl = 2
+
+// Input files
+params.genome_gtf = params.genome_gtf ?: '/Users/iseult/Desktop/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff'
+params.genome_fasta = params.genome_fasta ?: '/Users/iseult/Desktop/Horse_Analysis/horse_genome.fa'
+params.transcripts_clean = params.transcripts_clean // Optional: provide a transcripts_clean file
+params.output_dir = params.output_dir ?: './output'
+params.geneid_param = params.geneid_param ?: '/Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/human3iso.param'
+
+// Print help message if no parameters are provided
+if (params.help) {
+    log.info """
+    SECIS Independent Pipeline
+    =============
+    
+    Usage:
+    nextflow run main.nf --genome_gtf <file.gff> --genome_fasta <file.fa> [options]
+    
+    Mandatory arguments:
+      --genome_gtf <file>      Input GFF/GTF file
+      --genome_fasta <file>    Input FASTA file
+      
+    Optional arguments:
+      --output_dir <dir>       Output directory (default: ./results)
+      --max_cpus <int>         Maximum number of CPUs (default: 4)
+      --max_memory <mem>       Maximum memory (default: 8GB)
+      --geneid_param <file>    Path to geneid parameter file
+      --debug                  Enable debug mode (default: false)
+    """
+    exit 0
+}
+
+// Print pipeline header
+log.info """
+========================================
+ ORFsearch Pipeline - Nextflow Pipeline
+========================================
+Input GFF:  ${params.genome_gtf}
+Input FASTA: ${params.genome_fasta}
+Output dir:  ${params.output_dir}
+CPU's:       ${params.max_cpus}
+Memory:      ${params.max_memory}
+========================================
+"""
+
+// Load modules
+include { AGAT_GFF2GTF } from './modules/agat_gff2gtf'
+include { AGAT_SPLITGFF } from './modules/agat_splitgff'
+include { CLEAN_GTF } from './modules/clean_gtf'
+include { CREATE_PAIRING_FILE } from './modules/create_pairing_file'
+include { CONCATENATE_GTFS } from './modules/concatenated_gff'
+include { RELOCATE_TRANSCRIPTS } from './modules/relocate_transcripts'
+include { SPLITFASTA } from './modules/splitfasta'
+include { GFFREAD } from './modules/gffread'
+include { RECODE_TGA } from './modules/recode_tga'
+include {SPLIT_RECODED} from './modules/split_recoded'
+include { RUN_GENEID_ORIGINAL } from './modules/run_geneid_original'
+include { SELECT_INTERESTING } from './modules/select_interesting'
+include { GET_ORIGINAL_PREDICTIONS } from './modules/get_original_predictions'
+include { CREATE_SUMMARY_TABLE } from './modules/create_summary_table'
+
+// Helper function to extract chromosome name (without extension)
+def get_chr_name(file) {
+    return file.getBaseName().replaceFirst(/\.fa$|\.gtf$/, '')
+}
+
+workflow {
+    // Step 1: Split GFF by chromosome
+    split_results = AGAT_SPLITGFF(params.genome_gtf)
+
+    // Step 2: Collect all .gff files from the output directory
+    gff_files_ch = split_results.gff_files
+    gff_files_ch = gff_files_ch.flatten()
+
+    // Step 3: Run AGAT_GFF2GTF in parallel to standardise each GFF file
+    gtf_files_ch = AGAT_GFF2GTF(gff_files_ch)
+
+    split_gff_dir_ch = CLEAN_GTF(gtf_files_ch)
+
+    base_names_gff = split_gff_dir_ch.map { file ->
+        def chr = file.name.replaceFirst(/\.cleaned\.gtf$/, '')
+        tuple(chr, file)
+    }
+    
+    // Step 4: FASTA Processing Pipeline
+    split_fasta_dir_ch = SPLITFASTA(params.genome_fasta)
+    base_names_fasta = split_fasta_dir_ch.flatten().map { file ->
+        def fname = file.name  // e.g. horse_genome.part_NW_027222397.1.fa
+        def chr_match = fname =~ /part_(.+)\.fa/
+        def chr = chr_match ? chr_match[0][1] : null
+        tuple(chr, file)
+    }
+    
+    // Step 5: Create paired gtf & fasta channel
+    paired_ch = base_names_gff.combine(base_names_fasta, by: 0)
+
+    // Step 6: Create relocated to transcript gff 
+    CONCATENATE_GTFS(split_gff_dir_ch.collect())
+    RELOCATE_TRANSCRIPTS(CONCATENATE_GTFS.out)
+    
+    // Step 7: Now pass the paired channel to GFFREAD
+    gffread_out = GFFREAD(paired_ch)
+    gffread_out.view()
+    // Step 10. Recode all transcripts 
+    recoded_transcripts = RECODE_TGA(GFFREAD.out)
+
+    // Step 11: Split the recoded transcript sequences  
+    split_recoded_transcripts = SPLIT_RECODED(recoded_transcripts)
+     
+    // Step 12: Run geneid on all the transcript sequences 
+    RUN_GENEID_ORIGINAL(split_recoded_transcripts, params.geneid_param)
+    
+    // Step 13: Process recoded predictions (outputs 2 files: score and longest)
+    select_interesting_out = SELECT_INTERESTING(RUN_GENEID_ORIGINAL.out, RELOCATE_TRANSCRIPTS.out)
+    select_interesting_out.score.view()
+    select_interesting_out.longest.view()
+    
+    // Step 14: Process original predictions (outputs 2 files: score and longest)
+    original_out = GET_ORIGINAL_PREDICTIONS(RUN_GENEID_ORIGINAL.out)
+    original_out.score.view()
+    original_out.longest.view()
+    
+    // Step 15: Final Output - Pass all four files to the summary table process
+    CREATE_SUMMARY_TABLE(
+        select_interesting_out.score,
+        select_interesting_out.longest,
+        original_out.score,
+        original_out.longest,
+        RELOCATE_TRANSCRIPTS.out
+    )
+}
+
+// Workflow completion message
+workflow.onComplete {
+    log.info """
+    ========================================
+    Pipeline completed successfully!
+    Results are in: ${params.output_dir}
+    ========================================
+    """
+}

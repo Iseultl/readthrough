@@ -1,0 +1,21 @@
+# Nextflow directories
+work/
+.nextflow/
+
+# Nextflow files
+.nextflow.log*
+nextflow_report.html
+timeline.html
+trace.txt
+
+# Output directories from your pipeline
+*_out/
+cleaned_gtf/
+gffread_out/
+split_chr/
+relocated_gtf/
+recoded_transcripts/
+output/
+
+# macOS specific
+.DS_Store
