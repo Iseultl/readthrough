@@ -1,13 +1,13 @@
-genome_gtf : "/Users/iseult/Desktop/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff"
-genome_fasta : "/Users/iseult/Desktop/Horse_Analysis/horse_genome.fa"
+genome_gtf : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff"
+genome_fasta : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.fa"
 
 
 # Production settings
 debug: true
 max_cpus: 4  # Reduced for dev mode
-max_memory: '8GB'  # Reduced for dev mode
+max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "./output"  # Local output directory
-geneid_param: "/Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/human3iso.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Horse_Analysis/secis_independent_output"  # Local output directory
+geneid_param: "/no_backup/rg/ileahy/geneid/params/human/human3iso.param"  # Update to your geneid parameter file location
 

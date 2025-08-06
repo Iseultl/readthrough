@@ -1,7 +1,6 @@
 process SPLIT_RECODED {
     tag { "split_${input_file}" }
     
-    publishDir "split_recoded_transcripts", mode: 'copy'
     container "quay.io/biocontainers/seqkit:2.10.0--h9ee0642_0"
     cpus 1
     memory '8GB'

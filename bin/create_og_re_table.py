@@ -91,14 +91,12 @@ if __name__ == "__main__":
     parser.add_argument('--re_score', type=str, required=True, help="Path to temp_test_score.csv")
     parser.add_argument('--re_length', type=str, required=True, help="Path to temp_test_longest.csv")  
     parser.add_argument('--gff', type=str, required=True, help="Path to gff relocated_to_transcript.gff")
-    parser.add_argument('--secis', type=str, required=True, help="Path to secis gff all_secis_positive.gff")
+    parser.add_argument('--output', type=str, required=True, help="Path to output table")
     
     args = parser.parse_args()
     sel_df = read_sel(args.gff)
     gff_df = read_gff(args.gff)
     print(gff_df)
-    secis_df = read_secis(args.secis)
-    print(secis_df)
     og_score = pd.read_csv(args.og_score)
     og_length = pd.read_csv(args.og_length)
     re_score = pd.read_csv(args.re_score)
@@ -108,11 +106,9 @@ if __name__ == "__main__":
     merged = read_tables(og_score, og_length, re_score, re_length) 
     sel_df_filtered = sel_df.loc[sel_df.index.intersection(merged.index)]
     gff_df_filtered = gff_df.loc[gff_df.index.intersection(merged.index)]
-    secis_df_filtered = secis_df.loc[secis_df.index.intersection(merged.index)] 
     merged = merged.join(sel_df_filtered, how='left')
     merged = merged.join(gff_df_filtered, how='left')
-    merged = merged.join(secis_df_filtered, how='left') 
-    merged.to_csv("compare_coding_potential_170725.csv")
+    merged.to_csv(args.output + '.csv', index=False)
     
     
 #Command to execute code

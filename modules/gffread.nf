@@ -2,8 +2,6 @@
 
 process GFFREAD {
     tag { "gffread" }
-
-    publishDir "gffread_out", mode: 'copy'
     label 'gffread'
 
     input:
@@ -24,10 +22,9 @@ process GFFREAD {
     gffread -F -w transcripts.fa -g ${fasta} ${gtf}
     
     # Process transcripts
-    awk '/^>/ {sub(/^>/, ">"); print \$1; next} {print}'  transcripts.fa > transcripts_clean.fa
-    
+    awk '/^>/ {sub(/^>/, ">"); print \$1; next} {print}'  transcripts.fa > transcripts_clean_${id}.fa 
     # Move output to output directory
-    mv transcripts_clean.fa gffread_out/
+    mv transcripts_clean_${id}.fa gffread_out/
     
     """
 }

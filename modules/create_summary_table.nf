@@ -1,7 +1,8 @@
 process CREATE_SUMMARY_TABLE {
-    tag { "create_summary_${original_scores}_${interesting_predictions}_${relocated_gtf}_${secis_gff}" }
+    tag { "create_summary_${original_scores}_${interesting_predictions}_${relocated_gtf}" }
     label 'python'
-    publishDir "summary_results", mode: 'copy'
+    publishDir "${params.output_dir}/summary_results", mode: 'copy'
+
     cpus 1
     memory '4GB'
     time '2h'
@@ -21,12 +22,19 @@ process CREATE_SUMMARY_TABLE {
     #!/bin/bash
     set -euo pipefail
     
-    create_og_re_table.py \
-        --og_score ${original_scores_score} \
-        --og_length ${original_scores_longest} \
-        --re_score ${interesting_predictions_score} \
-        --re_length ${interesting_predictions_longest} \
-        --gff ${relocated_gtf} \
-        --output summary_results
+    # Extract identifier (e.g., NW_027221872.1)
+    ID=\$(basename ${original_scores_score} | grep -oE '[A-Z]{2}_[0-9]+\\.[0-9]+')
+
+    # Create output folder
+    mkdir -p summary_results
+
+    # Run script with output prefix
+    create_og_re_table.py \\
+        --og_score ${original_scores_score} \\
+        --og_length ${original_scores_longest} \\
+        --re_score ${interesting_predictions_score} \\
+        --re_length ${interesting_predictions_longest} \\
+        --gff ${relocated_gtf} \\
+        --output summary_results/\${ID}
     """
 }

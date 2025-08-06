@@ -1,6 +1,6 @@
 process AGAT_SPLITGFF {
     tag "${genome_gtf.baseName}"
-    publishDir "${params.output_dir}/gff_processing", mode: 'copy'
+
     label 'agat'
 
     input:

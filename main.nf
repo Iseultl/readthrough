@@ -50,14 +50,14 @@ Memory:      ${params.max_memory}
 include { AGAT_GFF2GTF } from './modules/agat_gff2gtf'
 include { AGAT_SPLITGFF } from './modules/agat_splitgff'
 include { CLEAN_GTF } from './modules/clean_gtf'
-include { CREATE_PAIRING_FILE } from './modules/create_pairing_file'
 include { CONCATENATE_GTFS } from './modules/concatenated_gff'
 include { RELOCATE_TRANSCRIPTS } from './modules/relocate_transcripts'
 include { SPLITFASTA } from './modules/splitfasta'
 include { GFFREAD } from './modules/gffread'
 include { RECODE_TGA } from './modules/recode_tga'
-include {SPLIT_RECODED} from './modules/split_recoded'
+include { SPLIT_RECODED } from './modules/split_recoded'
 include { RUN_GENEID_ORIGINAL } from './modules/run_geneid_original'
+include { CONCAT_SUMMARY_RESULTS } from './modules/concat_summary_results'
 include { SELECT_INTERESTING } from './modules/select_interesting'
 include { GET_ORIGINAL_PREDICTIONS } from './modules/get_original_predictions'
 include { CREATE_SUMMARY_TABLE } from './modules/create_summary_table'
@@ -103,34 +103,39 @@ workflow {
     
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD(paired_ch)
-    gffread_out.view()
+    
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(GFFREAD.out)
 
     // Step 11: Split the recoded transcript sequences  
-    split_recoded_transcripts = SPLIT_RECODED(recoded_transcripts)
+    // split_recoded_transcripts = SPLIT_RECODED(recoded_transcripts)
      
     // Step 12: Run geneid on all the transcript sequences 
-    RUN_GENEID_ORIGINAL(split_recoded_transcripts, params.geneid_param)
+    geneid_results_ch = RUN_GENEID_ORIGINAL(recoded_transcripts, params.geneid_param)
+
+    // Step 13: Concatenate the Geneid results 
+    // concatenated_geneid_results = CONCAT_GENEID_RESULTS(geneid_results_ch.collect())
     
-    // Step 13: Process recoded predictions (outputs 2 files: score and longest)
-    select_interesting_out = SELECT_INTERESTING(RUN_GENEID_ORIGINAL.out, RELOCATE_TRANSCRIPTS.out)
+    // Step 14: Process recoded predictions (outputs 2 files: score and longest)
+    select_interesting_out = SELECT_INTERESTING(geneid_results_ch, RELOCATE_TRANSCRIPTS.out)
     select_interesting_out.score.view()
     select_interesting_out.longest.view()
     
-    // Step 14: Process original predictions (outputs 2 files: score and longest)
-    original_out = GET_ORIGINAL_PREDICTIONS(RUN_GENEID_ORIGINAL.out)
+    // Step 15: Process original predictions (outputs 2 files: score and longest)
+    original_out = GET_ORIGINAL_PREDICTIONS(geneid_results_ch)
     original_out.score.view()
     original_out.longest.view()
     
-    // Step 15: Final Output - Pass all four files to the summary table process
-    CREATE_SUMMARY_TABLE(
+    // Step 16: Final Output - Pass all four files to the summary table process
+    summary_tables = CREATE_SUMMARY_TABLE(
         select_interesting_out.score,
         select_interesting_out.longest,
         original_out.score,
         original_out.longest,
         RELOCATE_TRANSCRIPTS.out
     )
+
+    result = CONCAT_SUMMARY_RESULTS(summary_tables)
 }
 
 // Workflow completion message

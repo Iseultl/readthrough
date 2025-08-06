@@ -48,12 +48,12 @@ def extract_predictions(geneid_txt):
                     'type': structure,
                     'length': abs(end - start) + 1,
                     'score': score,
-                    'gene_name': current_seq.split('-')[0]
+                    'gene_name': '-'.join(current_seq.split('-')[:2])
                 })
                 found_prediction = True
 
         # After the loop ends, make sure to check the last sequence
-        if current_seq and not found_prediction:
+        if current_seq and "original" in current_seq and not found_prediction:
             predictions.append({
                 'seq': current_seq,
                 'start': np.nan,

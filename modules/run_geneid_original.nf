@@ -1,12 +1,12 @@
 process RUN_GENEID_ORIGINAL {
     tag { "run_geneid_original_${input_file}" }
     
-    publishDir "geneid_original_predictions", mode: 'copy'
+    publishDir "${params.output_dir}/geneid_original_predictions", mode: 'copy'
     cpus 1
-    memory '8GB'
+    memory '48GB'
     
     input:
-    path(input_dir)
+    path(input_file)
     path(param_file)
     
     output:
@@ -16,7 +16,7 @@ process RUN_GENEID_ORIGINAL {
     """
     # Run geneid on the transcripts
     run_geneid_original.sh \
-        ${input_dir} \
+        ${input_file} \
         geneid_original_predictions \
         ${params.geneid_param}
     """

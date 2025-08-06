@@ -1,7 +1,6 @@
 process CLEAN_GTF {
     tag { "clean_gtf_${genome_gtf}" }
-    
-    publishDir "output/cleaned_gtf", mode: 'copy'
+
     cpus 1
     memory '2GB'
     time '1h'

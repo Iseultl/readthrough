@@ -1,29 +1,31 @@
 process SELECT_INTERESTING {
-    tag { "select_interesting_${recoded_predictions}_${relocated_gtf}" }
+    tag { "select_interesting_${geneid_output.simpleName}" }
     
-    publishDir "interesting_predictions", mode: 'copy'
+    publishDir "${params.output_dir}/interesting_predictions", mode: 'copy', pattern: "*_*.csv"
     label 'python'
     cpus 1
-    memory '4GB'
-    time '2h'
+    memory '8GB'
+    time '1h'
     
     input:
-    path recoded_predictions
+    path geneid_output
     path relocated_gtf
     
     output:
-    path "score.csv", emit: score
-    path "longest.csv", emit: longest
+    path "*_score.csv", emit: score
+    path "*_longest.csv", emit: longest
     
     script:
     """
     #!/bin/bash
     set -euo pipefail
     
-    select_interesting_recodings.py \
-        --geneid ${recoded_predictions} \
-        --gff ${relocated_gtf} \
-        --score score.csv \
-        --longest longest.csv
+    base_name=\$(basename ${geneid_output} .gff)
+
+    select_interesting_recodings.py \\
+        --geneid ${geneid_output} \\
+        --gff ${relocated_gtf} \\
+        --score "\${base_name}_score.csv" \\
+        --longest "\${base_name}_longest.csv"
     """
 }

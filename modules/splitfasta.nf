@@ -3,7 +3,6 @@
 process SPLITFASTA {
     tag { "${genome_fasta.getBaseName()}" }
 
-    publishDir "split_chr", mode: 'copy'
     label 'splitfasta'
     
     input:

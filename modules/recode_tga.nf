@@ -1,7 +1,6 @@
 process RECODE_TGA {
     tag { "recode_tga" }
-    
-    publishDir "recoded_transcripts", mode: 'copy'
+    publishDir "${params.output_dir}/recoded_transcripts", mode: 'copy'
     label 'python'
     cpus 1
     memory '8GB'
@@ -11,13 +10,15 @@ process RECODE_TGA {
     path(transcript_fasta)
     
     output:
-    path("recoded.fa")
+    path("*.fa")
     
     script:
+    def base = transcript_fasta.getBaseName()
+    def out_name = "${base}_recoded.fa"
     """
     recode_any_TGA.py \
         --fasta ${transcript_fasta} \
         --recodon TGC \
-        --output recoded.fa
+        --output ${out_name}
     """
 }
