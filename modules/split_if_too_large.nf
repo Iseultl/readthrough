@@ -24,13 +24,6 @@ process SPLIT_IF_TOO_LARGE {
         # Calculate number of parts to split into
         PARTS=\$(( (\$SEQ_COUNT + \$THRESHOLD - 1) / \$THRESHOLD ))
         seqkit split -p \$PARTS -O . ${input_file}
-
-        # Rename outputs for clarity and ensure they are in the correct output directory
-        for f in ${input_file.baseName}.split/*; do
-            # The output files from seqkit split will be named like 'input.part_001.fasta'
-            # We want to move them to the work directory with a simpler name
-            mv "\$f" "\$(basename \${f%.fasta}).fa"
-        done
     else
         echo "No split needed"
         mv ${input_file} ${input_file.baseName}.part_001.fa
