@@ -33,7 +33,7 @@ process SPLIT_IF_TOO_LARGE {
         done
     else
         echo "No split needed"
-        cp ${input_file} ${input_file.baseName}.fa
+        mv ${input_file} ${input_file.baseName}.part_001.fa
     fi
     """
 }
