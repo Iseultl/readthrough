@@ -107,14 +107,13 @@ workflow {
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(GFFREAD.out)
 
-    // Step 11: Split the recoded transcript sequences  
-    // split_recoded_transcripts = SPLIT_RECODED(recoded_transcripts)
+    // Step 11. Split recoded transcripts if too large
+    split_transcripts_ch = recoded_transcripts | SPLIT_IF_TOO_LARGE
      
     // Step 12: Run geneid on all the transcript sequences 
-    geneid_results_ch = RUN_GENEID_ORIGINAL(recoded_transcripts, params.geneid_param)
-
-    // Step 13: Concatenate the Geneid results 
-    // concatenated_geneid_results = CONCAT_GENEID_RESULTS(geneid_results_ch.collect())
+    geneid_results_ch = split_transcripts_ch
+    .map { sample_id, split_fasta -> tuple(split_fasta, params.geneid_param) }
+    | RUN_GENEID_ORIGINAL
     
     // Step 14: Process recoded predictions (outputs 2 files: score and longest)
     select_interesting_out = SELECT_INTERESTING(geneid_results_ch, RELOCATE_TRANSCRIPTS.out)

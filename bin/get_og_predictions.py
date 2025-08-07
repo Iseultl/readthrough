@@ -8,108 +8,86 @@ import argparse
 import re
 import numpy as np
 
-def extract_predictions(geneid_txt):
-    predictions = []
+def process_predictions(geneid_txt):
+    best_by_score = {}
+    best_by_length = {}
     current_seq = None
-    found_prediction = False  # Track if any prediction was found for the current sequence
+    current_gene = None 
+
+    def get_transcript_name(seq_name):
+        return seq_name.split('_')[0]
+    
+    def get_gene_name(seq_name):
+        return seq_name.split('-')[0].strip('_original')
 
     with open(geneid_txt) as f:
         for line in f:
             if line.startswith("# Sequence"):
-                # Before moving to the next sequence, check if the previous one had no predictions
-                if current_seq and not found_prediction:
-                    predictions.append({
-                        'seq': current_seq,
-                        'start': np.nan,
-                        'end': np.nan,
-                        'strand': np.nan,
-                        'type': np.nan,
-                        'length': np.nan,
-                        'score': np.nan,
-                        'gene_name': current_seq.split('-')[0]
-                    })
+                if current_seq and "original" in current_seq:
+                    transcript_name = get_transcript_name(current_seq)
+                    gene_name = get_gene_name(transcript_name)
+                    if transcript_name not in best_by_score:
+                        # No predictions were found for this transcript, add placeholder
+                        placeholder = {
+                            'seq': current_seq,
+                            'start': np.nan, 'end': np.nan, 'strand': np.nan,
+                            'type': np.nan, 'length': np.nan, 'score': np.nan,
+                            'gene_name': gene_name,
+                            'transcript_name': transcript_name
+                        }
+                        best_by_score[transcript_name] = placeholder
+                        best_by_length[transcript_name] = placeholder
 
                 current_seq = line.split()[2]
-                found_prediction = False  # Reset for new sequence
 
-            elif current_seq and "Single " in line and current_seq not in line:
-                # Parse prediction
+            elif current_seq and "original" in current_seq and line.startswith("  Single"):
                 fields = line.strip().split()
-                structure = fields[0]
-                start = int(fields[1])
-                end = int(fields[2]) - 3
-                score = float(fields[3])
-                aa_seq = fields[-1]
-                predictions.append({
+                transcript_name = get_transcript_name(current_seq)
+                gene_name = get_gene_name(transcript_name)
+                
+                prediction = {
                     'seq': current_seq,
-                    'start': start,
-                    'end': end,
+                    'start': int(fields[1]),
+                    'end': int(fields[2]) - 3,
                     'strand': '+',
-                    'type': structure,
-                    'length': abs(end - start) + 1,
-                    'score': score,
-                    'gene_name': '-'.join(current_seq.split('-')[:2])
-                })
-                found_prediction = True
+                    'type': fields[0],
+                    'length': abs((int(fields[2]) - 3) - int(fields[1])) + 1,
+                    'score': float(fields[3]),
+                    'gene_name': gene_name,
+                    'transcript_name': transcript_name
+                }
 
-        # After the loop ends, make sure to check the last sequence
-        if current_seq and "original" in current_seq and not found_prediction:
-            predictions.append({
-                'seq': current_seq,
-                'start': np.nan,
-                'end': np.nan,
-                'strand': np.nan,
-                'type': np.nan,
-                'length': np.nan,
-                'score': np.nan,
-                'gene_name': current_seq.split('-')[0]
-            })
+                # Update best by score
+                if transcript_name not in best_by_score or pd.isna(best_by_score.get(transcript_name, {}).get('score')) or prediction['score'] > best_by_score[transcript_name]['score']:
+                    best_by_score[transcript_name] = prediction
 
-    df = pd.DataFrame.from_dict(predictions)
-    return df
+                # Update best by length
+                current_best_len = best_by_length.get(transcript_name, {}).get('length')
+                if current_best_len is None or pd.isna(current_best_len) or prediction['length'] > current_best_len:
+                    best_by_length[transcript_name] = prediction
+
+        # Handle the very last sequence in the file
+        if current_seq and "original" in current_seq:
+            transcript_name = get_transcript_name(current_seq)
+            gene_name = get_gene_name(transcript_name)
+            if transcript_name not in best_by_score:
+                placeholder = {
+                    'seq': current_seq,
+                    'start': np.nan, 'end': np.nan, 'strand': np.nan,
+                    'type': np.nan, 'length': np.nan, 'score': np.nan,
+                    'gene_name': gene_name,
+                    'transcript_name': transcript_name
+                }
+                best_by_score[transcript_name] = placeholder
+                best_by_length[transcript_name] = placeholder
+
+    score_df = pd.DataFrame(list(best_by_score.values()))
+    longest_df = pd.DataFrame(list(best_by_length.values()))
+
+    return score_df, longest_df
 
 
-def get_transcript_id(df):
-    df['transcript_name'] = df['seq'].str.split('_').str[0]
-    return df
 
-def best_score(df):
-    # Separate rows with valid scores
-    df_valid = df.dropna(subset=["score"])
-    # Compute best scores from valid rows
-    score_idx = df_valid.groupby("transcript_name")["score"].idxmax()
-    score_df = df_valid.loc[score_idx]
-
-    # Identify transcript_names with no predictions
-    all_transcripts = set(df["transcript_name"])
-    scored_transcripts = set(score_df["transcript_name"])
-    missing_transcripts = all_transcripts - scored_transcripts
-
-    # Include original rows for missing predictions
-    missing_rows = df[df["transcript_name"].isin(missing_transcripts)]
-    
-    # Combine and return
-    combined_df = pd.concat([score_df, missing_rows], ignore_index=True)
-    return combined_df.reset_index(drop=True)
-
-def best_length(df):
-    # Separate rows with valid lengths
-    df_valid = df.dropna(subset=["length"])
-    # Compute longest predictions
-    longest_idx = df_valid.groupby("transcript_name")["length"].idxmax()
-    longest_df = df_valid.loc[longest_idx]
-
-    # Identify transcript_names with no predictions
-    all_transcripts = set(df["transcript_name"])
-    length_transcripts = set(longest_df["transcript_name"])
-    missing_transcripts = all_transcripts - length_transcripts
-
-    # Include original rows for missing predictions
-    missing_rows = df[df["transcript_name"].isin(missing_transcripts)]
-    
-    # Combine and return
-    combined_df = pd.concat([longest_df, missing_rows], ignore_index=True)
-    return combined_df.reset_index(drop=True)
 
 
 if __name__ == "__main__":
@@ -121,14 +99,10 @@ if __name__ == "__main__":
      
     args = parser.parse_args()
     
-    geneid = extract_predictions(args.geneid)
-    print(geneid)
-    geneid = get_transcript_id(geneid)
+    score_df, longest_df = process_predictions(args.geneid)
     
-    score = best_score(geneid)
-    longest = best_length(geneid)
-    longest.to_csv(args.longest + '_longest.csv', index=False)
-    score.to_csv(args.score + '_score.csv', index=False)
+    longest_df.to_csv(args.longest + '_longest.csv', index=False)
+    score_df.to_csv(args.score + '_score.csv', index=False)
     
        
     

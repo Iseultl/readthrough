@@ -3,10 +3,11 @@ process RUN_GENEID_ORIGINAL {
     
     publishDir "${params.output_dir}/geneid_original_predictions", mode: 'copy'
     cpus 1
-    memory '48GB'
+    memory '8GB'
     
     input:
-    path(input_file)
+    val(split_id)
+    path(split_file)
     path(param_file)
     
     output:
@@ -16,7 +17,7 @@ process RUN_GENEID_ORIGINAL {
     """
     # Run geneid on the transcripts
     run_geneid_original.sh \
-        ${input_file} \
+        ${split_file} \
         geneid_original_predictions \
         ${params.geneid_param}
     """
