@@ -12,20 +12,18 @@ process SELECT_INTERESTING {
     path relocated_gtf
     
     output:
-    tuple val(id), path("*_score.csv"), path("*_longest.csv"), emit: interesting_predictions
+    tuple val(id), path("*_recoded_score.csv"), path("*_recoded_longest.csv"), emit: interesting_predictions
     
     script:
+    def id = geneid_output.getName().replaceAll('transcripts_clean_', '').replaceAll(/_recoded.*/, '')
     """
     #!/bin/bash
     set -euo pipefail
     
-    id=\$(echo "${geneid_output}" | sed -e 's/transcripts_clean_//' -e 's/_recoded.*//')
-    base_name=\$(basename "${geneid_output}" .gff)
-
     select_interesting_recodings.py \\
         --geneid ${geneid_output} \\
         --gff ${relocated_gtf} \\
-        --score "\${id}_score.csv" \\
-        --longest "\${id}_longest.csv"
+        --score "${id}_score.csv" \\
+        --longest "${id}_longest.csv"
     """
 }

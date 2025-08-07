@@ -12,19 +12,14 @@ process GET_ORIGINAL_PREDICTIONS {
     path geneid_output
 
     output:
-    tuple val(id), path("*_score.csv"), path("*_longest.csv"), emit: original_predictions
+    tuple val(id), path("*_original_score.csv"), path("*_original_longest.csv"), emit: original_predictions
 
     script:
+    def id = geneid_output.getName().replaceAll('transcripts_clean_', '').replaceAll(/_recoded.*/, '')
     """
-    set -euo pipefail
-
-    id=\$(echo "${geneid_output}" | sed -e 's/transcripts_clean_//' -e 's/_recoded.*//')
-    echo "ID: \${id}"
-    base_name=\$(basename "${geneid_output}" .gff)
-
     get_og_predictions.py \\
         --geneid ${geneid_output} \\
-        --score "\${id}_original_score.csv" \\
-        --longest "\${id}_original_longest.csv"
+        --score "${id}_original_score.csv" \\
+        --longest "${id}_original_longest.csv"
     """
 }
