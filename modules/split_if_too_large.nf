@@ -8,7 +8,7 @@ process SPLIT_IF_TOO_LARGE {
     path input_file
 
     output:
-    path("*.fa")
+    path "*.fa", emit: split_fasta
 
     script:
     """
