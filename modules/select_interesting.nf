@@ -26,7 +26,7 @@ process SELECT_INTERESTING {
     select_interesting_recodings.py \\
         --geneid ${geneid_output} \\
         --gff ${relocated_gtf} \\
-        --score "${id}_score.csv" \\
-        --longest "${id}_longest.csv"
+        --score "\${id}_score.csv" \\
+        --longest "\${id}_longest.csv"
     """
 }

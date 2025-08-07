@@ -24,7 +24,7 @@ process GET_ORIGINAL_PREDICTIONS {
 
     get_og_predictions.py \\
         --geneid ${geneid_output} \\
-        --score "${id}_original_score.csv" \\
-        --longest "${id}_original_longest.csv"
+        --score "\${id}_original_score.csv" \\
+        --longest "\${id}_original_longest.csv"
     """
 }
