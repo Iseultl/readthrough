@@ -98,16 +98,12 @@ if __name__ == "__main__":
     parser.add_argument('--geneid', type=str, required=True, help="Path to geneid txt")
      
     args = parser.parse_args()
-    
-    score_df, longest_df = process_predictions(args.geneid)
-    
-    longest_df.to_csv(args.longest + '_longest.csv', index=False)
-    score_df.to_csv(args.score + '_score.csv', index=False)
-    
-       
-    
-    
 
+    score_df, longest_df = process_predictions(args.geneid)
+
+    score_df.to_csv(args.score, index=False)
+    longest_df.to_csv(args.longest, index=False)
+    
 # Code for running script
 """
 python get_og_predictions.py --geneid /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/geneid_results_originals.txt --output temp_test_og

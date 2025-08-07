@@ -126,16 +126,16 @@ def process_recoding_predictions(geneid_txt):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Select interesting transcript sequences")
     # Add arguments for input and output directories
-    parser.add_argument('--geneid_scores', type=str, required=True, help="Path to geneid scores of all ORFs")
+    parser.add_argument('--geneid', type=str, required=True, help="Path to geneid scores of all ORFs")
     parser.add_argument('--score', type=str, required=True, help="Path to output file")
     parser.add_argument('--longest', type=str, required=True, help="Path to output file")
     parser.add_argument('--gff', type=str, required=True, help="Path to relocated to transcript gff")
     args = parser.parse_args()
     
-    score_df, longest_df = process_recoding_predictions(args.geneid_scores)
+    score_df, longest_df = process_recoding_predictions(args.geneid)
 
-    score_df.to_csv(args.score + '_score.csv', index=False)
-    longest_df.to_csv(args.longest + '_longest.csv', index=False)
+    score_df.to_csv(args.score, index=False)
+    longest_df.to_csv(args.longest, index=False)
     
 # Command for running script
 """
