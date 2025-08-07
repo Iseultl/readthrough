@@ -24,6 +24,7 @@ process CREATE_SUMMARY_TABLE {
     
     # Extract identifier (e.g., NW_027221872.1)
     ID=\$(basename ${original_scores_score} | grep -oE '[A-Z]{2}_[0-9]+\\.[0-9]+')
+    echo "ID: \${ID}"
 
     # Create output folder
     mkdir -p summary_results

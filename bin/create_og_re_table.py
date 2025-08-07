@@ -41,8 +41,19 @@ def read_tables(og_score, og_length, re_score, re_length):
     re_score_df.set_index('transcript_name', inplace=True)
     re_length_df.set_index('transcript_name', inplace=True)
     
-    re_score_df['TGA_site_score'] = re_score_df['gene_name'].str.split('_').str[2]
-    re_length_df['TGA_site_longest'] = re_length_df['gene_name'].str.split('_').str[2]
+    # Define a safe splitting function that handles missing values
+    def safe_split(name):
+        # Check if the value is a string before splitting
+        if isinstance(name, str):
+            parts = name.split('_')
+            if len(parts) > 2:
+                return parts[2]
+        # Return None for non-string values or if split doesn't have enough parts
+        return None
+
+    # Apply the safe splitting function to create the new columns
+    re_score_df['TGA_site_score'] = re_score_df['gene_name'].apply(safe_split)
+    re_length_df['TGA_site_longest'] = re_length_df['gene_name'].apply(safe_split)
     # Select only the renamed columns (and drop other duplicate columns if necessary)
     og_score_df = og_score_df[['og_score_start', 'og_score_end', 'og_score_score', 'og_score_length']]
     og_length_df = og_length_df[['og_length_start', 'og_length_end', 'og_length_score', 'og_length_length']]
