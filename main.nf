@@ -56,6 +56,7 @@ include { SPLITFASTA } from './modules/splitfasta'
 include { GFFREAD } from './modules/gffread'
 include { RECODE_TGA } from './modules/recode_tga'
 include { SPLIT_RECODED } from './modules/split_recoded'
+include { SPLIT_IF_TOO_LARGE } from './modules/split_if_too_large'
 include { RUN_GENEID_ORIGINAL } from './modules/run_geneid_original'
 include { CONCAT_SUMMARY_RESULTS } from './modules/concat_summary_results'
 include { SELECT_INTERESTING } from './modules/select_interesting'
@@ -108,13 +109,13 @@ workflow {
     recoded_transcripts = RECODE_TGA(GFFREAD.out)
 
     // Step 11. Split recoded transcripts if too large
-    split_transcripts_ch = recoded_transcripts | SPLIT_IF_TOO_LARGE
+    split_transcripts_ch = SPLIT_IF_TOO_LARGE(recoded_transcripts)
+    split_transcripts_ch.view()
+    return
      
     // Step 12: Run geneid on all the transcript sequences 
-    geneid_results_ch = split_transcripts_ch
-    .map { sample_id, split_fasta -> tuple(split_fasta, params.geneid_param) }
-    | RUN_GENEID_ORIGINAL
-    
+    geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param)  
+ 
     // Step 14: Process recoded predictions (outputs 2 files: score and longest)
     select_interesting_out = SELECT_INTERESTING(geneid_results_ch, RELOCATE_TRANSCRIPTS.out)
     select_interesting_out.score.view()

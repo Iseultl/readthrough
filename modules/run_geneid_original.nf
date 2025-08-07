@@ -6,8 +6,7 @@ process RUN_GENEID_ORIGINAL {
     memory '8GB'
     
     input:
-    val(split_id)
-    path(split_file)
+    path(input_file)
     path(param_file)
     
     output:
@@ -17,7 +16,7 @@ process RUN_GENEID_ORIGINAL {
     """
     # Run geneid on the transcripts
     run_geneid_original.sh \
-        ${split_file} \
+        ${input_file} \
         geneid_original_predictions \
         ${params.geneid_param}
     """
