@@ -19,8 +19,9 @@ process SELECT_INTERESTING {
     #!/bin/bash
     set -euo pipefail
     
-    id=\$(echo "${geneid_output}" | grep -oE '(NC|NW|NT|AC|NG|NM|NR|NP|XM|XR|XP|YP|ZP)_[0-9]+\\.[0-9]+\\.part_[0-9]+')
-    base_name=\$(basename ${geneid_output} .gff)
+    pattern='(NC|NW|NT|AC|NG|NM|NR|NP|XM|XR|XP|YP|ZP)_[0-9]+\.[0-9]+\.part_[0-9]+'
+    id=\$(echo "${geneid_output}" | grep -oE "\${pattern}")
+    base_name=\$(basename "${geneid_output}" .gff)
 
     select_interesting_recodings.py \\
         --geneid ${geneid_output} \\
