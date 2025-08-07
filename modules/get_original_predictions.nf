@@ -12,18 +12,18 @@ process GET_ORIGINAL_PREDICTIONS {
     path geneid_output
 
     output:
-    path "*_score.csv", emit: score
-    path "*_longest.csv", emit: longest
+    tuple val(id), path("*_score.csv"), path("*_longest.csv"), emit: original_predictions
 
     script:
     """
     set -euo pipefail
 
+    id=\$(echo "${geneid_output}" | grep -oE '(NC|NW|NT|AC|NG|NM|NR|NP|XM|XR|XP|YP|ZP)_[0-9]+\.[0-9]+\.part_[0-9]+')
     base_name=\$(basename ${geneid_output} .gff)
 
     get_og_predictions.py \\
         --geneid ${geneid_output} \\
-        --score "\${base_name}_original_score.csv" \\
-        --longest "\${base_name}_original_longest.csv"
+        --score "${id}_original_score.csv" \\
+        --longest "${id}_original_longest.csv"
     """
 }

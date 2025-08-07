@@ -114,24 +114,15 @@ workflow {
     // Step 12: Run geneid on all the transcript sequences 
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param)  
  
-    // Step 14: Process recoded predictions (outputs 2 files: score and longest)
-    select_interesting_out = SELECT_INTERESTING(geneid_results_ch, RELOCATE_TRANSCRIPTS.out)
-    select_interesting_out.score.view()
-    select_interesting_out.longest.view()
-    
-    // Step 15: Process original predictions (outputs 2 files: score and longest)
-    original_out = GET_ORIGINAL_PREDICTIONS(geneid_results_ch)
-    original_out.score.view()
-    original_out.longest.view()
-    
-    // Step 16: Final Output - Pass all four files to the summary table process
-    summary_tables = CREATE_SUMMARY_TABLE(
-        select_interesting_out.score,
-        select_interesting_out.longest,
-        original_out.score,
-        original_out.longest,
-        RELOCATE_TRANSCRIPTS.out
-    )
+    // Step 14 & 15: Process original and recoded predictions
+    interesting_predictions = SELECT_INTERESTING(geneid_results_ch, RELOCATE_TRANSCRIPTS.out).interesting_predictions
+    original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
+
+    // Combine the channels based on the scaffold ID
+    combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
+
+    // Step 16: Final Output - Pass the combined channel to the summary table process
+    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, RELOCATE_TRANSCRIPTS.out)
 
     result = CONCAT_SUMMARY_RESULTS(summary_tables)
 }

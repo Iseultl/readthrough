@@ -8,11 +8,8 @@ process CREATE_SUMMARY_TABLE {
     time '2h'
     
     input:
-    path(interesting_predictions_score)
-    path(interesting_predictions_longest)
-    path(original_scores_score)
-    path(original_scores_longest)
-    path(relocated_gtf)
+    tuple val(id), path(interesting_score), path(interesting_longest), path(original_score), path(original_longest)
+    path relocated_gtf
     
     output:
     path("summary_results/*")
@@ -22,20 +19,18 @@ process CREATE_SUMMARY_TABLE {
     #!/bin/bash
     set -euo pipefail
     
-    # Extract identifier (e.g., NW_027221872.1)
-    ID=\$(basename ${original_scores_score} | grep -oE '[A-Z]{2}_[0-9]+\\.[0-9]+')
-    echo "ID: \${ID}"
+    echo "Processing ID: ${id}"
 
     # Create output folder
     mkdir -p summary_results
 
     # Run script with output prefix
     create_og_re_table.py \\
-        --og_score ${original_scores_score} \\
-        --og_length ${original_scores_longest} \\
-        --re_score ${interesting_predictions_score} \\
-        --re_length ${interesting_predictions_longest} \\
+        --og_score ${original_score} \\
+        --og_length ${original_longest} \\
+        --re_score ${interesting_score} \\
+        --re_length ${interesting_longest} \\
         --gff ${relocated_gtf} \\
-        --output summary_results/\${ID}
+        --output summary_results/${id}
     """
 }

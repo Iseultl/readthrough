@@ -12,20 +12,20 @@ process SELECT_INTERESTING {
     path relocated_gtf
     
     output:
-    path "*_score.csv", emit: score
-    path "*_longest.csv", emit: longest
+    tuple val(id), path("*_score.csv"), path("*_longest.csv"), emit: interesting_predictions
     
     script:
     """
     #!/bin/bash
     set -euo pipefail
     
+    id=\$(echo "${geneid_output}" | grep -oE '(NC|NW|NT|AC|NG|NM|NR|NP|XM|XR|XP|YP|ZP)_[0-9]+\.[0-9]+\.part_[0-9]+')
     base_name=\$(basename ${geneid_output} .gff)
 
     select_interesting_recodings.py \\
         --geneid ${geneid_output} \\
         --gff ${relocated_gtf} \\
-        --score "\${base_name}_score.csv" \\
-        --longest "\${base_name}_longest.csv"
+        --score "${id}_score.csv" \\
+        --longest "${id}_longest.csv"
     """
 }
