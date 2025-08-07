@@ -1,6 +1,5 @@
 process SPLIT_IF_TOO_LARGE {
     tag { "split_if_needed_${input_file.baseName}" }
-    publishDir "${params.output_dir}/split_transcripts", mode: 'copy'
     cpus 1
     memory '4GB'
     label 'splitfasta'
