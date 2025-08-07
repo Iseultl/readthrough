@@ -3,6 +3,7 @@ process SPLIT_IF_TOO_LARGE {
     publishDir "${params.output_dir}/split_transcripts", mode: 'copy'
     cpus 1
     memory '2GB'
+    label 'splitfasta'
 
     input:
     path input_file
