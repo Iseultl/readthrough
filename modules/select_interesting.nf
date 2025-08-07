@@ -13,9 +13,10 @@ process SELECT_INTERESTING {
     
     output:
     tuple val(id), path("*_recoded_score.csv"), path("*_recoded_longest.csv"), emit: interesting_predictions
+
+    def id = geneid_output.getName().replaceAll('transcripts_clean_', '').replaceAll(/_recoded.*/, '')
     
     script:
-    def id = geneid_output.getName().replaceAll('transcripts_clean_', '').replaceAll(/_recoded.*/, '')
     """
     #!/bin/bash
     set -euo pipefail
