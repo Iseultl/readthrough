@@ -96,7 +96,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     sel_df = read_sel(args.gff)
     gff_df = read_gff(args.gff)
-    print(gff_df)
     og_score = pd.read_csv(args.og_score)
     og_length = pd.read_csv(args.og_length)
     re_score = pd.read_csv(args.re_score)

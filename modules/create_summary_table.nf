@@ -23,7 +23,7 @@ process CREATE_SUMMARY_TABLE {
     set -euo pipefail
     
     # Extract identifier (e.g., NW_027221872.1)
-    ID=\$(basename ${original_scores_score} | grep -oE '[A-Z]{2}_[0-9]+\\.[0-9]+')
+    ID=\$(basename ${original_scores_score} | grep -oE '\\b[A-Z]{2}_[0-9]+\\.[0-9]+\\b')
 
     # Create output folder
     mkdir -p summary_results
