@@ -110,8 +110,6 @@ workflow {
 
     // Step 11. Split recoded transcripts if too large
     split_transcripts_ch = SPLIT_IF_TOO_LARGE(recoded_transcripts)
-    split_transcripts_ch.view()
-    return
      
     // Step 12: Run geneid on all the transcript sequences 
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param)  
