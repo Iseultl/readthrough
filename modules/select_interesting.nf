@@ -15,12 +15,12 @@ process SELECT_INTERESTING {
     tuple val(id), path("${id}_recoded_score.csv"), path("${id}_recoded_longest.csv"), emit: interesting_predictions
 
     script:
-    def id = geneid_output.getName().replaceAll('transcripts_clean_', '').replaceAll(/_recoded.*/, '')
+    id = geneid_output.getName().replaceAll('transcripts_clean_', '').replaceAll(/_recoded.*/, '')
     """
     select_interesting_recodings.py \
         --geneid ${geneid_output} \
         --gff ${relocated_gtf} \
-        --score "${id}_score.csv" \
-        --longest "${id}_longest.csv"
+        --score "${id}_recoded_score.csv" \
+        --longest "${id}_recoded_longest.csv"
     """
 }
