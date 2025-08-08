@@ -29,7 +29,7 @@ def process_recoding_predictions(geneid_txt):
     
     def get_transcript_name(seq_name):
         if len(seq_name.split('_')[0]) < 3:
-           return seq_name.split('_')[:1].strip('_original') 
+           return seq_name.split('_')[:1].join('_').strip('_original') 
         else:
             return seq_name.split('_')[0].strip('_original')
     
