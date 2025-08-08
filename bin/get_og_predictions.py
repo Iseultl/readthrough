@@ -15,7 +15,7 @@ def process_predictions(geneid_txt):
     current_gene = None 
 
     def get_transcript_name(seq_name):
-        return seq_name.split('_')[0]
+        return re.search(r'^(.*?)_original', seq_name).group(1)
     
     def get_gene_name(seq_name):
         return seq_name.split('-')[0].strip('_original')

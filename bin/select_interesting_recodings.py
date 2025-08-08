@@ -28,10 +28,10 @@ def process_recoding_predictions(geneid_txt):
     out_of_frame = 0
     
     def get_transcript_name(seq_name):
-        return re.search(r'(\w+)_TGA_', seq_name).group(1)
+        return re.search(r'^(.*?)_TGA', seq_name).group(1)
     
     def get_gene_name(seq_name):
-        return seq_name.split('-')[0]
+        return re.search(r'^(.*?)_TGA', seq_name).group(1).split('-')[0]
 
     with open(geneid_txt) as f:
         current_seq = None
