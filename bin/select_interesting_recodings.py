@@ -28,12 +28,7 @@ def process_recoding_predictions(geneid_txt):
     out_of_frame = 0
     
     def get_transcript_name(seq_name):
-        parts = seq_name.split('_')
-        print(parts)
-        if len(parts[0]) == 2 and len(parts) > 1:
-            return '_'.join(parts[:2])
-        else:
-            return parts[0]
+        return re.search(r'(\w+)_TGA_', seq_name).group(1)
     
     def get_gene_name(seq_name):
         return seq_name.split('-')[0]
