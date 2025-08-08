@@ -41,6 +41,7 @@ def process_recoding_predictions(geneid_txt):
             if line.startswith("# Sequence"):
                 prediction_count = 0
                 if current_seq and "original" not in current_seq:
+                    print(current_seq)
                     transcript_name = get_transcript_name(current_seq)
                     gene_name = get_gene_name(transcript_name)
                     if transcript_name not in best_by_score:
@@ -140,5 +141,5 @@ if __name__ == "__main__":
 # Command for running script
 """
 python select_interesting_recodings.py --geneid_scores /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/geneid_results.txt --score temp_test --longest temp_test --gff /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/relocated_to_transcript.gff
-python select_interesting_recodings.py --geneid_scores /no_backup/rg/ileahy/Horse_Analysis/secis_independent_output/geneid_original_predictions/geneid_original_predictions/transcripts_clean_NC_091684.1_recoded.part_001.fa.geneid.txt --score temp_test --longest temp_test -gff ~/git/gitlab/secis_independent/relocated_gtf/relocated_gtf/relocated.gtf 
+python select_interesting_recodings.py --geneid /no_backup/rg/ileahy/Horse_Analysis/secis_independent_output/geneid_original_predictions/geneid_original_predictions/transcripts_clean_NC_091684.1_recoded.part_001.fa.geneid.txt --score temp_test --longest temp_test --gff ~/git/gitlab/secis_independent/relocated_gtf/relocated_gtf/relocated.gtf 
 """ 
