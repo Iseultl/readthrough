@@ -29,12 +29,14 @@ def process_recoding_predictions(geneid_txt):
     
     def get_transcript_name(seq_name):
         parts = seq_name.split('_')
+        print(parts)
         if len(parts[0]) == 2 and len(parts) > 1:
-            return '_'.join(parts[:2]).strip('_original')
-        return parts[0].strip('_original')
+            return '_'.join(parts[:2])
+        else:
+            return parts[0]
     
     def get_gene_name(seq_name):
-        return seq_name.split('-')[0].strip('_original')
+        return seq_name.split('-')[0]
 
     with open(geneid_txt) as f:
         current_seq = None
