@@ -109,8 +109,15 @@ if __name__ == "__main__":
     gff_df = read_gff(args.gff)
     og_score = pd.read_csv(args.og_score)
     og_length = pd.read_csv(args.og_length)
-    re_score = pd.read_csv(args.re_score)
-    re_length = pd.read_csv(args.re_length)
+    try:
+        re_score = pd.read_csv(args.re_score)
+    except pd.errors.EmptyDataError:
+        re_score = pd.DataFrame(columns=['transcript_name', 'gene_name', 'start', 'end', 'score', 'length'])
+
+    try:
+        re_length = pd.read_csv(args.re_length)
+    except pd.errors.EmptyDataError:
+        re_length = pd.DataFrame(columns=['transcript_name', 'gene_name', 'start', 'end', 'score', 'length'])
     
 
     merged = read_tables(og_score, og_length, re_score, re_length) 

@@ -28,7 +28,7 @@ def process_recoding_predictions(geneid_txt):
     out_of_frame = 0
     
     def get_transcript_name(seq_name):
-        return seq_name.split('_')[0]
+        return seq_name.strip('_original')
     
     def get_gene_name(seq_name):
         return seq_name.split('-')[0].strip('_original')
@@ -140,4 +140,5 @@ if __name__ == "__main__":
 # Command for running script
 """
 python select_interesting_recodings.py --geneid_scores /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/geneid_results.txt --score temp_test --longest temp_test --gff /Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/relocated_to_transcript.gff
+python select_interesting_recodings.py --geneid_scores /no_backup/rg/ileahy/Horse_Analysis/secis_independent_output/geneid_original_predictions/geneid_original_predictions/transcripts_clean_NC_091684.1_recoded.part_001.fa.geneid.txt --score temp_test --longest temp_test -gff ~/git/gitlab/secis_independent/relocated_gtf/relocated_gtf/relocated.gtf 
 """ 
