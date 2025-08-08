@@ -112,12 +112,12 @@ if __name__ == "__main__":
     try:
         re_score = pd.read_csv(args.re_score)
     except pd.errors.EmptyDataError:
-        re_score = pd.DataFrame(columns=['transcript_name', 'gene_name', 'start', 'end', 'score', 'length'])
+        re_score = pd.DataFrame(columns=['re_score_start', 're_score_end', 're_score_score', 're_score_length', 'TGA_site_score'])
 
     try:
         re_length = pd.read_csv(args.re_length)
     except pd.errors.EmptyDataError:
-        re_length = pd.DataFrame(columns=['transcript_name', 'gene_name', 'start', 'end', 'score', 'length'])
+        re_length = pd.DataFrame(columns=['re_length_start', 're_length_end', 're_length_score', 're_length_length', 'TGA_site_longest'])
     
 
     merged = read_tables(og_score, og_length, re_score, re_length) 
