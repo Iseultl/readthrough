@@ -28,7 +28,10 @@ def process_recoding_predictions(geneid_txt):
     out_of_frame = 0
     
     def get_transcript_name(seq_name):
-        return seq_name.strip('_original')
+        if len(seq_name.split('_')[0]) < 3:
+           return seq_name.split('_')[:1].strip('_original') 
+        else:
+            return seq_name.split('_')[0].strip('_original')
     
     def get_gene_name(seq_name):
         return seq_name.split('-')[0].strip('_original')
