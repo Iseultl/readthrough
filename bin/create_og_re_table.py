@@ -9,6 +9,16 @@
 import pandas as pd
 import argparse
 
+def safe_read_csv(path, expected_cols):
+    """Read CSV, returning empty DataFrame with expected columns if file is empty."""
+    try:
+        df = pd.read_csv(path)
+        if df.empty:
+            return pd.DataFrame(columns=expected_cols)
+        return df
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame(columns=expected_cols)
+
 def read_tables(og_score, og_length, re_score, re_length):
     og_score_df = og_score.rename(columns={
         'start': 'og_score_start',
@@ -107,18 +117,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     sel_df = read_sel(args.gff)
     gff_df = read_gff(args.gff)
-    og_score = pd.read_csv(args.og_score)
-    og_length = pd.read_csv(args.og_length)
-    try:
-        re_score = pd.read_csv(args.re_score)
-    except pd.errors.EmptyDataError:
-        re_score = pd.DataFrame(columns=['re_score_start', 're_score_end', 're_score_score', 're_score_length', 'TGA_site_score'])
-
-    try:
-        re_length = pd.read_csv(args.re_length)
-    except pd.errors.EmptyDataError:
-        re_length = pd.DataFrame(columns=['re_length_start', 're_length_end', 're_length_score', 're_length_length', 'TGA_site_longest'])
-    
+    og_score = safe_read_csv(args.og_score, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
+    og_length = safe_read_csv(args.og_length, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
+    re_score = safe_read_csv(args.re_score, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
+    re_length = safe_read_csv(args.re_length, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
 
     merged = read_tables(og_score, og_length, re_score, re_length) 
     sel_df_filtered = sel_df.loc[sel_df.index.intersection(merged.index)]
