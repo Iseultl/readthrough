@@ -118,7 +118,7 @@ if __name__ == "__main__":
     gff_df_filtered = gff_df.loc[gff_df.index.intersection(merged.index)]
     merged = merged.join(sel_df_filtered, how='left')
     merged = merged.join(gff_df_filtered, how='left')
-    merged.to_csv(args.output + '.csv', index=False)
+    merged.to_csv(args.output + '.csv', index=True)
     
     
 #Command to execute code
