@@ -18,7 +18,7 @@ def process_predictions(geneid_txt):
         return re.search(r'^(.*?)_original', seq_name).group(1)
     
     def get_gene_name(seq_name):
-        return seq_name.split('-')[0].strip('_original')
+        return seq_name.strip('_original')
 
     with open(geneid_txt) as f:
         for line in f:
