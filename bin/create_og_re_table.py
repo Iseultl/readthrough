@@ -89,15 +89,18 @@ def read_gff(gff):
 
     # Group by transcript, keep gene_name as a regular column
     grouped = cds_df.groupby('transcript_name').agg({
-        'gene_name': 'gene_name',
+        'transcript_name': 'first',
+        'gene_name': 'first',
         'start': 'min',
         'end': 'max'
-    }).reset_index()
+    })
 
     grouped.rename(columns={
         'start': 'gtf_start',
         'end': 'gtf_end'
     }, inplace=True)
+    
+    grouped.set_index('transcript_name', inplace=True)  
     print(grouped.head())
     return grouped
 
