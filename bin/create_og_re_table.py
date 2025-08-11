@@ -8,6 +8,7 @@
             
 import pandas as pd
 import argparse
+import re
 
 def safe_read_csv(path, expected_cols):
     """Read CSV, returning empty DataFrame with expected columns if file is empty."""
