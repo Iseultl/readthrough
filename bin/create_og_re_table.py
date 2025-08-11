@@ -91,12 +91,12 @@ def read_gff(gff):
         'end': 'max'
     }).reset_index()
     
-    grouped = grouped.set_index('attributes')
     grouped.rename(columns={
         'start': 'gtf_start',
         'end': 'gtf_end'
     }, inplace=True)
     grouped[['gene_name', 'transcript_name']] = grouped['attributes'].str.split('_', n=1, expand=True)
+    grouped = grouped.set_index('transcript_name')
     print(grouped.head())
     return grouped
 
