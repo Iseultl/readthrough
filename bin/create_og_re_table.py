@@ -57,7 +57,7 @@ def read_tables(og_score, og_length, re_score, re_length):
         if isinstance(name, str):
             parts = name.split('_')
             if len(parts) > 2:
-                return parts[2]
+                return parts[3]
         # Return None for non-string values or if split doesn't have enough parts
         return None
 
