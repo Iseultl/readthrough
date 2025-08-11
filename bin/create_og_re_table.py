@@ -83,31 +83,24 @@ def read_gff(gff):
         sep='\t',
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     )
+     
+    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', 1, expand=True)
 
-    def parse_attr(attr):
-        # Match: gene + optional separator + transcript prefix
-        m = re.match(r'^(?P<gene>[A-Za-z0-9]+?)[_ ]?(?P<transcript>(?:X[MR]|N[MR])_\d+\.\d+)$', attr)
-        if m:
-            return m.group('gene'), m.group('transcript')
-        else:
-            # No transcript prefix detected → treat whole thing as both
-            return attr, attr
-
-    # Apply parsing to each row
-    df[['gene_name', 'transcript_name']] = df['attributes'].apply(lambda x: pd.Series(parse_attr(str(x))))
-
-    # Filter for CDS features only
+    # Filter for CDS
     cds_df = df[df['type'] == 'CDS']
 
-    # Group by transcript_name, keeping one gene_name per transcript
+    # Group by transcript, keep gene_name as a regular column
     grouped = cds_df.groupby('transcript_name').agg({
         'gene_name': 'first',
         'start': 'min',
         'end': 'max'
     }).reset_index()
 
-    grouped.rename(columns={'start': 'gtf_start', 'end': 'gtf_end'}, inplace=True)
-
+    grouped.rename(columns={
+        'start': 'gtf_start',
+        'end': 'gtf_end'
+    }, inplace=True)
+    print(grouped.head())
     return grouped
 
 def read_secis(secis):
