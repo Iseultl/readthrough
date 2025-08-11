@@ -55,7 +55,6 @@ def read_tables(og_score, og_length, re_score, re_length):
     
 
     # Apply the safe splitting function to create the new columns
-    print(re_score_df.head())
     re_score_df['TGA_site_score'] = re_score_df['seqnames'].str.split('_').str[-3]
     re_length_df['TGA_site_longest'] = re_length_df['seqnames'].str.split('_').str[-3]
     # Select only the renamed columns (and drop other duplicate columns if necessary)
@@ -83,7 +82,8 @@ def read_gff(gff):
         sep='\t',
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     )
-     
+    lst = df['attributes'].str.split('_', n=1, expand=True)
+    print(lst)
     df['gene_name'] = df['attributes'].str.split('_', n=1, expand=True)[0]
     df['transcript_name'] = df['attributes'].str.split('_', n=1, expand=True)[1]
     
@@ -101,7 +101,7 @@ def read_gff(gff):
         'start': 'gtf_start',
         'end': 'gtf_end'
     }, inplace=True)
-    print(grouped.head())
+
     return grouped
 
 def read_secis(secis):
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     sel_df = read_sel(args.gff)
     gff_df = read_gff(args.gff)
-    print(gff_df.head())
+
     og_score = safe_read_csv(args.og_score, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
     og_length = safe_read_csv(args.og_length, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
     re_score = safe_read_csv(args.re_score, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
