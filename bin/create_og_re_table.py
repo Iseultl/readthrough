@@ -82,11 +82,8 @@ def read_gff(gff):
         sep='\t',
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     )
-    lst = df['attributes'].str.split('_', n=1, expand=True)
-    print(lst)
-    df['gene_name'] = df['attributes'].str.split('_', n=1, expand=True)[0]
-    df['transcript_name'] = df['attributes'].str.split('_', n=1, expand=True)[1]
-    
+    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
+    print(df.head()) 
     # Filter for CDS
     cds_df = df[df['type'] == 'CDS']
 
