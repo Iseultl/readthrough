@@ -77,20 +77,35 @@ def read_sel(gff):
     return sel_df
 
 def read_gff(gff):
-    df = pd.read_csv(gff, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
-    # Set transcript name and gene name from attributes 
+    import pandas as pd
+
+    # Read the GFF
+    df = pd.read_csv(
+        gff,
+        sep='\t',
+        names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+    )
+
+    # Extract gene_name and transcript_name
     df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
+
     # Filter for CDS entries
     cds_df = df[df['type'] == 'CDS']
-    # Group by attributes and get min start and max end
+
+    # Group by transcript_name, but keep gene_name with .first()
     grouped = cds_df.groupby('transcript_name').agg({
+        'gene_name': 'first',  # keep one gene_name per transcript
         'start': 'min',
         'end': 'max'
     }).reset_index()
-    grouped = grouped.set_index('transcript_name')
-    grouped = grouped.rename(columns={"start": "gtf_start", "end": "gtf_end", "gene_name": "gene_name"})
 
-    return grouped 
+    # Rename start/end columns
+    grouped.rename(columns={
+        'start': 'gtf_start',
+        'end': 'gtf_end'
+    }, inplace=True)
+
+    return grouped
 
 def read_secis(secis):
     df = pd.read_csv(secis, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
