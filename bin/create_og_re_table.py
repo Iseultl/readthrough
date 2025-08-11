@@ -55,8 +55,8 @@ def read_tables(og_score, og_length, re_score, re_length):
 
     # Apply the safe splitting function to create the new columns
     print(re_score_df.head())
-    re_score_df['TGA_site_score'] = re_score_df['seqnames'].str.split('_')[-3]
-    re_length_df['TGA_site_longest'] = re_length_df['seqnames'].str.split('_')[-3]
+    re_score_df['TGA_site_score'] = re_score_df['seqnames'].str.split('_').str[-3]
+    re_length_df['TGA_site_longest'] = re_length_df['seqnames'].str.split('_').str[-3]
     # Select only the renamed columns (and drop other duplicate columns if necessary)
     og_score_df = og_score_df[['og_score_start', 'og_score_end', 'og_score_score', 'og_score_length']]
     og_length_df = og_length_df[['og_length_start', 'og_length_end', 'og_length_score', 'og_length_length']]
@@ -77,33 +77,35 @@ def read_sel(gff):
     return sel_df
 
 def read_gff(gff):
-    import pandas as pd
-
-    # Read the GFF
     df = pd.read_csv(
         gff,
         sep='\t',
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     )
 
-    # Extract gene_name and transcript_name
-    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
+    def parse_attr(attr):
+        # Match: gene + optional separator + transcript prefix
+        m = re.match(r'^(?P<gene>[A-Za-z0-9]+?)[_ ]?(?P<transcript>(?:X[MR]|N[MR])_\d+\.\d+)$', attr)
+        if m:
+            return m.group('gene'), m.group('transcript')
+        else:
+            # No transcript prefix detected → treat whole thing as both
+            return attr, attr
 
-    # Filter for CDS entries
+    # Apply parsing to each row
+    df[['gene_name', 'transcript_name']] = df['attributes'].apply(lambda x: pd.Series(parse_attr(str(x))))
+
+    # Filter for CDS features only
     cds_df = df[df['type'] == 'CDS']
 
-    # Group by transcript_name, but keep gene_name with .first()
+    # Group by transcript_name, keeping one gene_name per transcript
     grouped = cds_df.groupby('transcript_name').agg({
-        'gene_name': 'first',  # keep one gene_name per transcript
+        'gene_name': 'first',
         'start': 'min',
         'end': 'max'
     }).reset_index()
 
-    # Rename start/end columns
-    grouped.rename(columns={
-        'start': 'gtf_start',
-        'end': 'gtf_end'
-    }, inplace=True)
+    grouped.rename(columns={'start': 'gtf_start', 'end': 'gtf_end'}, inplace=True)
 
     return grouped
 
