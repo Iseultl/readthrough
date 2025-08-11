@@ -136,7 +136,7 @@ if __name__ == "__main__":
     og_length = safe_read_csv(args.og_length, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
     re_score = safe_read_csv(args.re_score, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
     re_length = safe_read_csv(args.re_length, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
-
+    gene_dict = gene_look_up(args.gff)
     merged = read_tables(og_score, og_length, re_score, re_length) 
     sel_df_filtered = sel_df.loc[sel_df.index.intersection(merged.index)]
     gff_df_filtered = gff_df.loc[gff_df.index.intersection(merged.index)]
