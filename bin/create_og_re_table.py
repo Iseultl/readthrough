@@ -62,8 +62,8 @@ def read_tables(og_score, og_length, re_score, re_length):
         return None
 
     # Apply the safe splitting function to create the new columns
-    re_score_df['TGA_site_score'] = re_score_df['gene_name'].apply(safe_split)
-    re_length_df['TGA_site_longest'] = re_length_df['gene_name'].apply(safe_split)
+    re_score_df['TGA_site_score'] = re_score_df['seq'].apply(safe_split)
+    re_length_df['TGA_site_longest'] = re_length_df['seq'].apply(safe_split)
     # Select only the renamed columns (and drop other duplicate columns if necessary)
     og_score_df = og_score_df[['og_score_start', 'og_score_end', 'og_score_score', 'og_score_length']]
     og_length_df = og_length_df[['og_length_start', 'og_length_end', 'og_length_score', 'og_length_length']]
@@ -85,15 +85,17 @@ def read_sel(gff):
 
 def read_gff(gff):
     df = pd.read_csv(gff, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
+    # Set transcript name and gene name from attributes 
+    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
     # Filter for CDS entries
     cds_df = df[df['type'] == 'CDS']
     # Group by attributes and get min start and max end
-    grouped = cds_df.groupby('attributes').agg({
+    grouped = cds_df.groupby('transcript_name').agg({
         'start': 'min',
         'end': 'max'
     }).reset_index()
-    grouped = grouped.set_index('attributes')
-    grouped = grouped.rename(columns={"start": "gtf_start", "end": "gtf_end"})
+    grouped = grouped.set_index('transcript_name')
+    grouped = grouped.rename(columns={"start": "gtf_start", "end": "gtf_end", "gene_name": "gene_name"})
 
     return grouped 
 
