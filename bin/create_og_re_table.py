@@ -95,18 +95,29 @@ def read_gff(gff):
         'start': 'gtf_start',
         'end': 'gtf_end'
     }, inplace=True)
+
     grouped[['gene_name', 'transcript_name']] = grouped['attributes'].str.split('_', n=1, expand=True)
     grouped = grouped.set_index('transcript_name')
+    grouped = grouped.drop('attributes', axis=1)
     print(grouped.head())
+    
     return grouped
 
-def read_secis(secis):
-    df = pd.read_csv(secis, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
-    df = df.rename(columns={"start": "secis_start", "end": "secis_end"})
-    df = df[["secis_start", "secis_end", "chr"]]
-    df = df.set_index("chr")
-    return df
-
+def gene_look_up(gff):
+    df = pd.read_csv(
+        gff,
+        sep='\t',
+        names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+    ) 
+    # Split attributes once into gene and transcript
+    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
+    # Create dictionary: transcript_name -> gene_name
+    gene_dict = df.drop_duplicates(subset=['transcript_name']) \
+                  .set_index('transcript_name')['gene_name'] \
+                  .to_dict()
+    return gene_dict
+    
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract the coding regions of each transcript and input to coding_potential script")
     # Add arguments for input and output directories
@@ -131,6 +142,7 @@ if __name__ == "__main__":
     gff_df_filtered = gff_df.loc[gff_df.index.intersection(merged.index)]
     merged = merged.join(sel_df_filtered, how='left')
     merged = merged.join(gff_df_filtered, how='left')
+    merged['gene_name'] = merged.index.map(gene_dict)
     merged.to_csv(args.output + '.csv', index=True)
     
     
