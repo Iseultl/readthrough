@@ -51,20 +51,12 @@ def read_tables(og_score, og_length, re_score, re_length):
     re_score_df.set_index('transcript_name', inplace=True)
     re_length_df.set_index('transcript_name', inplace=True)
     
-    # Define a safe splitting function that handles missing values
-    def safe_split(name):
-        # Check if the value is a string before splitting
-        if isinstance(name, str):
-            parts = name.split('_')
-            if len(parts) > 2:
-                return parts[3]
-        # Return None for non-string values or if split doesn't have enough parts
-        return None
+    
 
     # Apply the safe splitting function to create the new columns
     print(re_score_df.head())
-    re_score_df['TGA_site_score'] = re_score_df['seqnames'].apply(safe_split)
-    re_length_df['TGA_site_longest'] = re_length_df['seqnames'].apply(safe_split)
+    re_score_df['TGA_site_score'] = re_score_df['seqnames'].str.split('_')[-3]
+    re_length_df['TGA_site_longest'] = re_length_df['seqnames'].str.split('_')[-3]
     # Select only the renamed columns (and drop other duplicate columns if necessary)
     og_score_df = og_score_df[['og_score_start', 'og_score_end', 'og_score_score', 'og_score_length']]
     og_length_df = og_length_df[['og_length_start', 'og_length_end', 'og_length_score', 'og_length_length']]
@@ -120,6 +112,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     sel_df = read_sel(args.gff)
     gff_df = read_gff(args.gff)
+    print(gff_df.head())
     og_score = safe_read_csv(args.og_score, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
     og_length = safe_read_csv(args.og_length, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
     re_score = safe_read_csv(args.re_score, ['seq','start','end','strand','type','length','score','gene_name','transcript_name'])
