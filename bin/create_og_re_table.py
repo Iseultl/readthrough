@@ -83,7 +83,7 @@ def read_gff(gff):
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     )
     df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
-    print(df.head()) 
+    
     # Filter for CDS
     cds_df = df[df['type'] == 'CDS']
 
@@ -98,7 +98,7 @@ def read_gff(gff):
         'start': 'gtf_start',
         'end': 'gtf_end'
     }, inplace=True)
-
+    print(grouped.head())
     return grouped
 
 def read_secis(secis):
