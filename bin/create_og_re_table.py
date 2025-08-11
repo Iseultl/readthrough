@@ -62,6 +62,7 @@ def read_tables(og_score, og_length, re_score, re_length):
         return None
 
     # Apply the safe splitting function to create the new columns
+    print(re_score_df.head())
     re_score_df['TGA_site_score'] = re_score_df['seq'].apply(safe_split)
     re_length_df['TGA_site_longest'] = re_length_df['seq'].apply(safe_split)
     # Select only the renamed columns (and drop other duplicate columns if necessary)
