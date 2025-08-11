@@ -82,24 +82,21 @@ def read_gff(gff):
         sep='\t',
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     )
-    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
     
     # Filter for CDS
     cds_df = df[df['type'] == 'CDS']
-    print(cds_df.head())
     # Group by transcript, keep gene_name as a regular column
-    grouped = cds_df.groupby('transcript_name').agg({
-        'gene_name': 'first',
+    grouped = cds_df.groupby('attributes').agg({
         'start': 'min',
         'end': 'max'
-    }).set_index('transcript_name')
-    print(grouped.head())
+    }).reset_index()
+    
+    grouped = grouped.set_index('attributes')
     grouped.rename(columns={
         'start': 'gtf_start',
         'end': 'gtf_end'
     }, inplace=True)
-    
-    grouped.set_index('transcript_name', inplace=True)  
+    grouped[['gene_name', 'transcript_name']] = grouped['attributes'].str.split('_', n=1, expand=True)
     print(grouped.head())
     return grouped
 
