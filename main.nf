@@ -127,6 +127,7 @@ workflow {
 
     result = CONCAT_SUMMARY_RESULTS(summary_tables)
     
+    // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
 }
 
