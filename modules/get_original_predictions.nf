@@ -15,7 +15,7 @@ process GET_ORIGINAL_PREDICTIONS {
     tuple val(id), path("${id}_original_score.csv"), path("${id}_original_longest.csv"), emit: original_predictions
 
     script:
-    id = geneid_output.getName().replaceAll('transcripts_clean_', '').replaceAll('.fa.geneid.txt_*', '')
+    id = geneid_output.getName().replaceAll('_original_*', '')
     """
     get_og_predictions.py \
         --geneid ${geneid_output} \

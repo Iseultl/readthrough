@@ -99,7 +99,6 @@ def read_gff(gff):
     grouped[['gene_name', 'transcript_name']] = grouped['attributes'].str.split('_', n=1, expand=True)
     grouped = grouped.set_index('transcript_name')
     grouped = grouped.drop('attributes', axis=1)
-    print(grouped.head())
     
     return grouped
 
