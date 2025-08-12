@@ -62,6 +62,7 @@ include { CONCAT_SUMMARY_RESULTS } from './modules/concat_summary_results'
 include { SELECT_INTERESTING } from './modules/select_interesting'
 include { GET_ORIGINAL_PREDICTIONS } from './modules/get_original_predictions'
 include { CREATE_SUMMARY_TABLE } from './modules/create_summary_table'
+include { FILTER_FINAL_TABLE } from './modules/filter_final_table'
 
 // Helper function to extract chromosome name (without extension)
 def get_chr_name(file) {
@@ -125,6 +126,8 @@ workflow {
     summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, RELOCATE_TRANSCRIPTS.out)
 
     result = CONCAT_SUMMARY_RESULTS(summary_tables)
+    
+    ORFsearch_result = FILTER_FINAL_TABLE(result)
 }
 
 // Workflow completion message
