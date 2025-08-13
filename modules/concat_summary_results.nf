@@ -5,10 +5,10 @@ process CONCAT_SUMMARY_RESULTS {
     path summary_tables
 
     output:
-    path "ORFsearch.result"
+    path "ORFsearch.filter"
 
     script:
     """
-    cat ${summary_tables.join(' ')} > ORFsearch.result
+    cat ${summary_tables.join(' ')} > ORFsearch.filter
     """
 }

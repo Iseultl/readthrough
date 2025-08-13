@@ -125,7 +125,7 @@ workflow {
     // Step 16: Final Output - Pass the combined channel to the summary table process
     summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, RELOCATE_TRANSCRIPTS.out)
 
-    result = CONCAT_SUMMARY_RESULTS(summary_tables)
+    result = CONCAT_SUMMARY_RESULTS(summary_tables.collect())
     
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)

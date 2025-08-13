@@ -8,7 +8,7 @@ process FILTER_FINAL_TABLE {
     time '2h'
     
     input:
-    path input_file
+    path("ORFsearch.filter")
     
     output:
     path("ORFsearch.result")
@@ -19,7 +19,7 @@ process FILTER_FINAL_TABLE {
     set -euo pipefail
     
     filter_final_table.py \\
-        --input ${input_file} \\
+        --input ORFsearch.filter \\
         --output ORFsearch.result
     """
 }
