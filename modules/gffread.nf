@@ -28,7 +28,7 @@ process GFFREAD {
        tid = \$9;
        split(tid,a,"-");
        gid = a[1];
-       \$9 = "gene_id \"" gid "\"; transcript_id \"" tid "\";";
+       \$9 = "gene_id \\"" gid "\\"; transcript_id \\"" tid "\\";";
        print
      }' ${gtf} > ${gtf}.fixed
     
