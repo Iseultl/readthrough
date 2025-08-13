@@ -311,7 +311,7 @@ if __name__ == "__main__":
     print("Relocate secis took", time.time() - start, "seconds")
 
     columns = ['Chromosome', 'Source', 'Feature', 'Start', 'End', 'Score', 'Strand', 'Frame', 'Attributes']
-    df = pd.DataFrame.from_dict(transcript_lst+relocated_CDS+relocated_exons+relocated_sec+relocated_secis, columns=columns)
+    df = pd.DataFrame.from_dict(transcript_lst+relocated_CDS+relocated_exons+relocated_sec+relocated_secis)
  
     df = handle_negs(df)
     print("Relocate negatives took", time.time() - start, "seconds")

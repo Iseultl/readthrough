@@ -105,8 +105,7 @@ workflow {
     
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD(paired_ch)
-    gffread_out.view()
-    return 
+     
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(GFFREAD.out)
 
