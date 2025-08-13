@@ -15,7 +15,7 @@ process SELECT_INTERESTING {
     tuple val(id), path("${id}_recoded_score.csv"), path("${id}_recoded_longest.csv"), emit: interesting_predictions
 
     script:
-    id = geneid_output.getName().replaceAll("transcripts_clean_", "").replaceAll('.fa.geneid.txt_recoded_*', '')
+    id = geneid_output.getName().replaceAll("transcripts_clean_", "").replaceAll("_recoded.", ".").replaceAll(".fa.geneid.txt_recoded_*", "")
     """
     select_interesting_recodings.py \
         --geneid ${geneid_output} \
