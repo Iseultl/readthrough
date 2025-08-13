@@ -2,8 +2,11 @@
 
 process GFFREAD {
     publishDir "${params.output_dir}/gffread_out", mode: 'copy'
-    tag { "gffread" }
+    tag { "gffread_${id}" }
     label 'gffread'
+    cpus 1
+    memory '8GB'
+    time '1h'
 
     input:
     tuple val(id), path(gtf), path(fasta)
