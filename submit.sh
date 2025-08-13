@@ -2,7 +2,7 @@
 #SBATCH --no-requeue
 #SBATCH --mem 16G
 #SBATCH -p genoa64
-#SBATCH --time 00:10:00
+#SBATCH --time 00:30:00
 #SBATCH --output=/no_backup/rg/ileahy/logs/nf_secis_independent_mouse_%A.out  # log per job
 #SBATCH --error=/no_backup/rg/ileahy/logs/nf_secis_independent_mouse_%A.err   # error log
  
