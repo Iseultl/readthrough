@@ -80,10 +80,13 @@ workflow {
     // Step 3: Run AGAT_GFF2GTF in parallel to standardise each GFF file
     gtf_files_ch = AGAT_GFF2GTF(gff_files_ch)
     
+    // Create a channel of cleaned GTF files for downstream processing
     split_gff_dir_ch = CLEAN_GTF(gtf_files_ch)
-     
-    base_names_gff = split_gff_dir_ch.map { file ->
-        def chr = file.name.replaceFirst(/\.cleaned\.gtf$/, '')
+    
+    // Create paired channels for GTF and FASTA files
+    // First, create a channel for GTF files with chromosome names
+    base_names_gtf = gtf_files_ch.map { file ->
+        def chr = file.name.replaceFirst(/\.gtf$/, '')
         tuple(chr, file)
     }
     
@@ -97,7 +100,7 @@ workflow {
     }
     
     // Step 5: Create paired gtf & fasta channel
-    paired_ch = base_names_gff.combine(base_names_fasta, by: 0)  
+    paired_ch = base_names_gtf.combine(base_names_fasta, by: 0)  
      
     // Step 6: Create relocated to transcript gff 
     CONCATENATE_GTFS(split_gff_dir_ch.collect())
