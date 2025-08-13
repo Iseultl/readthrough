@@ -79,9 +79,11 @@ workflow {
 
     // Step 3: Run AGAT_GFF2GTF in parallel to standardise each GFF file
     gtf_files_ch = AGAT_GFF2GTF(gff_files_ch)
+    gtf_files_ch.view()
 
     split_gff_dir_ch = CLEAN_GTF(gtf_files_ch)
-
+    split_gff_dir_ch.view()
+    return 
     base_names_gff = split_gff_dir_ch.map { file ->
         def chr = file.name.replaceFirst(/\.cleaned\.gtf$/, '')
         tuple(chr, file)
@@ -105,8 +107,6 @@ workflow {
     
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD(paired_ch)
-    gffread_out.view()
-    return 
     
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(GFFREAD.out)
