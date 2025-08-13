@@ -19,7 +19,7 @@ process FILTER_FINAL_TABLE {
     set -euo pipefail
     
     filter_final_table.py \\
-        --input ORFsearch.filter \\
-        --output ORFsearch.result
+        ORFsearch.filter \\
+        ORFsearch.result
     """
 }
