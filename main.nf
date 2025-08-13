@@ -118,9 +118,7 @@ workflow {
     // Step 14 & 15: Process original and recoded predictions
     interesting_predictions = SELECT_INTERESTING(geneid_results_ch, RELOCATE_TRANSCRIPTS.out).interesting_predictions
     original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
-    interesting_predictions.view()
-    original_predictions.view()
-    return
+    
     // Combine the channels based on the scaffold ID
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
     
