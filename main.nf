@@ -4,10 +4,10 @@
 nextflow.enable.dsl = 2
 
 // Input files
-params.genome_gtf = params.genome_gtf ?: '/Users/iseult/Desktop/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff'
-params.genome_fasta = params.genome_fasta ?: '/Users/iseult/Desktop/Horse_Analysis/horse_genome.fa'
+params.genome_gtf = params.genome_gtf ?: '/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf'
+params.genome_fasta = params.genome_fasta ?: '/no_backup/rg/ileahy/Mouse_Analysis/GRCm39.primary_assembly.genome.fa'
 params.transcripts_clean = params.transcripts_clean // Optional: provide a transcripts_clean file
-params.output_dir = params.output_dir ?: './output'
+params.output_dir = params.output_dir ?: '/no_backup/rg/ileahy/Mouse_Analysis/secis_independent_output'
 params.geneid_param = params.geneid_param ?: '/Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/human3iso.param'
 
 // Print help message if no parameters are provided
