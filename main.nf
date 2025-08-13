@@ -98,15 +98,15 @@ workflow {
     
     // Step 5: Create paired gtf & fasta channel
     paired_ch = base_names_gff.combine(base_names_fasta, by: 0)  
-    paired_ch.view()
-    return 
+     
     // Step 6: Create relocated to transcript gff 
     CONCATENATE_GTFS(split_gff_dir_ch.collect())
     RELOCATE_TRANSCRIPTS(CONCATENATE_GTFS.out)
     
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD(paired_ch)
-    
+    gffread_out.view()
+    return 
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(GFFREAD.out)
 
