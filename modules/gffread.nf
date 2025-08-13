@@ -1,6 +1,7 @@
 // modules/gffread.nf
 
 process GFFREAD {
+    publishDir "${params.output_dir}/gffread_out", mode: 'copy'
     tag { "gffread" }
     label 'gffread'
 
