@@ -12,7 +12,7 @@ process CREATE_SUMMARY_TABLE {
     path relocated_gtf
     
     output:
-    path("summary_results/*")
+    path("summary_results/${id}.csv")
     
     script:
     """
@@ -25,12 +25,12 @@ process CREATE_SUMMARY_TABLE {
     mkdir -p summary_results
 
     # Run script with output prefix
-    create_og_re_table.py \\
-        --og_score ${original_score} \\
-        --og_length ${original_longest} \\
-        --re_score ${interesting_score} \\
-        --re_length ${interesting_longest} \\
-        --gff ${relocated_gtf} \\
+    create_og_re_table.py \
+        --og_score ${original_score} \
+        --og_length ${original_longest} \
+        --re_score ${interesting_score} \
+        --re_length ${interesting_longest} \
+        --gff ${relocated_gtf} \
         --output summary_results/${id}
     """
 }
