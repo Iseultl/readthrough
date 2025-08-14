@@ -2,9 +2,9 @@
 #SBATCH --no-requeue
 #SBATCH --mem 16G
 #SBATCH -p genoa64
-#SBATCH --time 00:30:00
-#SBATCH --output=/no_backup/rg/ileahy/logs/nf_secis_independent_mouse_%A.out  # log per job
-#SBATCH --error=/no_backup/rg/ileahy/logs/nf_secis_independent_mouse_%A.err   # error log
+#SBATCH --time 01:00:00
+#SBATCH --output=/no_backup/rg/ileahy/logs/nf_secis_independent_human_%A.out  # log per job
+#SBATCH --error=/no_backup/rg/ileahy/logs/nf_secis_independent_human_%A.err   # error log
  
 # Configure bash
 set -e          # exit immediately on error
@@ -32,7 +32,7 @@ export NXF_JVM_ARGS="-Xms2g -Xmx5g"
 # $ sbatch submit_nf.sh nextflow/rnatoy -with-singularity
 #
 # will use "nextflow/rnatoy -with-singularity" as arguments
-nextflow run ~/git/gitlab/secis_independent/main.nf -params-file ~/git/gitlab/secis_independent/params.yaml -profile cluster -w /nfs/scratch01/rg/ileahy -resume
+nextflow run ~/git/gitlab/secis_independent/main.nf -params-file ~/git/gitlab/secis_independent/params.yaml -profile cluster -w /nfs/scratch01/rg/ileahy
  
 # Wait for the pipeline to finish
 echo "Waiting for ${pid}"
