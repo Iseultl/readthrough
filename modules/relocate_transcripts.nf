@@ -18,7 +18,7 @@ process RELOCATE_TRANSCRIPTS {
     mkdir -p relocated_gtf
 
     relocate_transcripts.py \
-        --gff ${cleaned_gtf}.fixed \
+        --gff ${cleaned_gtf} \
         --output relocated_gtf/relocated.gtf
     """
 }
