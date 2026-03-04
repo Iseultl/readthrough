@@ -62,6 +62,7 @@ include { SELECT_INTERESTING } from './modules/select_interesting'
 include { GET_ORIGINAL_PREDICTIONS } from './modules/get_original_predictions'
 include { CREATE_SUMMARY_TABLE } from './modules/create_summary_table'
 include { FILTER_FINAL_TABLE } from './modules/filter_final_table'
+include { EXTRACT_SEQUENCE_LOGOS } from '/modules/extract_sequence_logos'
 
 // Helper function to extract chromosome name (without extension)
 def get_chr_name(file) {

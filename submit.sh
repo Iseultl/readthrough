@@ -3,8 +3,8 @@
 #SBATCH --mem 16G
 #SBATCH -p genoa64
 #SBATCH --time 00:10:00
-#SBATCH --output=/no_backup/rg/ileahy/logs/nf_secis_independent_human_%A.out  # log per job
-#SBATCH --error=/no_backup/rg/ileahy/logs/nf_secis_independent_human_%A.err   # error log
+#SBATCH --output=/no_backup/rg/ileahy/logs/nf_orfsearch_pvivax_%A.out  # log per job
+#SBATCH --error=/no_backup/rg/ileahy/logs/nf_orfsearch_pvivax_%A.err   # error log
  
 # Configure bash
 set -e          # exit immediately on error
