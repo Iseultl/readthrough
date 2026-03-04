@@ -15,5 +15,9 @@ process SPLITFASTA {
     """
     mkdir -p split_chr
     seqkit split -i -O split_chr ${genome_fasta}
+
+    for f in split_chr/*; do
+        mv "\$f" "\${f%.*}.fa"
+    done
     """
 }
