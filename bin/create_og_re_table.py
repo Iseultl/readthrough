@@ -87,10 +87,17 @@ def read_gff(gff):
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     )
     
-    # Filter for CDS
-    cds_df = df[df['type'] == 'CDS']
+    # Prefer CDS features
+    feature_df = df[df['type'] == 'CDS']
+    # If no CDS present, fall back to transcript features
+    if feature_df.empty:
+        feature_df = df[df['type'].isin(['exon', 'transcript'])]
+    # If still empty, return an empty frame with the right structure
+    if feature_df.empty:
+        return pd.DataFrame(columns=['gene_name', 'transcript_name', 'gtf_start', 'gtf_end']).set_index('transcript_name')
+
     # Group by transcript, keep gene_name as a regular column
-    grouped = cds_df.groupby('attributes').agg({
+    grouped = feature_df.groupby('attributes').agg({
         'start': 'min',
         'end': 'max'
     }).reset_index()
