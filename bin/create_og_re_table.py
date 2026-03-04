@@ -71,6 +71,9 @@ def read_tables(og_score, og_length, re_score, re_length):
 def read_sel(gff):
     df = pd.read_csv(gff, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
     sel_df = df[df['type'] == 'Selenocysteine'].copy()
+    if sel_df.empty:
+        # Return empty DataFrame with correct columns
+        return pd.DataFrame(columns=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']) 
     sel_df['attributes'] = sel_df['attributes'].str.split('_', n=1, expand=True)[1]
     sel_df = sel_df.set_index('attributes')
     sel_df = sel_df['type']
