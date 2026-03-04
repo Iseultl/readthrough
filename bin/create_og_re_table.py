@@ -74,7 +74,7 @@ def read_sel(gff):
     if sel_df.empty:
         # Return empty DataFrame with correct columns
         return pd.DataFrame(columns=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']) 
-    sel_df['attributes'] = sel_df['attributes'].str.split('_', n=1, expand=True)[1]
+    sel_df['attributes'] = sel_df['attributes'].str.split(' ; ', n=1, expand=True)[1]
     sel_df = sel_df.set_index('attributes')
     sel_df = sel_df['type']
 
@@ -120,7 +120,7 @@ def gene_look_up(gff):
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     ) 
     # Split attributes once into gene and transcript
-    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
+    df[['gene_name', 'transcript_name']] = df['attributes'].str.split(' ; ', n=1, expand=True)
     # Create dictionary: transcript_name -> gene_name
     gene_dict = df.drop_duplicates(subset=['transcript_name']) \
                   .set_index('transcript_name')['gene_name'] \
@@ -234,7 +234,7 @@ def read_tables(og_score, og_length, re_score, re_length):
 def read_sel(gff):
     df = pd.read_csv(gff, sep='\t', names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
     sel_df = df[df['type'] == 'Selenocysteine'].copy()
-    sel_df['attributes'] = sel_df['attributes'].str.split('_', n=1, expand=True)[1]
+    sel_df['attributes'] = sel_df['attributes'].str.split(' ; ', n=1, expand=True)[1]
     sel_df = sel_df.set_index('attributes')
     sel_df = sel_df['type']
 
@@ -273,7 +273,7 @@ def gene_look_up(gff):
         names=['chr', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     ) 
     # Split attributes once into gene and transcript
-    df[['gene_name', 'transcript_name']] = df['attributes'].str.split('_', n=1, expand=True)
+    df[['gene_name', 'transcript_name']] = df['attributes'].str.split(' ; ', n=1, expand=True)
     # Create dictionary: transcript_name -> gene_name
     gene_dict = df.drop_duplicates(subset=['transcript_name']) \
                   .set_index('transcript_name')['gene_name'] \
