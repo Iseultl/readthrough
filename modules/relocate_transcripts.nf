@@ -17,16 +17,6 @@ process RELOCATE_TRANSCRIPTS {
     """
     mkdir -p relocated_gtf
 
-    awk 'BEGIN{OFS="\\t"} 
-     /^#/ {print; next} 
-     {
-       tid = \$9;
-       split(tid,a,"-");
-       gid = a[1];
-       \$9 = "gene_id \\"" gid "\\"; transcript_id \\"" tid "\\";";
-       print
-     }' ${cleaned_gtf} > ${cleaned_gtf}.fixed
-
     relocate_transcripts.py \
         --gff ${cleaned_gtf}.fixed \
         --output relocated_gtf/relocated.gtf
