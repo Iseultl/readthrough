@@ -1,5 +1,5 @@
-genome_gtf : "/no_backup/rg/ileahy/Human_Analysis/gencode.v47.annotation.gtf"
-genome_fasta : "/no_backup/rg/ileahy/Human_Analysis/GRCh38.primary_assembly.genome.fa"
+genome_gtf : "/no_backup/rg/references/species/Plasmodium_vivax.5855/GCF_000002415.2/LyRic_complete.gff"
+genome_fasta : "/no_backup/rg/references/species/Plasmodium_vivax.5855/GCF_000002415.2/GCF_000002415.2_ASM241v2_genomic.fna"
 
 
 # Production settings
@@ -8,6 +8,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Human_Analysis/secis_independent_output"  # Local output directory
-geneid_param: "/no_backup/rg/ileahy/geneid/params/human/human3iso.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Pvivax/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Plasmodium_vivax.5855/GCF_000002415.2/geneId_trainer.optimized.edit.param"  # Update to your geneid parameter file location
 

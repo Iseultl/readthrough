@@ -131,6 +131,9 @@ workflow {
     
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
+
+    // Step 18: Extract sequences for logos
+    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.collect())
 }
 
 // Workflow completion message

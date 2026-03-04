@@ -36,6 +36,7 @@ def recode(sequences, recodon, tga_positions, output_fasta):
     records = []
     
     for transcript_name, seq in sequences.items():
+        print("Processing ", transcript_name)
         seq_str = str(seq)  # Convert Seq object to string
         positions = tga_positions.get(transcript_name, [])  # Get TGA positions or empty list
 
@@ -60,7 +61,7 @@ def recode(sequences, recodon, tga_positions, output_fasta):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Recode TGA codons at selenocysteine positions in a genome FASTA file")
-    parser.add_argument('--fasta', type=str, required=True, help="Path to genome FASTA file") 
+    parser.add_argument('--fasta', type=str, required=True, help="Path to transcript FASTA file") 
     parser.add_argument('--recodon', type=str, required=True, choices=['TGT', 'TGC'], help="Codon to replace TGA (TGT or TGC)")
     parser.add_argument('--output', type=str, required=True, help="Output FASTA file of recoded sequences")
      
