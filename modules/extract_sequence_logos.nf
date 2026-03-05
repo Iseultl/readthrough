@@ -1,6 +1,5 @@
 process EXTRACT_SEQUENCE_LOGOS {
-    tag { "extract_sequence_logos" }
-
+    tag { "extract_sequence_logos_${result_csv}" }
     label 'python'
     publishDir "${params.output_dir}/sequence_logos", mode: 'copy'
     cpus 1
@@ -20,7 +19,7 @@ process EXTRACT_SEQUENCE_LOGOS {
     set -euo pipefail
     mkdir -p sequence_logos
     
-    python bin/extract_sequence_logos.py \
+    extract_sequence_logos.py \
         --result_file ${result_csv} \
         --fasta_dir gffread_out \
         --output_dir sequence_logos
