@@ -18,8 +18,8 @@ process EXTRACT_SEQUENCE_LOGOS {
     #!/bin/bash
     set -euo pipefail
     mkdir -p sequence_logos
-    
-    extract_sequence_logos.py \
+    chmod +x extract_sequence_logos.py
+    ./extract_sequence_logos.py \
         --result_file ${result_csv} \
         --fasta_dir gffread_out \
         --output_dir sequence_logos

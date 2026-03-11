@@ -135,6 +135,9 @@ workflow {
 
     // Step 18: Extract sequences for logos
     extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.collect())
+
+    // Step 19: Run SECISearch on the transcripts
+    secissearch_results = SECISSEARCH(gffread_out.collect())
 }
 
 // Workflow completion message
