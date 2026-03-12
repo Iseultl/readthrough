@@ -26,8 +26,8 @@ if __name__ == "__main__":
     filtered_secis = read_gff(args.filtered_secis)
     df = read_df(args.ORFsearch)
     
-    df = df.join(all_secis, how='left', rsuffix='_all_secis')
-    df = df.join(filtered_secis, how='left', rsuffix='_filtered_secis')
-    df.to_csv(args.output + '.csv', index=True)
+    df1 = df.join(all_secis, how='left', rsuffix='_all_secis')
+    df2 = df1.join(filtered_secis, how='left', rsuffix='_filtered_secis')
+    df2.to_csv(args.output, index=True)
     
  
