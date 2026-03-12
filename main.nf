@@ -133,11 +133,22 @@ workflow {
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
 
+    // Step 18: Run SECISearch on the transcripts
+    secissearch_results = SECISSEARCH(gffread_out.collect())
+    secissearch_results.collect().set { all_gffs }
+    merged_secis_gff = MERGE_GFF(all_gffs)
+
+    // Step 19: Filter SECISearch results
+    filtered_secis = FILTER_SECIS(merged_secis_gff)
+
+    // Step 20: Combine ORFsearch results with filtered SECISearch results
+
+
     // Step 18: Extract sequences for logos
     extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.collect())
 
-    // Step 19: Run SECISearch on the transcripts
-    secissearch_results = SECISSEARCH(gffread_out.collect())
+    
+
 }
 
 // Workflow completion message

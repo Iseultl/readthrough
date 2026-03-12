@@ -2,9 +2,7 @@
 
 process SECISSEARCH {
     tag { input_fasta.getBaseName() }
-
-    publishDir "${params.output_dir}/secis_final_gff", mode: 'copy'
-
+    
     label 'secissearch'
 
     input:
