@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('--ORFsearch', type=str, required=True, help="Path to ORFsearch file")
     parser.add_argument('--all_secis', type=str, required=True, help="Path to all secis elements file")  
     parser.add_argument('--filtered_secis', type=str, required=True, help="Path to filtered secis elements file")   
+    parser.add_argument('--output', type=str, required=True, help="Path to output table")
     args = parser.parse_args()
     
     all_secis = read_gff(args.all_secis)
@@ -27,5 +28,6 @@ if __name__ == "__main__":
     
     df = df.join(all_secis, how='left', rsuffix='_all_secis')
     df = df.join(filtered_secis, how='left', rsuffix='_filtered_secis')
+    df.to_csv(args.output + '.csv', index=True)
     
  
