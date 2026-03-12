@@ -14,5 +14,10 @@ process concat_SECIS_ORFsearch {
     script:
     """
     # Python script to concatenate the results 
+    add_SECIS_annotation.py \\
+        --orfsearch ${orfsearch_result} \\
+        --secis_gff ${merged_secis_gff} \\
+        --filtered_sec ${filtered_secis} \\
+        --output ORFsearch.result
     """
 }

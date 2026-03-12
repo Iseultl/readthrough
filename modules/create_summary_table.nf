@@ -1,8 +1,6 @@
 process CREATE_SUMMARY_TABLE {
     tag { "create_summary_${original_scores}_${interesting_predictions}_${relocated_gtf}" }
     label 'python'
-    publishDir "${params.output_dir}/summary_results", mode: 'copy'
-
     cpus 1
     memory '4GB'
     time '2h'

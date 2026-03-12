@@ -1,9 +1,6 @@
 process GET_ORIGINAL_PREDICTIONS {
     tag { "get_original_${geneid_output.simpleName}" }
     label 'python'
-
-    publishDir "${params.output_dir}/original_predictions", mode: 'copy', pattern: "*_original_*.csv"
-
     cpus 1
     memory '8GB'
     time '1h'

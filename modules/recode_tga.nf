@@ -1,9 +1,8 @@
 process RECODE_TGA {
     tag { "recode_tga" }
-    publishDir "${params.output_dir}/recoded_transcripts", mode: 'copy'
     label 'python'
     cpus 1
-    memory '8GB'
+    memory '4GB'
     time '1h'
     
     input:

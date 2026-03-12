@@ -1,8 +1,6 @@
 process FILTER_FINAL_TABLE {
     tag { "filter_final_table_${input_file}" }
     label 'python'
-    publishDir "${params.output_dir}", mode: 'copy'
-
     cpus 1
     memory '4GB'
     time '2h'
@@ -11,7 +9,7 @@ process FILTER_FINAL_TABLE {
     path("ORFsearch.filter")
     
     output:
-    path("ORFsearch.result")
+    path("ORFsearch.temp")
     
     script:
     """
@@ -20,6 +18,6 @@ process FILTER_FINAL_TABLE {
     
     filter_final_table.py \\
         ORFsearch.filter \\
-        ORFsearch.result
+        ORFsearch.temp
     """
 }
