@@ -6,7 +6,8 @@ nextflow.enable.dsl = 2
 // Input files
 params.genome_gtf = params.genome_gtf ?: '/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf'
 params.genome_fasta = params.genome_fasta ?: '/no_backup/rg/ileahy/Mouse_Analysis/GRCm39.primary_assembly.genome.fa'
-params.transcripts_clean = params.transcripts_clean // Optional: provide a transcripts_clean file
+params.lyric_gtf = params.lyric_gtf ?: '/no_backup/rg/ileahy/Mouse_Analysis/lyric_output/lyric_predictions.gtf'
+params.species_name = params.species_name ?: 'Mus musculus'
 params.output_dir = params.output_dir ?: '/no_backup/rg/ileahy/Mouse_Analysis/secis_independent_output'
 params.geneid_param = params.geneid_param ?: '/Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/human3iso.param'
 
@@ -63,6 +64,12 @@ include { GET_ORIGINAL_PREDICTIONS } from './modules/get_original_predictions'
 include { CREATE_SUMMARY_TABLE } from './modules/create_summary_table'
 include { FILTER_FINAL_TABLE } from './modules/filter_final_table'
 include { EXTRACT_SEQUENCE_LOGOS } from './modules/extract_sequence_logos'
+include { SECISSEARCH } from './modules/secissearch'
+include { MERGE_GFF } from './modules/merge_gff'
+include { FILTER_SECIS } from './modules/filter_secis'
+include { COMBINE_ORFSECIS } from './modules/combine_orfsecis'
+include { CREATE_README } from './modules/create_readme'
+include { RUN_SELENOPROFILES } from './modules/run_selenoprofiles'
 
 // Helper function to extract chromosome name (without extension)
 def get_chr_name(file) {
@@ -70,8 +77,14 @@ def get_chr_name(file) {
 }
 
 workflow {
+    // Step 0: Create readme file
+    CREATE_README(params.genome_fasta, params.genome_gtf)
+
+    // Step 1: Run selenoprofiles
+    selenoprofiles_results = RUN_SELENOPROFILES(params.genome_fasta, params.species_name)
+
     // Step 1: Split GFF by chromosome
-    split_results = AGAT_SPLITGFF(params.genome_gtf)
+    split_results = AGAT_SPLITGFF(params.lyric_gtf)
 
     // Step 2: Collect all .gff files from the output directory
     gff_files_ch = split_results.gff_files
@@ -133,21 +146,19 @@ workflow {
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
 
-    // Step 18: Run SECISearch on the transcripts
+    // Step 18: Extract sequences for logos
+    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.collect())
+
+    // Step 19: Run SECISearch on the transcripts
     secissearch_results = SECISSEARCH(gffread_out.collect())
     secissearch_results.collect().set { all_gffs }
     merged_secis_gff = MERGE_GFF(all_gffs)
 
-    // Step 19: Filter SECISearch results
+    // Step 20: Filter SECISearch results
     filtered_secis = FILTER_SECIS(merged_secis_gff)
 
-    // Step 20: Combine ORFsearch results with filtered SECISearch results
-
-
-    // Step 18: Extract sequences for logos
-    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.collect())
-
-    
+    // Step 21: Combine ORFsearch results with filtered SECISearch results
+    ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, filtered_secis)
 
 }
 

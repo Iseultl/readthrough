@@ -1,5 +1,7 @@
-genome_gtf : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila_lyric.gff"
+lyric_gtf : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila_lyric.gff"
 genome_fasta : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila.fa"
+genome_gtf : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila_annot.gff"
+species_name : "Tetrahymena_thermophila"
 
 
 # Production settings
