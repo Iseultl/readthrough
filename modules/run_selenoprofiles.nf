@@ -1,18 +1,18 @@
 #!/usr/bin/env nextflow
 
-process runSelenoprofiles {
-    tag "${genomeFile}"
+process RUN_SELENOPROFILES {
+    tag "${genome.baseName}"
     label 'selenoprofiles'
     publishDir "${params.output_dir}/selenoprofiles", mode: 'copy'
 
     input:
     path genome
     path reference_annotation
-    species_name
+    val species_name
 
     output:
-    "selenoprofiles_output/all_predictions.gtf"
-    "selenoprofiles_output/annotation_result.csv"
+    path "selenoprofiles_output/all_predictions.gtf"
+    path "selenoprofiles_output/annotation_result.csv"
 
     script:
     """

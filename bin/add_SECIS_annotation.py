@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pandas as pd 
 import argparse
 
@@ -23,7 +25,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     all_secis = read_gff(args.all_secis)
+    all_secis = all_secis.rename(columns={'chr': 'transcript_name', 'start': 'all_secis_start', 'end': 'all_secis_end'})
     filtered_secis = read_gff(args.filtered_secis)
+    filtered_secis = filtered_secis.rename(columns={'chr': 'transcript_name', 'start': 'filtered_secis_start', 'end': 'filtered_secis_end'})
     df = read_df(args.ORFsearch)
     
     df1 = df.join(all_secis, how='left', rsuffix='_all_secis')

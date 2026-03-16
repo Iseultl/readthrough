@@ -10,6 +10,7 @@ params.lyric_gtf = params.lyric_gtf ?: '/no_backup/rg/ileahy/Mouse_Analysis/lyri
 params.species_name = params.species_name ?: 'Mus musculus'
 params.output_dir = params.output_dir ?: '/no_backup/rg/ileahy/Mouse_Analysis/secis_independent_output'
 params.geneid_param = params.geneid_param ?: '/Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/human3iso.param'
+params.help = params.help ?: false
 
 // Print help message if no parameters are provided
 if (params.help) {
@@ -81,7 +82,7 @@ workflow {
     CREATE_README(params.genome_fasta, params.genome_gtf)
 
     // Step 1: Run selenoprofiles
-    selenoprofiles_results = RUN_SELENOPROFILES(params.genome_fasta, params.species_name)
+    selenoprofiles_results = RUN_SELENOPROFILES(params.genome_fasta, params.genome_gtf, params.species_name)
 
     // Step 1: Split GFF by chromosome
     split_results = AGAT_SPLITGFF(params.lyric_gtf)
@@ -158,10 +159,7 @@ workflow {
     filtered_secis = FILTER_SECIS(merged_secis_gff)
 
     // Step 21: Combine ORFsearch results with filtered SECISearch results
-    ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, filtered_secis)
-
-    // Step 22: Run selenoprofiles on the genome
-    RUN_SELENOPROFILES(params.genome_fasta, params.species_name)
+    ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis)
 
 }
 

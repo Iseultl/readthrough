@@ -1,5 +1,5 @@
 process CREATE_SUMMARY_TABLE {
-    tag { "create_summary_${original_scores}_${interesting_predictions}_${relocated_gtf}" }
+    tag { "create_summary_${id}" }
     label 'python'
     cpus 1
     memory '4GB'

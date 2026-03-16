@@ -1,4 +1,4 @@
-process CreateReadme {
+process CREATE_README {
     tag "Creating README"
     publishDir "${params.output_dir}", mode: 'copy' 
     label 'samtools'

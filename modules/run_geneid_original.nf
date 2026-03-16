@@ -18,6 +18,6 @@ process RUN_GENEID_ORIGINAL {
     run_geneid_original.sh \
         ${input_file} \
         geneid_original_predictions \
-        ${params.geneid_param}
+        ${param_file}
     """
 }
