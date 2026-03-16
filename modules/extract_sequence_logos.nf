@@ -19,8 +19,8 @@ process EXTRACT_SEQUENCE_LOGOS {
     set -euo pipefail
 
     mkdir -p sequence_logos
-    chmod +x extract_sequence_logos.py
-    ./extract_sequence_logos.py \
+    
+    extract_sequence_logos.py \
         --result_file ${result_csv} \
         --fasta_dir gffread_out \
         --output_dir sequence_logos
