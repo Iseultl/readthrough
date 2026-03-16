@@ -17,6 +17,9 @@ process RUN_SELENOPROFILES {
     script:
     """
     mkdir -p selenoprofiles_output
+
+    selenoprofiles -download
+
     selenoprofiles  -o selenoprofiles_output  -t ${genome}  -s "${species_name}"  -p eukarya -output_gtf_file selenoprofiles_output/all_predictions.gtf
 
     selenoprofiles assess -s selenoprofiles_output/all_predictions.gtf \\
