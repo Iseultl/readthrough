@@ -8,8 +8,8 @@ process EXTRACT_SEQUENCE_LOGOS {
     
     input:
     path result_csv
-    path gffread_files
-    
+    path gffread_files, stageAs: 'gffread_out/*'
+     
     output:
     path "sequence_logos/*"
     
@@ -17,9 +17,6 @@ process EXTRACT_SEQUENCE_LOGOS {
     """
     #!/bin/bash
     set -euo pipefail
-
-    mkdir -p gffread_out
-    cp ${gffread_files.join(' ')} gffread_out/
 
     mkdir -p sequence_logos
     chmod +x extract_sequence_logos.py
