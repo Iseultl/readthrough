@@ -151,7 +151,7 @@ workflow {
     extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.collect())
 
     // Step 19: Run SECISearch on the transcripts
-    secissearch_results = SECISSEARCH(gffread_out.collect())
+    secissearch_results = SECISSEARCH(gffread_out)
     secissearch_results.collect().set { all_gffs }
     merged_secis_gff = MERGE_GFF(all_gffs)
 

@@ -32,7 +32,7 @@ export NXF_JVM_ARGS="-Xms2g -Xmx5g"
 # $ sbatch submit_nf.sh nextflow/rnatoy -with-singularity
 #
 # will use "nextflow/rnatoy -with-singularity" as arguments
-nextflow run ~/git/gitlab/secis_independent/main.nf -params-file ~/git/gitlab/secis_independent/params.yaml -profile cluster -w /nfs/scratch01/rg/ileahy
+nextflow run ~/git/gitlab/secis_independent/main.nf -params-file ~/git/gitlab/secis_independent/params.yaml -profile cluster -w /nfs/scratch01/rg/ileahy -resume
  
 # Wait for the pipeline to finish
 echo "Waiting for ${pid}"

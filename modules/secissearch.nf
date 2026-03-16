@@ -1,7 +1,7 @@
 // modules/secissearch.nf
 
 process SECISSEARCH {
-    tag { input_fasta.getBaseName() }
+    tag { input_fasta.baseName }
     
     label 'secissearch'
 
