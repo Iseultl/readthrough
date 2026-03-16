@@ -15,6 +15,6 @@ process COMBINE_ORFSECIS {
     #!/bin/bash
     set -euo pipefail
     # Combine ORFsearch results with filtered SECISearch results
-    python3 add_SECIS_annotation.py --ORFsearch ${orfsearch_result} --filtered_secis ${filtered_secis} --all_secis ${all_secis} --output ORFsearch_SECIS.result
+    add_SECIS_annotation.py --ORFsearch ${orfsearch_result} --filtered_secis ${filtered_secis} --all_secis ${all_secis} --output ORFsearch_SECIS.result
     """
 }
