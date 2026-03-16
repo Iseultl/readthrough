@@ -160,6 +160,9 @@ workflow {
     // Step 21: Combine ORFsearch results with filtered SECISearch results
     ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, filtered_secis)
 
+    // Step 22: Run selenoprofiles on the genome
+    RUN_SELENOPROFILES(params.genome_fasta, params.species_name)
+
 }
 
 // Workflow completion message

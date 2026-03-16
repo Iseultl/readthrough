@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila_lyric.gff"
-genome_fasta : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila.fa"
-genome_gtf : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila_annot.gff"
-species_name : "Tetrahymena_thermophila"
+lyric_gtf : "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/LyRic_complete.gff"
+genome_fasta : "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/GCF_000002765.6_GCA_000002765_genomic.fna"
+genome_gtf : "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/GCF_000002765.6_GCA_000002765_genomic.gff"
+species_name : "Plasmodium_falciparum_3D7.36329"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Tetrahymena_thermophila/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/ileahy/geneid/params/Tetrahymena_thermophila/Tetrahymena_thermophila.5911.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Pfalciparum/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/geneId_trainer.optimized.edit.param"  # Update to your geneid parameter file location
 
