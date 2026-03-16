@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --no-requeue
-#SBATCH --mem 16G
+#SBATCH --mem 8G
 #SBATCH -p genoa64
 #SBATCH --time 00:10:00
 #SBATCH --output=/no_backup/rg/ileahy/logs/nf_orfsearch_pfalciparum_%A.out  # log per job
