@@ -4,7 +4,7 @@ process RUN_SELENOPROFILES {
     tag "${genome.baseName}"
     label 'selenoprofiles'
     publishDir "${params.output_dir}/selenoprofiles", mode: 'copy'
-    conda 'bioconda::selenoprofiles4'
+
 
     input:
     path genome
