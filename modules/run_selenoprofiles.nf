@@ -30,7 +30,9 @@ process RUN_SELENOPROFILES {
         printf '\\n' | selenoprofiles -download -y
     fi
 
-    selenoprofiles  -o selenoprofiles_output  -t ${genome}  -s "${species_name}"  -p eukarya -output_gtf_file -temp temp_folder selenoprofiles_output/all_predictions.gtf
+    export SELENOPROFILES_DATA_DIR=~/selenoprofiles_data
+
+    selenoprofiles  -o selenoprofiles_output  -t ${genome}  -s "${species_name}"  -p eukarya -output_gtf_file selenoprofiles_output/all_predictions.gtf -temp temp_folder
 
     selenoprofiles assess -s selenoprofiles_output/all_predictions.gtf \\
         -e ${reference_annotation} \\
