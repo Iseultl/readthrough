@@ -18,8 +18,14 @@ process RUN_SELENOPROFILES {
     script:
     """
     mkdir -p selenoprofiles_output
-    
-    selenoprofiles -setup
+
+    if [ -f ~/.selenoprofiles_config.txt ]; then
+        echo "Config file exists"
+    else
+        echo "Config file does not exist"
+        selenoprofiles -setup
+    fi
+
     selenoprofiles -download
 
     selenoprofiles  -o selenoprofiles_output  -t ${genome}  -s "${species_name}"  -p eukarya -output_gtf_file -temp temp_folder selenoprofiles_output/all_predictions.gtf
