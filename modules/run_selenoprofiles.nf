@@ -4,6 +4,7 @@ process RUN_SELENOPROFILES {
     tag "${genome.baseName}"
     label 'selenoprofiles'
     publishDir "${params.output_dir}/selenoprofiles", mode: 'copy'
+    conda 'bioconda::selenoprofiles4'
 
     input:
     path genome
@@ -17,6 +18,9 @@ process RUN_SELENOPROFILES {
     script:
     """
     mkdir -p selenoprofiles_output
+    
+    selenoprofiles -setup
+    selenoprofiles -download
 
     selenoprofiles  -o selenoprofiles_output  -t ${genome}  -s "${species_name}"  -p eukarya -output_gtf_file -temp temp_folder selenoprofiles_output/all_predictions.gtf
 
