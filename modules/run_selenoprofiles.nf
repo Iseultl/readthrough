@@ -34,10 +34,16 @@ process RUN_SELENOPROFILES {
 
     selenoprofiles  -o selenoprofiles_output  -t ${genome}  -s "${species_name}"  -p eukarya -output_gtf_file selenoprofiles_output/all_predictions.gtf -temp temp_folder
 
-    selenoprofiles assess -s selenoprofiles_output/all_predictions.gtf \\
-        -e ${reference_annotation} \\
-        -f ${genome} \\
-        -o selenoprofiles_output/annotation_result.csv 
+    if grep -qi 'Selenocysteine' selenoprofiles_output/all_predictions.gtf; then
+        selenoprofiles assess -s selenoprofiles_output/all_predictions.gtf \\
+            -e ${reference_annotation} \\
+            -f ${genome} \\
+            -o selenoprofiles_output/annotation_result.csv
+    else
+        echo "No Selenocysteine entries found in all_predictions.gtf; skipping selenoprofiles assess."
+        printf 'status,details\n' > selenoprofiles_output/annotation_result.csv
+        printf 'skipped,No Selenocysteine entries found in all_predictions.gtf\n' >> selenoprofiles_output/annotation_result.csv
+    fi
     """
 }
 
