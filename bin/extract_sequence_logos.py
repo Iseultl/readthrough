@@ -108,35 +108,47 @@ def main():
             continue  # Skip if stop codon not found within +/-1
         print(f"Found stop for {tid} at actual_stop {actual_stop}", file=sys.stderr)
 
-        # Extract -7 to +9 around actual TGA (17bp total), padded with N
-        left_pad_15 = max(0, 7 - actual_pos)
-        right_pad_15 = max(0, actual_pos + 9 - len(seq))
-        start_15 = max(0, actual_pos - 7)
-        end_15 = min(len(seq), actual_pos + 9)
+        # Convert from 1-based codon start to 0-based for robust window extraction.
+        actual_pos_0 = actual_pos - 1
+        actual_stop_0 = actual_stop - 1
+
+        # Extract -7 to +9 around actual TGA, padded with N.
+        left_15 = actual_pos_0 - 7
+        right_15 = actual_pos_0 + 9
+        left_pad_15 = max(0, -left_15)
+        right_pad_15 = max(0, right_15 - len(seq))
+        start_15 = max(0, left_15)
+        end_15 = min(len(seq), right_15)
         extracted_15 = 'N' * left_pad_15 + seq[start_15:end_15] + 'N' * right_pad_15
         print(f"Extracted 15bp for {tid}: {extracted_15}", file=sys.stderr)
         # TGA should be at positions 6-8 (0-based)
         assert extracted_15[6:9] == 'TGA'
 
-        # Extract -300 to +300 around actual TGA (600bp total), padded with N
-        left_pad_300 = max(0, 300 - actual_pos)
-        right_pad_300 = max(0, actual_pos + 300 - len(seq))
-        start_300 = max(0, actual_pos - 300)
-        end_300 = min(len(seq), actual_pos + 300)
+        # Extract -300 and +300 around full TGA codon (603bp total), padded with N.
+        left_300 = actual_pos_0 - 300
+        right_300 = actual_pos_0 + 3 + 300
+        left_pad_300 = max(0, -left_300)
+        right_pad_300 = max(0, right_300 - len(seq))
+        start_300 = max(0, left_300)
+        end_300 = min(len(seq), right_300)
         extracted_300 = 'N' * left_pad_300 + seq[start_300:end_300] + 'N' * right_pad_300
 
-        # Extract -7 to +9 around actual stop (17bp total), padded with N
-        left_pad_stop_15 = max(0, 7 - actual_stop)
-        right_pad_stop_15 = max(0, actual_stop + 9 - len(seq))
-        start_stop_15 = max(0, actual_stop - 7)
-        end_stop_15 = min(len(seq), actual_stop + 9)
+        # Extract -7 to +9 around actual stop, padded with N.
+        left_stop_15 = actual_stop_0 - 7
+        right_stop_15 = actual_stop_0 + 9
+        left_pad_stop_15 = max(0, -left_stop_15)
+        right_pad_stop_15 = max(0, right_stop_15 - len(seq))
+        start_stop_15 = max(0, left_stop_15)
+        end_stop_15 = min(len(seq), right_stop_15)
         extracted_stop_15 = 'N' * left_pad_stop_15 + seq[start_stop_15:end_stop_15] + 'N' * right_pad_stop_15
 
-        # Extract -300 to +300 around actual stop (600bp total), padded with N
-        left_pad_stop_300 = max(0, 300  - actual_stop)
-        right_pad_stop_300 = max(0, actual_stop + 300 - len(seq))
-        start_stop_300 = max(0, actual_stop - 300)
-        end_stop_300 = min(len(seq), actual_stop + 300)
+        # Extract -300 and +300 around full stop codon (603bp total), padded with N.
+        left_stop_300 = actual_stop_0 - 300
+        right_stop_300 = actual_stop_0 + 3 + 300
+        left_pad_stop_300 = max(0, -left_stop_300)
+        right_pad_stop_300 = max(0, right_stop_300 - len(seq))
+        start_stop_300 = max(0, left_stop_300)
+        end_stop_300 = min(len(seq), right_stop_300)
         extracted_stop_300 = 'N' * left_pad_stop_300 + seq[start_stop_300:end_stop_300] + 'N' * right_pad_stop_300
 
         header = f">{tid}_{actual_pos}"
