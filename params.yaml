@@ -1,4 +1,4 @@
-lyric_gtf : "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/LyRic_complete.gff"
+lyric_gtf : "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/LyRic_modified.gff"
 genome_fasta : "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/GCA_028658345.1_Bduncani_v1_genomic.fna"
 genome_gtf : "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/Babesia_duncani_323732_GenBank_GCA_028658345.1_d12006d79550f7614070864c802e7498.gff"
 species_name : "Babesia_duncani.323732"
