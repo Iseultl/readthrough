@@ -8,11 +8,11 @@
  
 # Configure bash
 set -e          # exit immediately on error
-set -u          # exit immidiately if using undefined variables
+set -u          # exit immediately if using undefined variables
 set -o pipefail # ensure bash pipelines return non-zero status if any of their command fails
  
 # Setup trap function to be run when canceling the pipeline job. It will propagate the SIGTERM signal
-# to Nextlflow so that all jobs launche by the pipeline will be cancelled too.
+# to Nextflow so that all jobs launched by the pipeline will be cancelled too.
 _term() {
         echo "Caught SIGTERM signal!"
         kill -s SIGTERM $pid
