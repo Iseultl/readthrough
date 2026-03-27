@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/LyRic_modified.gff"
-genome_fasta : "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/GCA_028658345.1_Bduncani_v1_genomic.fna"
-genome_gtf : "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/Babesia_duncani_323732_GenBank_GCA_028658345.1_d12006d79550f7614070864c802e7498.gff"
-species_name : "Babesia_duncani.323732"
+lyric_gtf : "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/LyRic_complete.gff"
+genome_fasta : "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/GCF_000002765.6_GCA_000002765_genomic.fna"
+genome_gtf : "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/GCF_000002765.6_GCA_000002765_genomic.gff"
+species_name : "Plasmodium_falciparum_3D7.36329"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Babesia_duncani/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Babesia_duncani.323732/GCA_028658345.1/Babesia_duncani_323732.geneid.edit.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Plasmodium_falciparum_3D7.36329/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Plasmodium_falciparum_3D7.36329/GCF_000002765.6/geneId_trainer.optimized.edit.param"  # Update to your geneid parameter file location
 
