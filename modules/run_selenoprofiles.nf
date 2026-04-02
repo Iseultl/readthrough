@@ -4,7 +4,8 @@ process RUN_SELENOPROFILES {
     tag "${genome.baseName}"
     label 'selenoprofiles'
     publishDir "${params.output_dir}/selenoprofiles", mode: 'copy'
-
+    memory '8GB'
+    time '1h'
 
     input:
     path genome
