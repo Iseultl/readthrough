@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/ileahy/Tetrahymena_thermophila/Tetrahymena_thermophila_lyric.gff"
-genome_fasta : "/no_backup/rg/references/species/Tetrahymena_thermophila_SB210.312017/GCF_000189635.1/GCF_000189635.1_JCVI-TTA1-2.2_genomic.fna"
-genome_gtf : "/no_backup/rg/references/species/Tetrahymena_thermophila_SB210.312017/GCF_000189635.1/GCF_000189635.1_JCVI-TTA1-2.2_genomic.gff"
-species_name : "Tetrahymena_thermophila"
+lyric_gtf : "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/LyRic_complete.gff"
+genome_fasta : "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/GCA_000002595.3_Chlamydomonas_reinhardtii_v5.5_genomic.fna"
+genome_gtf : "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/Chlamydomonas_reinhardtii_3055_GenBank_GCA_000002595.3_86aec8f92eb0302205ae6707d5046e58.gff"
+species_name : "Chlamydomonas_reinhardtii"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Tthermophila/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/ileahy/geneid/params/Tetrahymena_thermophila/Tetrahymena_thermophila.5911.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Chlamydomonas_reinhardtii/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/Chlamydomonas_reinhardtii_3055.geneid.edit.param"  # Update to your geneid parameter file location
 
