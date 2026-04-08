@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/LyRic_complete.gff"
-genome_fasta : "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/GCA_000002595.3_Chlamydomonas_reinhardtii_v5.5_genomic.fna"
-genome_gtf : "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/Chlamydomonas_reinhardtii_3055_GenBank_GCA_000002595.3_86aec8f92eb0302205ae6707d5046e58.gff"
-species_name : "Chlamydomonas_reinhardtii"
+lyric_gtf : "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.353152/GCA_000165345.1/LyRic_complete.gff"
+genome_fasta : "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.353152/GCA_000165345.1/GCA_000165345.1_ASM16534v1_genomic.fna"
+genome_gtf : "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.353152/GCA_000165345.1/Cryptosporidium_parvum_Iowa_II_353152_GenBank_GCA_000165345.1_ed3b5699c20bdaa3103d49c2a3e827ad.gff"
+species_name : "Cryptosporidium_parvum_Iowa_II"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Chlamydomonas_reinhardtii/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Chlamydomonas_reinhardtii.3055/GCA_000002595.3/Chlamydomonas_reinhardtii_3055.geneid.edit.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Cryptosporidium_parvum_Iowa_II/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.353152/GCA_000165345.1/Cryptosporidium_parvum_Iowa_II_353152.geneid.edit.param"  # Update to your geneid parameter file location
 
