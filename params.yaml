@@ -11,5 +11,5 @@ max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
 output_dir: "/no_backup/rg/ileahy/Cyanidiococcus_yangmingshanensis/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Cyanidiococcus_yangmingshanensis.2690220/GCA_013995675.1/Cyanidioschyzon_merolae_strain_10D_280699.geneid.edit.param"  # Update to your geneid parameter file location
+geneid_param: "/no_backup/rg/references/species/Cyanidiococcus_yangmingshanensis.2690220/GCA_013995675.1/Cyanidiococcus_yangmingshanensis_2690220.geneid.edit.param"  # Update to your geneid parameter file location
 
