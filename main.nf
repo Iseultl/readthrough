@@ -71,6 +71,7 @@ include { FILTER_SECIS } from './modules/filter_secis'
 include { COMBINE_ORFSECIS } from './modules/combine_orfsecis'
 include { CREATE_README } from './modules/create_readme'
 include { RUN_SELENOPROFILES } from './modules/run_selenoprofiles'
+include { RUN_SECMARKER } from './modules/run_secmarker'
 
 // Helper function to extract chromosome name (without extension)
 def get_chr_name(file) {
@@ -81,8 +82,11 @@ workflow {
     // Step 0: Create readme file
     CREATE_README(params.genome_fasta, params.genome_gtf)
 
-    // Step 0.5: Run Selenoprofiles to get reference predictions and assessment
+    // Step 0.1: Run Selenoprofiles to get reference predictions and assessment
     selenoprofiles_results = RUN_SELENOPROFILES(params.genome_fasta, params.genome_gtf, params.species_name)
+
+    // Step 0.2: Run Secmarker to identify tRNA-sec
+    secmarker_results = RUN_SECMARKER(params.genome_fasta)
 
     // Step 1: Split GFF by chromosome
     split_results = AGAT_SPLITGFF(params.lyric_gtf)

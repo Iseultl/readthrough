@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCA_000091205.1/LyRic_complete.gff"
-genome_fasta : "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCA_000091205.1/GCA_000091205.1_ASM9120v1_genomic.fna"
-genome_gtf : "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCA_000091205.1/Cyanidioschyzon_merolae_strain_10D_280699_GenBank_GCA_000091205.1_4d16b908b5f85da87b8c7b1d58441f2b.gff"
-species_name : "Cyanidioschyzon_merolae_strain_10D"
+lyric_gtf : "/no_backup/rg/ileahy/Human_Analysis/gencode.v47.annotation.gtf"
+genome_fasta : "/no_backup/rg/ileahy/Human_Analysis/GRCh38.primary_assembly.genome.fa"
+genome_gtf : "/no_backup/rg/ileahy/Human_Analysis/gencode.v47.annotation.gtf"
+species_name : "Homo_sapiens"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Cyanidioschyzon_merolae_strain_10D/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCA_000091205.1/Cyanidioschyzon_merolae_strain_10D_280699.geneid.edit.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Human_Analysis/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/ileahy/geneid/params/human/human3iso.param"  # Update to your geneid parameter file location
 
