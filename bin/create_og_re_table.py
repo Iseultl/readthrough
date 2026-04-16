@@ -118,7 +118,11 @@ def read_gff(gff):
         'end': 'gtf_end'
     }, inplace=True)
 
-    grouped[['gene_name', 'transcript_name']] = grouped['attributes'].str.split('_', n=1, expand=True)
+    # Try splitting by ' ; ' first, then by '_'
+    split_result = grouped['attributes'].str.split(' ; ', n=1, expand=True)
+    if split_result.shape[1] < 2:
+        split_result = grouped['attributes'].str.split('_', n=1, expand=True)
+    grouped[['gene_name', 'transcript_name']] = split_result
     grouped = grouped.set_index('transcript_name')
     grouped = grouped.drop('attributes', axis=1)
     
