@@ -2,7 +2,7 @@ process RECODE_TGA {
     tag { "recode_tga" }
     label 'python'
     cpus 1
-    memory '4GB'
+    memory '8GB'
     time '1h'
     
     input:
