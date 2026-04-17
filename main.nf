@@ -83,7 +83,7 @@ workflow {
     CREATE_README(params.genome_fasta, params.genome_gtf)
 
     // Step 0.1: Run Selenoprofiles to get reference predictions and assessment
-    selenoprofiles_results = RUN_SELENOPROFILES(params.genome_fasta, params.genome_gtf, params.species_name)
+    // selenoprofiles_results = RUN_SELENOPROFILES(params.genome_fasta, params.genome_gtf, params.species_name)
 
     // Step 0.2: Run Secmarker to identify tRNA-sec
     secmarker_results = RUN_SECMARKER(params.genome_fasta)
