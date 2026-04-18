@@ -2,8 +2,8 @@ process SELECT_INTERESTING {
     tag { "select_interesting_${geneid_output.simpleName}" }
     label 'python'
     cpus 1
-    memory '8GB'
-    time '1h'
+    memory '16GB'
+    time '2h'
 
     input:
     path geneid_output
