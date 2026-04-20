@@ -2,7 +2,7 @@ process GET_ORIGINAL_PREDICTIONS {
     tag { "get_original_${geneid_output.simpleName}" }
     label 'python'
     cpus 1
-    memory '8GB'
+    memory '4GB'
     time '1h'
 
     input:
