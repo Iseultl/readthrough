@@ -3,8 +3,8 @@
 #SBATCH --mem 8G
 #SBATCH -p genoa64
 #SBATCH --time 02:00:00
-#SBATCH --output=/no_backup/rg/ileahy/logs/nf_orfsearch_Homo_sapiens_%A.out   # log per job
-#SBATCH --error=/no_backup/rg/ileahy/logs/nf_orfsearch_Homo_sapiens_%A.err   # error log
+#SBATCH --output=/no_backup/rg/ileahy/logs/nf_orfsearch_Galdieria_yellowstonensis_%A.out   # log per job
+#SBATCH --error=/no_backup/rg/ileahy/logs/nf_orfsearch_Galdieria_yellowstonensis_%A.err   # error log
  
 # Configure bash
 set -e          # exit immediately on error
