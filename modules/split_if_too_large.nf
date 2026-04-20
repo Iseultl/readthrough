@@ -16,7 +16,7 @@ process SPLIT_IF_TOO_LARGE {
     # Use seqkit stats with tabular output and headers to robustly get sequence count
     SEQ_COUNT=\$(seqkit stats -T ${input_file} | awk -F '\t' 'NR==2 {print \$4}')
     echo "Sequence count: \$SEQ_COUNT"
-    THRESHOLD=80000
+    THRESHOLD=40000
 
     if [ -n "\$SEQ_COUNT" ] && [ "\$SEQ_COUNT" -gt "\$THRESHOLD" ]; then
         echo "Splitting file as sequence count \$SEQ_COUNT is greater than threshold \$THRESHOLD"
