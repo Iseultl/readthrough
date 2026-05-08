@@ -1,13 +1,13 @@
 // modules/handle_zipped_input.nf
 
 process UNZIP_IF_NEEDED {
-    tag { "${input_file.getName()}" }
+    tag { "${file_type}" }
     
     input:
-    path(input_file)
+    tuple val(file_type), path(input_file)
     
     output:
-    path("${output_name}"), emit: unzipped_file
+    tuple val(file_type), path("${output_name}"), emit: unzipped_file
     
     script:
     is_gzipped = input_file.name.endsWith('.gz')

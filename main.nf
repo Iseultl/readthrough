@@ -80,21 +80,42 @@ def get_chr_name(file) {
 }
 
 workflow {
-    // Step -1: Handle zipped input files (unzip if needed)
-    genome_fasta_unzipped = UNZIP_IF_NEEDED(file(params.genome_fasta)).unzipped_file
-    genome_gtf_unzipped = UNZIP_IF_NEEDED(file(params.genome_gtf)).unzipped_file
-    lyric_gtf_unzipped = UNZIP_IF_NEEDED(file(params.lyric_gtf)).unzipped_file
+    // Step -1: Handle zipped input files
+    input_files = Channel.of(
+        tuple('genome_fasta', file(params.genome_fasta)),
+        tuple('genome_gtf',   file(params.genome_gtf)),
+        tuple('lyric_gtf',    file(params.lyric_gtf))
+    )
 
-    // Step 0: Create readme file
+    unzipped_files = UNZIP_IF_NEEDED(input_files)
+
+    // Separate outputs by file type
+    genome_fasta_unzipped = unzipped_files
+        .filter { type, f -> type == 'genome_fasta' }
+        .map { type, f -> f }
+
+    genome_gtf_unzipped = unzipped_files
+        .filter { type, f -> type == 'genome_gtf' }
+        .map { type, f -> f }
+
+    lyric_gtf_unzipped = unzipped_files
+        .filter { type, f -> type == 'lyric_gtf' }
+        .map { type, f -> f }
+
+    // Step 0: Create readme
     CREATE_README(genome_fasta_unzipped, genome_gtf_unzipped)
 
-    // Step 0.1: Run Selenoprofiles to get reference predictions and assessment
-    selenoprofiles_results = RUN_SELENOPROFILES(genome_fasta_unzipped, genome_gtf_unzipped, params.species_name)
+    // Step 0.1: Run Selenoprofiles
+    selenoprofiles_results = RUN_SELENOPROFILES(
+        genome_fasta_unzipped,
+        genome_gtf_unzipped,
+        params.species_name
+    )
 
-    // Step 0.2: Run Secmarker to identify tRNA-sec
+    // Step 0.2: Run Secmarker
     secmarker_results = RUN_SECMARKER(genome_fasta_unzipped)
 
-    // Step 1: Split GFF by chromosome
+    // Step 1: Split GTF/GFF
     split_results = AGAT_SPLITGFF(lyric_gtf_unzipped)
 
     // Step 2: Collect all .gff files from the output directory
