@@ -2,7 +2,7 @@
 #SBATCH --no-requeue
 #SBATCH --mem 8G
 #SBATCH -p genoa64
-#SBATCH --time 02:00:00
+#SBATCH --time 01:00:00
 #SBATCH --output=/no_backup/rg/ileahy/logs/nf_orfsearch_mouse_%A.out   # log per job
 #SBATCH --error=/no_backup/rg/ileahy/logs/nf_orfsearch_mouse_%A.err   # error log
  
