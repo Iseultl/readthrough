@@ -49,6 +49,7 @@ Memory:      ${params.max_memory}
 """
 
 // Load modules
+include { UNZIP_IF_NEEDED } from './modules/handle_zipped_input'
 include { AGAT_GFF2GTF } from './modules/agat_gff2gtf'
 include { AGAT_SPLITGFF } from './modules/agat_splitgff'
 include { CLEAN_GTF } from './modules/clean_gtf'
@@ -79,17 +80,22 @@ def get_chr_name(file) {
 }
 
 workflow {
+    // Step -1: Handle zipped input files (unzip if needed)
+    genome_fasta_unzipped = UNZIP_IF_NEEDED(file(params.genome_fasta)).unzipped_file
+    genome_gtf_unzipped = UNZIP_IF_NEEDED(file(params.genome_gtf)).unzipped_file
+    lyric_gtf_unzipped = UNZIP_IF_NEEDED(file(params.lyric_gtf)).unzipped_file
+
     // Step 0: Create readme file
-    CREATE_README(params.genome_fasta, params.genome_gtf)
+    CREATE_README(genome_fasta_unzipped, genome_gtf_unzipped)
 
     // Step 0.1: Run Selenoprofiles to get reference predictions and assessment
-    // selenoprofiles_results = RUN_SELENOPROFILES(params.genome_fasta, params.genome_gtf, params.species_name)
+    selenoprofiles_results = RUN_SELENOPROFILES(genome_fasta_unzipped, genome_gtf_unzipped, params.species_name)
 
     // Step 0.2: Run Secmarker to identify tRNA-sec
-    secmarker_results = RUN_SECMARKER(params.genome_fasta)
+    secmarker_results = RUN_SECMARKER(genome_fasta_unzipped)
 
     // Step 1: Split GFF by chromosome
-    split_results = AGAT_SPLITGFF(params.lyric_gtf)
+    split_results = AGAT_SPLITGFF(lyric_gtf_unzipped)
 
     // Step 2: Collect all .gff files from the output directory
     gff_files_ch = split_results.gff_files
@@ -109,7 +115,7 @@ workflow {
     }
     
     // Step 4: FASTA Processing Pipeline
-    split_fasta_dir_ch = SPLITFASTA(params.genome_fasta)
+    split_fasta_dir_ch = SPLITFASTA(genome_fasta_unzipped)
     base_names_fasta = split_fasta_dir_ch.flatten().map { file ->
         def fname = file.name  // e.g. horse_genome.part_NW_027222397.1.fa
         def chr_match = fname =~ /part_(.+)\.fa/

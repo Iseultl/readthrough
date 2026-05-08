@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/references/species/Galdieria_yellowstonensis.3028027/GCA_026122205.1/LyRic_complete.gff"
-genome_fasta : "/no_backup/rg/references/species/Galdieria_yellowstonensis.3028027/GCA_026122205.1/GCA_026122205.1_ASM2612220v1_genomic.fna"
-genome_gtf : "/no_backup/rg/references/species/Galdieria_yellowstonensis.3028027/GCA_026122205.1/Galdieria_yellowstonensis_3028027_GenBank_GCA_026122205.1_5b5ab2277aeb0b6737414d2714b2e970.gff"
-species_name : "Galdieria_yellowstonensis"
+lyric_gtf : "/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf.gz"
+genome_fasta : "/no_backup/rg/ileahy/Mouse_Analysis/gencode/GRCm39.primary_assembly.genome.fa.gz"
+genome_gtf : "/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf.gz"
+species_name : "Mouse"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Galdieria_yellowstonensis/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Galdieria_yellowstonensis.3028027/GCA_026122205.1/Galdieria_yellowstonensis_3028027.geneid.edit.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Mouse_Analysis/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/ileahy/geneid/params/human/human3iso.param"  # Update to your geneid parameter file location
 
