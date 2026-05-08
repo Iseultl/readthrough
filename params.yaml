@@ -1,5 +1,5 @@
 lyric_gtf : "/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf.gz"
-genome_fasta : "/no_backup/rg/ileahy/Mouse_Analysis/gencode/GRCm39.primary_assembly.genome.fa.gz"
+genome_fasta : "/no_backup/rg/ileahy/Mouse_Analysis/GRCm39.primary_assembly.genome.fa.gz"
 genome_gtf : "/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf.gz"
 species_name : "Mouse"
 
