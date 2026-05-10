@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf.gz"
-genome_fasta : "/no_backup/rg/ileahy/Mouse_Analysis/GRCm39.primary_assembly.genome.fa.gz"
-genome_gtf : "/no_backup/rg/ileahy/Mouse_Analysis/gencode.vM37.annotation.gtf.gz"
-species_name : "Mouse"
+lyric_gtf : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff.gz"
+genome_fasta : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.fna.gz"
+genome_gtf : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff.gz"
+species_name : "Horse"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Mouse_Analysis/ORFsearch"  # Local output directory
+output_dir: "/no_backup/rg/ileahy/Horse_Analysis/ORFsearch"  # Local output directory
 geneid_param: "/no_backup/rg/ileahy/geneid/params/human/human3iso.param"  # Update to your geneid parameter file location
 
