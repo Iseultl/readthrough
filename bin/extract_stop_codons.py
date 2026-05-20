@@ -16,6 +16,7 @@ from Bio import SeqIO
 import pandas as pd
 import os
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 
 def load_gff(gff_file):
@@ -85,6 +86,72 @@ def extract_transcript_id(attributes):
             return tid
     
     return attributes.strip()
+
+
+def create_stop_codon_pie_chart(stop_codon_counts, output_file='stop_codon_distribution.png'):
+    """
+    Create and save a pie chart of stop codon distribution.
+    
+    Args:
+        stop_codon_counts: Counter object with stop codon frequencies
+        output_file: Path to save the pie chart image
+    """
+    if not stop_codon_counts:
+        print("Warning: No stop codons to plot")
+        return
+    
+    # Extract data for pie chart
+    codons = list(stop_codon_counts.keys())
+    counts = list(stop_codon_counts.values())
+    
+    # Create figure and pie chart
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    # Define colors - different colors for single vs double stop codons
+    colors = []
+    for codon in codons:
+        if len(codon) == 6:  # Double stop codon
+            colors.append('#FF6B6B')  # Red
+        else:  # Single stop codon
+            colors.append('#4ECDC4')  # Teal
+    
+    # Create pie chart
+    wedges, texts, autotexts = ax.pie(
+        counts,
+        labels=codons,
+        autopct='%1.1f%%',
+        colors=colors,
+        startangle=90,
+        textprops={'fontsize': 10}
+    )
+    
+    # Enhance text readability
+    for autotext in autotexts:
+        autotext.set_color('white')
+        autotext.set_weight('bold')
+        autotext.set_fontsize(9)
+    
+    for text in texts:
+        text.set_fontsize(11)
+        text.set_weight('bold')
+    
+    # Add title and legend
+    ax.set_title('Stop Codon Distribution Across Transcripts', 
+                 fontsize=14, fontweight='bold', pad=20)
+    
+    # Create custom legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#4ECDC4', label='Single stop codons (3bp)'),
+        Patch(facecolor='#FF6B6B', label='Double stop codons (6bp)')
+    ]
+    ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0, 0.5, 1))
+    
+    # Save the figure
+    plt.tight_layout()
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
+    print(f"Pie chart saved to: {output_file}")
+    plt.close()
 
 
 def extract_stop_codons(gff_file, gffread_dir, output_file=None):
@@ -239,6 +306,14 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
                 f.write(f"{record['transcript_id']}\t{record['stop_codon']}\t"
                        f"{record['chromosome']}\t{record['strand']}\t{record['cds_end_position']}\n")
         print(f"\nDetailed results written to: {output_file}")
+        
+        # Also create pie chart with base name of output file
+        output_dir = os.path.dirname(output_file) if output_file else '.'
+        pie_chart_file = os.path.join(output_dir, 'stop_codon_distribution_pie.png')
+        create_stop_codon_pie_chart(stop_codon_counts, pie_chart_file)
+    else:
+        # If no output file specified, save pie chart in current directory
+        create_stop_codon_pie_chart(stop_codon_counts, 'stop_codon_distribution_pie.png')
     
     return {
         'stop_codons': stop_codons,
