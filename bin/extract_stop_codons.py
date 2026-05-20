@@ -11,6 +11,7 @@ This script:
 
 import argparse
 from collections import Counter
+from operator import pos
 from Bio import SeqIO
 import pandas as pd
 import os
@@ -131,19 +132,28 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
         
         # Get the end position of the last CDS (1-based in GFF, but we need 0-based for Python)
         # The stop codon starts right after the last CDS ends
-        cds_end = int(last_cds['End'])  # This is 1-based, pointing to last nucleotide of CDS
+        stop = int(last_cds['End'])  # This is 1-based, pointing to last nucleotide of CDS
         
         # Extract stop codon (positions cds_end to cds_end+2, 0-based indexing)
         try:
-            # Since GFF is 1-based and End is inclusive, the stop codon starts at cds_end position (0-based)
-            stop_codon = sequence[cds_end:cds_end+3]
+            # Check for stop codon within +/-1 of annotated stop
+            actual_stop = None
+            if stop-1 >= 0 and stop+2 <= len(seq) and (seq[stop-1:stop+2] == 'TGA' or seq[stop-1:stop+2] == 'TAG' or seq[stop-1:stop+2] == 'TAA'):
+                actual_stop = stop
+            elif stop-2 >= 0 and stop+1 <= len(seq) and (seq[stop-2:stop+1] == 'TGA' or seq[stop-2:stop+1] == 'TAG' or seq[stop-2:stop+1] == 'TAA'):
+                actual_stop = stop - 1
+            elif stop >= 0 and stop+3 <= len(seq) and (seq[stop:stop+3] == 'TGA' or seq[stop:stop+3] == 'TAG' or seq[stop:stop+3] == 'TAA'):
+                actual_stop = stop + 1
+            if actual_stop is None:
+                print(f"Warning: {tid} stop codon not found within +/-1 at stop {stop}")
+                continue  # Skip if stop codon not found within +/-1
             
             # Validate that we got 3 nucleotides
-            if len(stop_codon) < 3:
-                print(f"Warning: Could not extract full stop codon for {tid} (got {len(stop_codon)} bp)")
+            if len(actual_stop) < 3:
+                print(f"Warning: Could not extract full stop codon for {tid} (got {len(actual_stop)} bp)")
                 continue
             
-            stop_codon_upper = stop_codon.upper()
+            stop_codon_upper = actual_stop.upper()
             stop_codons.append({
                 'transcript_id': tid,
                 'stop_codon': stop_codon_upper,
