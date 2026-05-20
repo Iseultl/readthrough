@@ -121,10 +121,10 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
         chromosome = last_cds['Chromosome']
         
         # Get sequence from appropriate chromosome file
-        sequence = get_sequence(tid, chromosome)
+        seq= get_sequence(tid, chromosome)
         
         # Check if sequence exists
-        if sequence is None:
+        if seq is None:
             if tid not in missing_transcripts:
                 missing_transcripts.add(tid)
                 print(f"Warning: Transcript {tid} not found in {chromosome} FASTA file")
@@ -164,7 +164,7 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
             stop_codon_counts[stop_codon_upper] += 1
             
         except IndexError:
-            print(f"Warning: Sequence too short for {tid} (length: {len(sequence)}, trying to access {cds_end}:{cds_end+3})")
+            print(f"Warning: Sequence too short for {tid} (length: {len(seq)}, trying to access {actual_stop}:{actual_stop+3})")
             continue
     
     # Print results
