@@ -110,8 +110,11 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
     stop_codons = []
     stop_codon_counts = Counter()
     missing_transcripts = set()
+    transcripts_without_stop = 0
+    total_transcripts_with_cds = 0
     
     for transcript_id, group in cds_df.groupby('Attributes'):
+        total_transcripts_with_cds += 1
         # Sort by End position to find the last CDS
         group_sorted = group.sort_values('End')
         last_cds = group_sorted.iloc[-1]
@@ -134,43 +137,53 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
         # The stop codon starts right after the last CDS ends
         stop = int(last_cds['End'])  # This is 1-based, pointing to last nucleotide of CDS
         
-        # Extract stop codon (positions cds_end to cds_end+2, 0-based indexing)
+        # Extract stop codon and check for double stop codons (6bp: 3bp stop + 3bp next codon)
         try:
             # Check for stop codon within +/-1 of annotated stop
             actual_stop = None
             actual_stop_sequence = None
             
             # Check at position stop-1
-            if stop-1 >= 0 and stop+2 <= len(seq):
-                candidate = seq[stop-1:stop+2]
-                if candidate.upper() in ('TGA', 'TAG', 'TAA'):
+            if stop-1 >= 0 and stop+5 <= len(seq):
+                candidate = seq[stop-1:stop+5]
+                if candidate.upper()[:3] in ('TGA', 'TAG', 'TAA'):
                     actual_stop = stop - 1
                     actual_stop_sequence = candidate
             
             # Check at position stop (default)
-            if actual_stop is None and stop >= 0 and stop+3 <= len(seq):
-                candidate = seq[stop:stop+3]
-                if candidate.upper() in ('TGA', 'TAG', 'TAA'):
+            if actual_stop is None and stop >= 0 and stop+6 <= len(seq):
+                candidate = seq[stop:stop+6]
+                if candidate.upper()[:3] in ('TGA', 'TAG', 'TAA'):
                     actual_stop = stop
                     actual_stop_sequence = candidate
             
             # Check at position stop+1
-            if actual_stop is None and stop+1 >= 0 and stop+4 <= len(seq):
-                candidate = seq[stop+1:stop+4]
-                if candidate.upper() in ('TGA', 'TAG', 'TAA'):
+            if actual_stop is None and stop+1 >= 0 and stop+7 <= len(seq):
+                candidate = seq[stop+1:stop+7]
+                if candidate.upper()[:3] in ('TGA', 'TAG', 'TAA'):
                     actual_stop = stop + 1
                     actual_stop_sequence = candidate
             
             if actual_stop is None or actual_stop_sequence is None:
                 print(f"Warning: {tid} stop codon not found within +/-1 at stop {stop}")
+                transcripts_without_stop += 1
                 continue  # Skip if stop codon not found within +/-1
             
-            # Validate that we got 3 nucleotides
+            # Validate that we got at least 3 nucleotides
             if len(actual_stop_sequence) < 3:
                 print(f"Warning: Could not extract full stop codon for {tid} (got {len(actual_stop_sequence)} bp)")
+                transcripts_without_stop += 1
                 continue
             
             stop_codon_upper = actual_stop_sequence.upper()
+            
+            # Check for double stop codon (next in-frame codon is also a stop codon)
+            stop_1 = stop_codon_upper[:3]
+            if len(stop_codon_upper) >= 6:
+                stop_2 = stop_codon_upper[3:6]
+                if stop_2 in ('TGA', 'TAG', 'TAA'):
+                    stop_codon_upper = stop_1 + stop_2
+            
             stop_codons.append({
                 'transcript_id': tid,
                 'stop_codon': stop_codon_upper,
@@ -188,8 +201,19 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
     print("\n" + "="*60)
     print("STOP CODON DISTRIBUTION")
     print("="*60)
-    print(f"Total transcripts analyzed: {len(stop_codons)}")
-    print(f"Unique stop codons found: {len(stop_codon_counts)}")
+    print(f"Total transcripts with CDS: {total_transcripts_with_cds}")
+    print(f"Transcripts with stop codon found: {len(stop_codons)}")
+    print(f"Transcripts WITHOUT stop codon: {transcripts_without_stop}")
+    print(f"Unique stop codon types found: {len(stop_codon_counts)}")
+    print()
+    
+    # Count single vs double stop codons
+    single_stop_count = sum(1 for count in stop_codon_counts.values() if len(list(stop_codon_counts.keys())[0]) == 3)
+    double_stop_count = sum(1 for count in stop_codon_counts.values() if len(list(stop_codon_counts.keys())[0]) == 6)
+    double_stop_transcripts = sum(count for codon, count in stop_codon_counts.items() if len(codon) == 6)
+    
+    print(f"Single stop codons (3bp): {len([c for c in stop_codon_counts.keys() if len(c) == 3])} types")
+    print(f"Double stop codons (6bp): {len([c for c in stop_codon_counts.keys() if len(c) == 6])} types ({double_stop_transcripts} transcripts)")
     print()
     
     # Sort by frequency
@@ -200,7 +224,8 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
     total_count = sum(count for _, count in sorted_codons)
     for codon, count in sorted_codons:
         percentage = (count / total_count) * 100
-        print(f"{codon}: {count:>6} ({percentage:>6.2f}%)")
+        codon_type = "[DOUBLE]" if len(codon) == 6 else "[SINGLE]"
+        print(f"{codon} {codon_type}: {count:>6} ({percentage:>6.2f}%)")
     
     print("="*60)
     
