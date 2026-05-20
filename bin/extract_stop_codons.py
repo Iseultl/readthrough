@@ -183,6 +183,8 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
                 stop_2 = stop_codon_upper[3:6]
                 if stop_2 in ('TGA', 'TAG', 'TAA'):
                     stop_codon_upper = stop_1 + stop_2
+                else:
+                    stop_codon_upper = stop_1
             
             stop_codons.append({
                 'transcript_id': tid,
