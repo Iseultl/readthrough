@@ -138,33 +138,50 @@ def extract_stop_codons(gff_file, gffread_dir, output_file=None):
         try:
             # Check for stop codon within +/-1 of annotated stop
             actual_stop = None
-            if stop-1 >= 0 and stop+2 <= len(seq) and (seq[stop-1:stop+2] == 'TGA' or seq[stop-1:stop+2] == 'TAG' or seq[stop-1:stop+2] == 'TAA'):
-                actual_stop = stop
-            elif stop-2 >= 0 and stop+1 <= len(seq) and (seq[stop-2:stop+1] == 'TGA' or seq[stop-2:stop+1] == 'TAG' or seq[stop-2:stop+1] == 'TAA'):
-                actual_stop = stop - 1
-            elif stop >= 0 and stop+3 <= len(seq) and (seq[stop:stop+3] == 'TGA' or seq[stop:stop+3] == 'TAG' or seq[stop:stop+3] == 'TAA'):
-                actual_stop = stop + 1
-            if actual_stop is None:
+            actual_stop_sequence = None
+            
+            # Check at position stop-1
+            if stop-1 >= 0 and stop+2 <= len(seq):
+                candidate = seq[stop-1:stop+2]
+                if candidate.upper() in ('TGA', 'TAG', 'TAA'):
+                    actual_stop = stop - 1
+                    actual_stop_sequence = candidate
+            
+            # Check at position stop (default)
+            if actual_stop is None and stop >= 0 and stop+3 <= len(seq):
+                candidate = seq[stop:stop+3]
+                if candidate.upper() in ('TGA', 'TAG', 'TAA'):
+                    actual_stop = stop
+                    actual_stop_sequence = candidate
+            
+            # Check at position stop+1
+            if actual_stop is None and stop+1 >= 0 and stop+4 <= len(seq):
+                candidate = seq[stop+1:stop+4]
+                if candidate.upper() in ('TGA', 'TAG', 'TAA'):
+                    actual_stop = stop + 1
+                    actual_stop_sequence = candidate
+            
+            if actual_stop is None or actual_stop_sequence is None:
                 print(f"Warning: {tid} stop codon not found within +/-1 at stop {stop}")
                 continue  # Skip if stop codon not found within +/-1
             
             # Validate that we got 3 nucleotides
-            if len(actual_stop) < 3:
-                print(f"Warning: Could not extract full stop codon for {tid} (got {len(actual_stop)} bp)")
+            if len(actual_stop_sequence) < 3:
+                print(f"Warning: Could not extract full stop codon for {tid} (got {len(actual_stop_sequence)} bp)")
                 continue
             
-            stop_codon_upper = actual_stop.upper()
+            stop_codon_upper = actual_stop_sequence.upper()
             stop_codons.append({
                 'transcript_id': tid,
                 'stop_codon': stop_codon_upper,
                 'chromosome': chromosome,
                 'strand': last_cds['Strand'],
-                'cds_end_position': cds_end
+                'cds_end_position': stop
             })
             stop_codon_counts[stop_codon_upper] += 1
             
         except IndexError:
-            print(f"Warning: Sequence too short for {tid} (length: {len(seq)}, trying to access {actual_stop}:{actual_stop+3})")
+            print(f"Warning: Sequence too short for {tid} (length: {len(seq)}, trying to access around position {stop})")
             continue
     
     # Print results
