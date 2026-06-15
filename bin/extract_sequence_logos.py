@@ -51,10 +51,10 @@ def main():
 
     # Open output files
     files = {
-        'positives_600': open(os.path.join(args.output_dir, 'positives_223.fa'), 'w'),
-        'negatives_600': open(os.path.join(args.output_dir, 'negatives_223.fa'), 'w'),
-        'positives_stop_600': open(os.path.join(args.output_dir, 'positives_stop_223.fa'), 'w'),
-        'negatives_stop_600': open(os.path.join(args.output_dir, 'negatives_stop_223.fa'), 'w'),
+        'positives_223': open(os.path.join(args.output_dir, 'positives_223.fa'), 'w'),
+        'negatives_223': open(os.path.join(args.output_dir, 'negatives_223.fa'), 'w'),
+        'positives_stop_223': open(os.path.join(args.output_dir, 'positives_stop_223.fa'), 'w'),
+        'negatives_stop_223': open(os.path.join(args.output_dir, 'negatives_stop_223.fa'), 'w'),
         'positives_15': open(os.path.join(args.output_dir, 'positives_15.fa'), 'w'),
         'negatives_15': open(os.path.join(args.output_dir, 'negatives_15.fa'), 'w'),
         'positives_stop_15': open(os.path.join(args.output_dir, 'positives_stop_15.fa'), 'w'),
@@ -150,14 +150,14 @@ def main():
         if is_positive:
             files['positives_15'].write(f"{header}\n{extracted_15}\n")
             files['positives_stop_15'].write(f"{header_stop}\n{extracted_stop_15}\n")
-            files['positives_110'].write(f"{header}\n{extracted_110}\n")
-            files['positives_stop_110'].write(f"{header_stop}\n{extracted_stop_110}\n")
+            files['positives_223'].write(f"{header}\n{extracted_110}\n")
+            files['positives_stop_223'].write(f"{header_stop}\n{extracted_stop_110}\n")
             print(f"Wrote positive for {tid}", file=sys.stderr)
         else:
             files['negatives_15'].write(f"{header}\n{extracted_15}\n")
             files['negatives_stop_15'].write(f"{header_stop}\n{extracted_stop_15}\n")
-            files['negatives_110'].write(f"{header}\n{extracted_110}\n")
-            files['negatives_stop_110'].write(f"{header_stop}\n{extracted_stop_110}\n")
+            files['negatives_223'].write(f"{header}\n{extracted_110}\n")
+            files['negatives_stop_223'].write(f"{header_stop}\n{extracted_stop_110}\n")
             print(f"Wrote negative for {tid}", file=sys.stderr)
 
     # Close all files
