@@ -51,10 +51,10 @@ def main():
 
     # Open output files
     files = {
-        'positives_600': open(os.path.join(args.output_dir, 'positives_600.fa'), 'w'),
-        'negatives_600': open(os.path.join(args.output_dir, 'negatives_600.fa'), 'w'),
-        'positives_stop_600': open(os.path.join(args.output_dir, 'positives_stop_600.fa'), 'w'),
-        'negatives_stop_600': open(os.path.join(args.output_dir, 'negatives_stop_600.fa'), 'w'),
+        'positives_600': open(os.path.join(args.output_dir, 'positives_223.fa'), 'w'),
+        'negatives_600': open(os.path.join(args.output_dir, 'negatives_223.fa'), 'w'),
+        'positives_stop_600': open(os.path.join(args.output_dir, 'positives_stop_223.fa'), 'w'),
+        'negatives_stop_600': open(os.path.join(args.output_dir, 'negatives_stop_223.fa'), 'w'),
         'positives_15': open(os.path.join(args.output_dir, 'positives_15.fa'), 'w'),
         'negatives_15': open(os.path.join(args.output_dir, 'negatives_15.fa'), 'w'),
         'positives_stop_15': open(os.path.join(args.output_dir, 'positives_stop_15.fa'), 'w'),
@@ -118,14 +118,14 @@ def main():
         # TGA should be at positions 6-8 (0-based)
         assert extracted_15[6:9] == 'TGA'
 
-        # Extract -300 and +300 around full TGA codon (603bp total), padded with N.
-        left_300 = actual_pos - 300
-        right_300 = actual_pos + 3 + 300
-        left_pad_300 = max(0, -left_300)
-        right_pad_300 = max(0, right_300 - len(seq))
-        start_300 = max(0, left_300)
-        end_300 = min(len(seq), right_300)
-        extracted_300 = 'N' * left_pad_300 + seq[start_300:end_300] + 'N' * right_pad_300
+        # Extract -110 and +110 around full TGA codon (223bp total), padded with N.
+        left_110 = actual_pos - 110
+        right_110 = actual_pos + 3 + 110
+        left_pad_110 = max(0, -left_110)
+        right_pad_110 = max(0, right_110 - len(seq))
+        start_110 = max(0, left_110)
+        end_110 = min(len(seq), right_110)
+        extracted_110 = 'N' * left_pad_110 + seq[start_110:end_110] + 'N' * right_pad_110
 
         # Extract -7 to +9 around actual stop (17bp total), padded with N
         left_pad_stop_15 = max(0, 7 - actual_stop)
@@ -134,14 +134,14 @@ def main():
         end_stop_15 = min(len(seq), actual_stop + 9)
         extracted_stop_15 = 'N' * left_pad_stop_15 + seq[start_stop_15:end_stop_15] + 'N' * right_pad_stop_15
 
-        # Extract -300 and +300 around full stop codon (603bp total), padded with N.
-        left_stop_300 = actual_stop - 300
-        right_stop_300 = actual_stop + 3 + 300
-        left_pad_stop_300 = max(0, -left_stop_300)
-        right_pad_stop_300 = max(0, right_stop_300 - len(seq))
-        start_stop_300 = max(0, left_stop_300)
-        end_stop_300 = min(len(seq), right_stop_300)
-        extracted_stop_300 = 'N' * left_pad_stop_300 + seq[start_stop_300:end_stop_300] + 'N' * right_pad_stop_300
+        # Extract -110 and +110 around full stop codon (223bp total), padded with N.
+        left_stop_110 = actual_stop - 110
+        right_stop_110 = actual_stop + 3 + 110
+        left_pad_stop_110 = max(0, -left_stop_110)
+        right_pad_stop_110 = max(0, right_stop_110 - len(seq))
+        start_stop_110 = max(0, left_stop_110)
+        end_stop_110 = min(len(seq), right_stop_110)
+        extracted_stop_110 = 'N' * left_pad_stop_110 + seq[start_stop_110:end_stop_110] + 'N' * right_pad_stop_110
 
         header = f">{tid}_{actual_pos}"
         header_stop = f">{tid}_{actual_stop}"
@@ -150,14 +150,14 @@ def main():
         if is_positive:
             files['positives_15'].write(f"{header}\n{extracted_15}\n")
             files['positives_stop_15'].write(f"{header_stop}\n{extracted_stop_15}\n")
-            files['positives_600'].write(f"{header}\n{extracted_300}\n")
-            files['positives_stop_600'].write(f"{header_stop}\n{extracted_stop_300}\n")
+            files['positives_110'].write(f"{header}\n{extracted_110}\n")
+            files['positives_stop_110'].write(f"{header_stop}\n{extracted_stop_110}\n")
             print(f"Wrote positive for {tid}", file=sys.stderr)
         else:
             files['negatives_15'].write(f"{header}\n{extracted_15}\n")
             files['negatives_stop_15'].write(f"{header_stop}\n{extracted_stop_15}\n")
-            files['negatives_600'].write(f"{header}\n{extracted_300}\n")
-            files['negatives_stop_600'].write(f"{header_stop}\n{extracted_stop_300}\n")
+            files['negatives_110'].write(f"{header}\n{extracted_110}\n")
+            files['negatives_stop_110'].write(f"{header_stop}\n{extracted_stop_110}\n")
             print(f"Wrote negative for {tid}", file=sys.stderr)
 
     # Close all files
