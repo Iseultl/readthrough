@@ -9,7 +9,7 @@ mkdir -p "$OUTPUT_DIR"
 
 echo "Processing $(basename "$INPUT_FILE")"
 output_file="$OUTPUT_DIR/$(basename "$INPUT_FILE").geneid.txt"
-geneid -P "$PARAM_FILE" -s -W "$INPUT_FILE" > "$output_file"
+geneid -P "$PARAM_FILE" -s -W "$INPUT_FILE" | awk '{$NF=""; sub(/[[:space:]]+$/, ""); print}' > "$output_file"
 
 
 

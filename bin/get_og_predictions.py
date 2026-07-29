@@ -40,7 +40,7 @@ def process_predictions(geneid_txt):
 
                 current_seq = line.split()[2]
 
-            elif current_seq and "original" in current_seq and line.startswith("  Single"):
+            elif current_seq and "original" in current_seq and line.startswith("Single"):
                 fields = line.strip().split()
                 transcript_name = get_transcript_name(current_seq)
                 gene_name = get_gene_name(transcript_name)

@@ -20,7 +20,7 @@ process AGAT_SPLITGFF {
     # Split GFF by chromosome/sequence
     awk -F '\\t' -v outdir="agat_gff2gtf" '
         \$0 !~ /^#/ && NF >= 9 {
-            print > outdir "/" \$1 ".gff"
+            print > (outdir "/" \$1 ".gff")
         }
     ' "${genome_gtf}"
     

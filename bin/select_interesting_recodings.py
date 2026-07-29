@@ -68,10 +68,11 @@ def process_recoding_predictions(geneid_txt):
                 else:
                     current_tga_pos = None
 
-            elif line.startswith("  Single"):
+            elif line.startswith("Single"):
                 
                 total_predictions += 1
                 fields = line.strip().split()
+                print(fields)
                 start = int(fields[1])
                 end = int(fields[2]) - 3
 

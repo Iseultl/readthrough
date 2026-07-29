@@ -1,7 +1,6 @@
 process RUN_GENEID_ORIGINAL {
     tag { "run_geneid_original_${input_file}" }
     
-    publishDir "${params.output_dir}/geneid_original_predictions", mode: 'copy'
     cpus 1
     memory '8GB'
     

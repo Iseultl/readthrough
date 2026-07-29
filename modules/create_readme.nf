@@ -4,6 +4,7 @@ process CREATE_README {
     label 'samtools'
 
     input:
+    val species_name
     path genome
     path annotation_gtf
 
@@ -12,8 +13,15 @@ process CREATE_README {
 
     script:
     """
-    # Calculate genome length using samtools
-    samtools faidx ${genome} | awk '{sum+=\$2} END {print "Genome Length: " sum}' > README.txt
+    # Create README file with genome length and number of annotated genes
+    printf "${species_name}\n" > README.txt
+
+    # Create FASTA index
+    samtools faidx ${genome}
+
+    # Sum sequence lengths (column 2 of the .fai file)
+    awk '{sum+=\$2} END {print "Genome Length: " sum}' ${genome}.fai >> README.txt
+
 
     # Extract number of annotated genes from GTF file
     cut -f3 ${annotation_gtf} | grep -c 'gene'  | awk '{print "Number of Annotated Genes: " \$1}' >> README.txt

@@ -1,0 +1,106 @@
+name: Nextflow CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'main_mammal.nf'
+      - 'modules/**'
+      - 'bin/**'
+      - 'nextflow.config'
+      - '.github/workflows/nextflow.yml'
+  pull_request:
+    paths:
+      - 'main_mammal.nf'
+      - 'modules/**'
+      - 'bin/**'
+      - 'nextflow.config'
+      - '.github/workflows/nextflow.yml'
+  workflow_dispatch:
+    inputs:
+      run_full:
+        description: 'Run the full pipeline instead of a dry run'
+        required: false
+        default: 'false'
+        type: boolean
+      species_taxid:
+        description: 'NCBI taxid for the target species'
+        required: false
+        default: '10090'
+        type: string
+      species_name:
+        description: 'Species name used in logs and outputs'
+        required: false
+        default: 'Mus musculus'
+        type: string
+      candidates:
+        description: 'Path to a candidate proteins FASTA file (required for full run)'
+        required: false
+        default: ''
+        type: string
+      geneid_param:
+        description: 'Path to the GeneID parameter file (required for full run)'
+        required: false
+        default: ''
+        type: string
+      output_dir:
+        description: 'Where to write workflow outputs'
+        required: false
+        default: 'results-ci'
+        type: string
+
+jobs:
+  nextflow:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Nextflow
+        run: |
+          curl -fsSL https://get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+          nextflow -version
+
+      - name: Show Docker availability
+        run: docker --version
+
+      - name: Dry-run the workflow
+        run: |
+          nextflow run main_mammal.nf \
+            -profile local \
+            --species_taxid "${{ github.event.inputs.species_taxid || '10090' }}" \
+            --species_name "${{ github.event.inputs.species_name || 'Mus musculus' }}" \
+            --output_dir "${{ github.workspace }}/results-ci" \
+            -dry-run
+
+      - name: Run the full pipeline
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_full == 'true'
+        run: |
+          if [ -z "${{ github.event.inputs.candidates }}" ] || [ -z "${{ github.event.inputs.geneid_param }}" ]; then
+            echo "Both --candidates and --geneid_param are required for a full run." >&2
+            exit 1
+          fi
+
+          nextflow run main_mammal.nf \
+            -profile local \
+            --species_taxid "${{ github.event.inputs.species_taxid }}" \
+            --species_name "${{ github.event.inputs.species_name }}" \
+            --candidates "${{ github.event.inputs.candidates }}" \
+            --geneid_param "${{ github.event.inputs.geneid_param }}" \
+            --output_dir "${{ github.workspace }}/${{ github.event.inputs.output_dir }}" \
+            --max_cpus 2 \
+            --max_memory '4GB' \
+            -with-report report.html \
+            -with-timeline timeline.html
