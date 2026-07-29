@@ -2,7 +2,7 @@
 
 process SPLITFASTA {
     tag { "${genome_fasta.getBaseName()}" }
-    memory '4GB'
+    memory '6GB'
     label 'splitfasta'
     
     input:
