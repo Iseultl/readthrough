@@ -20,11 +20,6 @@ on:
       - '.github/workflows/nextflow.yml'
   workflow_dispatch:
     inputs:
-      run_full:
-        description: 'Use the supplied candidate and GeneID inputs for each run'
-        required: false
-        default: 'false'
-        type: boolean
       species_taxid:
         description: 'NCBI taxid for the target species'
         required: false
@@ -97,7 +92,7 @@ jobs:
         shell: bash
         env:
           RUN_FULL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_full == 'true' }}
-          GENEID_PARAM: ${{ github.event.inputs.geneid_param || '' }}
+          GENEID_PARAM: human3iso.param
           OUTPUT_ROOT: ${{ github.workspace }}/results-ci
         run: |
           set -euo pipefail
@@ -122,45 +117,21 @@ jobs:
             output_dir="$OUTPUT_ROOT/$safe_name"
             mkdir -p "$output_dir"
 
-            if [ -f "$output_dir/completion.txt" ] || [ -f "$output_dir/report.html" ] || [ -d "$output_dir/work" ]; then
+            if [ -f "$output_dir/completion.txt" ] || [ -d "$output_dir/work" ]; then
               echo "Skipping $species ($taxid): existing outputs found in $output_dir"
               echo -e "$taxid\t$species\tskipped\t$output_dir\texisting outputs found" >> "$completion_file"
               continue
             fi
 
-            status="success"
-            notes="pipeline run completed"
-
-            if [ "$RUN_FULL" = "true" ] && [ -n "$CANDIDATES" ] && [ -n "$GENEID_PARAM" ]; then
-              if nextflow run main_mammal.nf \
+            nextflow run main_mammal.nf \
                 -profile local \
                 --species_taxid "$taxid" \
                 --species_name "$species" \
                 --geneid_param "$GENEID_PARAM" \
                 --output_dir "$output_dir" \
                 --max_cpus 2 \
-                --max_memory '6GB' \
-                -with-report "$output_dir/report.html" \
-                -with-timeline "$output_dir/timeline.html"; then
-                status="success"
-                notes="full run completed"
-              else
-                status="failed"
-                notes="nextflow exited non-zero"
-              fi
-            else
-              if nextflow run main_mammal.nf \
-                -profile local \
-                --species_taxid "$taxid" \
-                --species_name "$species" \
-                --output_dir "$output_dir"; then
-                status="success"
-                notes="pipeline run completed"
-              else
-                status="failed"
-                notes="nextflow exited non-zero"
-              fi
-            fi
+                --max_memory '6GB' 
+            
 
             echo -e "$taxid\t$species\t$status\t$output_dir\t$notes" >> "$completion_file"
           done < mammals_to_search.tsv
@@ -175,4 +146,4 @@ jobs:
           name: completion-report
           path: |
             completion_report.tsv
-            results-ci/**
+            results-ci/**/ORFsearch_SECIS.result

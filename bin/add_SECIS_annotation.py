@@ -11,7 +11,7 @@ def read_gff(gff):
 
 def read_df(df):
     df = pd.read_csv(df)
-    df = df[['transcript_name', 'og_score_start', 'og_score_end', 'og_score_score', 'og_score_length', 're_score_start', 're_score_end', 're_score_score', 're_score_length', 'TGA_site_score']]
+    df = df[['transcript_name', 'og_score_start', 'og_score_end', 'og_score_score', 'og_score_length', 're_score_start', 're_score_end', 're_score_score', 're_score_length', 'TGA_site_score', 'gtf_start', 'gtf_end', 'gene_name']]
     df = df.set_index('transcript_name')
     return df
 
