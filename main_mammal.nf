@@ -48,6 +48,17 @@ def printHeader() {
     """
 }
 
+// Workflow completion message
+def workflowCompletionMessage() {
+    log.info """
+    ========================================
+    Pipeline completed successfully!
+    Results are in: ${params.output_dir}
+    ========================================
+    """
+}
+
+
 // Load modules
 include { DOWNLOAD_TAXID } from './modules/download_taxid'
 include { UNZIP_IF_NEEDED } from './modules/handle_zipped_input'
@@ -218,14 +229,7 @@ workflow {
     // Step 21: Combine ORFsearch results with filtered SECISearch results
     ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis)
 
+    workflowCompletionMessage()
 }
 
-// Workflow completion message
-workflow.onComplete {
-    log.info """
-    ========================================
-    Pipeline completed successfully!
-    Results are in: ${params.output_dir}
-    ========================================
-    """
-}
+
