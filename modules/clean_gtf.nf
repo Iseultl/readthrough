@@ -2,8 +2,6 @@ process CLEAN_GTF {
     tag { "clean_gtf_${genome_gtf}" }
 
     cpus 1
-    memory '2GB'
-    time '1h'
 
     input:
     path(genome_gtf)

@@ -4,7 +4,6 @@ process RELOCATE_TRANSCRIPTS {
     publishDir "${params.output_dir}/relocated_gtf", mode: 'copy'
     label 'python'
     cpus 1
-    memory '8GB'
     time '1h'
     
     input:

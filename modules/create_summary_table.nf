@@ -2,9 +2,7 @@ process CREATE_SUMMARY_TABLE {
     tag { "create_summary_${id}" }
     label 'python'
     cpus 1
-    memory '4GB'
-    time '2h'
-    
+  
     input:
     tuple val(id), path(interesting_score), path(interesting_longest), path(original_score), path(original_longest)
     path relocated_gtf

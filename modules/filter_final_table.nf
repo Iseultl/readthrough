@@ -2,7 +2,6 @@ process FILTER_FINAL_TABLE {
     tag { "filter_final_table" }
     label 'python'
     cpus 1
-    memory '4GB'
     time '2h'
     
     input:

@@ -3,7 +3,6 @@ process EXTRACT_SEQUENCE_LOGOS {
     label 'python'
     publishDir "${params.output_dir}/sequence_logos", mode: 'copy'
     cpus 1
-    memory '2GB'
     time '1h'
     
     input:

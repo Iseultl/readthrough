@@ -86,7 +86,12 @@ jobs:
             docker pull maxtico/seblastian:latest
             docker pull ileahy/biopythonimage:latest
             docker pull biocontainers/samtools:v1.9-4-deb_cv1
-
+      - name: Install annocli
+        if: steps.conda-cache.outputs.cache-hit != 'true'
+        shell: bash -el {0}
+        run: |
+            git clone --branch v1.0.0 --depth 1 https://github.com/apollo994/annocli.git
+            pip install ./annocli/
 
       - name: Run pipeline for each mammal from mammals_to_search.tsv
         shell: bash
@@ -134,7 +139,7 @@ jobs:
                 --geneid_param "$GENEID_PARAM" \
                 --output_dir "$output_dir" \
                 --max_cpus 2 \
-                --max_memory '16GB' \
+                --max_memory '6GB' \
                 -with-report "$output_dir/report.html" \
                 -with-timeline "$output_dir/timeline.html"; then
                 status="success"
