@@ -34,17 +34,19 @@ def printHelp() {
 }
 
 // Print pipeline header
-log.info """
-========================================
- Selenoprotein Hunter Pipeline - Nextflow Pipeline
-========================================
-Input TaxID:  ${params.species_taxid}
-Input Species:  ${params.species_name}
-Output dir:  ${params.output_dir}
-CPU's:       ${params.max_cpus}
-Memory:      ${params.max_memory}
-========================================
-"""
+def printHeader() {
+    log.info """
+    ========================================
+     Selenoprotein Hunter Pipeline - Nextflow Pipeline
+    ========================================
+    Input TaxID:  ${params.species_taxid}
+    Input Species:  ${params.species_name}
+    Output dir:  ${params.output_dir}
+    CPU's:       ${params.max_cpus}
+    Memory:      ${params.max_memory}
+    ========================================
+    """
+}
 
 // Load modules
 include { DOWNLOAD_TAXID } from './modules/download_taxid'
@@ -85,6 +87,7 @@ workflow {
         printHelp()
         return
     }
+    printHeader()
 
     // Step 0: Download genome files based on taxid
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
