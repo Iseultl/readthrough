@@ -65,7 +65,7 @@ jobs:
             start=${{ github.event.inputs.start || '1' }}
             count=${{ github.event.inputs.count || '100' }}
 
-            matrix=$(awk '
+            matrix=$(awk -v start="$start" -v count="$count" '
             BEGIN {
                 FS="\t"
                 printf "["
