@@ -11,7 +11,7 @@ params.geneid_param = params.geneid_param ?: 'human3iso.param'
 params.help = params.help ?: false
 
 // Print help message if no parameters are provided
-if (params.help) {
+def printHelp() {
     log.info """
     Selenoprotein Hunter Pipeline
     =============
@@ -81,6 +81,8 @@ def get_chr_name(file) {
 }
 
 workflow {
+    printHelp() if params.help
+    
     // Step 0: Download genome files based on taxid
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
     

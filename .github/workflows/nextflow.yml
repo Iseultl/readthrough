@@ -92,7 +92,6 @@ jobs:
         shell: bash
         env:
           RUN_FULL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_full == 'true' }}
-          CANDIDATES: ${{ github.event.inputs.candidates || '' }}
           GENEID_PARAM: ${{ github.event.inputs.geneid_param || '' }}
           OUTPUT_ROOT: ${{ github.workspace }}/results-ci
         run: |
@@ -132,7 +131,6 @@ jobs:
                 -profile local \
                 --species_taxid "$taxid" \
                 --species_name "$species" \
-                --candidates "$CANDIDATES" \
                 --geneid_param "$GENEID_PARAM" \
                 --output_dir "$output_dir" \
                 --max_cpus 2 \
