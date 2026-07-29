@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       run_full:
-        description: 'Run the full pipeline instead of a dry run'
+        description: 'Use the supplied candidate and GeneID inputs for each run'
         required: false
         default: 'false'
         type: boolean
@@ -118,41 +118,41 @@ jobs:
             output_dir="$OUTPUT_ROOT/$safe_name"
             mkdir -p "$output_dir"
 
-            status="success"
-            notes="dry-run completed"
+            if [ -f "$output_dir/completion.txt" ] || [ -f "$output_dir/report.html" ] || [ -d "$output_dir/work" ]; then
+              echo "Skipping $species ($taxid): existing outputs found in $output_dir"
+              echo -e "$taxid\t$species\tskipped\t$output_dir\texisting outputs found" >> "$completion_file"
+              continue
+            fi
 
-            if [ "$RUN_FULL" = "true" ]; then
-              if [ -z "$CANDIDATES" ] || [ -z "$GENEID_PARAM" ]; then
-                status="failed"
-                notes="missing candidates or geneid_param"
+            status="success"
+            notes="pipeline run completed"
+
+            if [ "$RUN_FULL" = "true" ] && [ -n "$CANDIDATES" ] && [ -n "$GENEID_PARAM" ]; then
+              if nextflow run main_mammal.nf \
+                -profile local \
+                --species_taxid "$taxid" \
+                --species_name "$species" \
+                --candidates "$CANDIDATES" \
+                --geneid_param "$GENEID_PARAM" \
+                --output_dir "$output_dir" \
+                --max_cpus 2 \
+                --max_memory '16GB' \
+                -with-report "$output_dir/report.html" \
+                -with-timeline "$output_dir/timeline.html"; then
+                status="success"
+                notes="full run completed"
               else
-                if nextflow run main_mammal.nf \
-                  -profile local \
-                  --species_taxid "$taxid" \
-                  --species_name "$species" \
-                  --candidates "$CANDIDATES" \
-                  --geneid_param "$GENEID_PARAM" \
-                  --output_dir "$output_dir" \
-                  --max_cpus 2 \
-                  --max_memory '16GB' \
-                  -with-report "$output_dir/report.html" \
-                  -with-timeline "$output_dir/timeline.html"; then
-                  status="success"
-                  notes="full run completed"
-                else
-                  status="failed"
-                  notes="nextflow exited non-zero"
-                fi
+                status="failed"
+                notes="nextflow exited non-zero"
               fi
             else
               if nextflow run main_mammal.nf \
                 -profile local \
                 --species_taxid "$taxid" \
                 --species_name "$species" \
-                --output_dir "$output_dir" \
-                -dry-run; then
+                --output_dir "$output_dir"; then
                 status="success"
-                notes="dry-run completed"
+                notes="pipeline run completed"
               else
                 status="failed"
                 notes="nextflow exited non-zero"
