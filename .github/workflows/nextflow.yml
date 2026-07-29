@@ -30,10 +30,13 @@ on:
         required: false
         default: 'Mus musculus'
         type: string
-      candidates:
-        description: 'Path to a candidate proteins FASTA file (required for full run)'
-        required: false
-        default: ''
+      start:
+        description: "First row to process"
+        default: "1"
+        type: string
+      count:
+        description: "Number of species to process"
+        default: "100"
         type: string
       geneid_param:
         description: 'Path to the GeneID parameter file (required for full run)'
@@ -59,14 +62,26 @@ jobs:
         - id: matrix
           shell: bash
           run: |
+            start=${{ github.event.inputs.start || '1' }}
+            count=${{ github.event.inputs.count || '100' }}
+
             matrix=$(awk '
             BEGIN {
                 FS="\t"
                 printf "["
                 first=1
+                idx=0
             }
 
             !/^#/ && NF>=2 {
+                idx++
+
+                if (idx < start)
+                    next
+
+                if (idx >= start + count)
+                    next
+
                 gsub(/ /, "_", $2)
 
                 if (!first)
