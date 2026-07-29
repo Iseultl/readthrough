@@ -57,22 +57,32 @@ jobs:
         - uses: actions/checkout@v4
 
         - id: matrix
+          shell: bash
           run: |
             matrix=$(awk '
-            BEGIN{
+            BEGIN {
                 FS="\t"
-                print "["
+                printf "["
+                first=1
             }
-            !/^#/ && NF>=2{
-                gsub(/ /,"_",$2)
-                printf "%s{\"taxid\":\"%s\",\"species\":\"%s\"}",
-                    (NR==1?"":","),
-                    $1,
-                    $2
+
+            !/^#/ && NF>=2 {
+                gsub(/ /, "_", $2)
+
+                if (!first)
+                    printf ","
+
+                printf "{\"taxid\":\"%s\",\"species\":\"%s\"}", $1, $2
+                first=0
             }
-            END{
-                print "]"
-            }' mammals_to_search.tsv)
+
+            END {
+                printf "]"
+            }
+            ' mammals_to_search.tsv)
+
+            echo "Generated matrix:"
+            echo "$matrix"
 
             echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   nextflow:
