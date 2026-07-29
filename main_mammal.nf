@@ -83,10 +83,6 @@ include { MERGE_GFF } from './modules/merge_gff'
 include { FILTER_SECIS } from './modules/filter_secis'
 include { COMBINE_ORFSECIS } from './modules/combine_orfsecis'
 include { CREATE_README } from './modules/create_readme'
-include { SELENOPROFILES_ANALYSIS } from './modules/secorfsearch_profiles'
-include { SELENOPROFILES_GFFREAD } from './modules/selenoprofiles_gffread'
-include { RUN_SELENOPROFILES } from './modules/run_selenoprofiles'
-
 
 // Helper function to extract chromosome name (without extension)
 def get_chr_name(file) {

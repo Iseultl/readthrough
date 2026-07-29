@@ -1,5 +1,5 @@
 process FILTER_FINAL_TABLE {
-    tag { "filter_final_table_${input_file}" }
+    tag { "filter_final_table" }
     label 'python'
     cpus 1
     memory '4GB'
