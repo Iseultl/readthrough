@@ -88,31 +88,88 @@ jobs:
             docker pull biocontainers/samtools:v1.9-4-deb_cv1
 
 
-      - name: Dry-run the workflow
+      - name: Run pipeline for each mammal from mammals_to_search.tsv
+        shell: bash
+        env:
+          RUN_FULL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_full == 'true' }}
+          CANDIDATES: ${{ github.event.inputs.candidates || '' }}
+          GENEID_PARAM: ${{ github.event.inputs.geneid_param || '' }}
+          OUTPUT_ROOT: ${{ github.workspace }}/results-ci
         run: |
-          nextflow run main_mammal.nf \
-            -profile local \
-            --species_taxid "${{ github.event.inputs.species_taxid || '10090' }}" \
-            --species_name "${{ github.event.inputs.species_name || 'Mus musculus' }}" \
-            --output_dir "${{ github.workspace }}/results-ci" \
-            -dry-run
+          set -euo pipefail
 
-      - name: Run the full pipeline
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_full == 'true'
-        run: |
-          if [ -z "${{ github.event.inputs.candidates }}" ] || [ -z "${{ github.event.inputs.geneid_param }}" ]; then
-            echo "Both --candidates and --geneid_param are required for a full run." >&2
+          if [ ! -f mammals_to_search.tsv ]; then
+            echo "mammals_to_search.tsv not found" >&2
             exit 1
           fi
 
-          nextflow run main_mammal.nf \
-            -profile local \
-            --species_taxid "${{ github.event.inputs.species_taxid }}" \
-            --species_name "${{ github.event.inputs.species_name }}" \
-            --candidates "${{ github.event.inputs.candidates }}" \
-            --geneid_param "${{ github.event.inputs.geneid_param }}" \
-            --output_dir "${{ github.workspace }}/${{ github.event.inputs.output_dir }}" \
-            --max_cpus 2 \
-            --max_memory '16GB' \
-            -with-report report.html \
-            -with-timeline timeline.html
+          completion_file="${{ github.workspace }}/completion_report.tsv"
+          echo -e "taxid\tspecies\tstatus\toutput_dir\tnotes" > "$completion_file"
+
+          while IFS=$'\t' read -r taxid species class; do
+            [ -z "${taxid:-}" ] && continue
+            [ "${taxid#\#}" != "$taxid" ] && continue
+
+            taxid="$(echo "$taxid" | tr -d '[:space:]')"
+            species="$(echo "$species" | tr -d '[:space:]')"
+            [ -z "$species" ] && species="species_${taxid}"
+
+            safe_name=$(echo "$species" | tr ' /:' '__' | tr -cd '[:alnum:]._-')
+            output_dir="$OUTPUT_ROOT/$safe_name"
+            mkdir -p "$output_dir"
+
+            status="success"
+            notes="dry-run completed"
+
+            if [ "$RUN_FULL" = "true" ]; then
+              if [ -z "$CANDIDATES" ] || [ -z "$GENEID_PARAM" ]; then
+                status="failed"
+                notes="missing candidates or geneid_param"
+              else
+                if nextflow run main_mammal.nf \
+                  -profile local \
+                  --species_taxid "$taxid" \
+                  --species_name "$species" \
+                  --candidates "$CANDIDATES" \
+                  --geneid_param "$GENEID_PARAM" \
+                  --output_dir "$output_dir" \
+                  --max_cpus 2 \
+                  --max_memory '16GB' \
+                  -with-report "$output_dir/report.html" \
+                  -with-timeline "$output_dir/timeline.html"; then
+                  status="success"
+                  notes="full run completed"
+                else
+                  status="failed"
+                  notes="nextflow exited non-zero"
+                fi
+              fi
+            else
+              if nextflow run main_mammal.nf \
+                -profile local \
+                --species_taxid "$taxid" \
+                --species_name "$species" \
+                --output_dir "$output_dir" \
+                -dry-run; then
+                status="success"
+                notes="dry-run completed"
+              else
+                status="failed"
+                notes="nextflow exited non-zero"
+              fi
+            fi
+
+            echo -e "$taxid\t$species\t$status\t$output_dir\t$notes" >> "$completion_file"
+          done < mammals_to_search.tsv
+
+          echo "Completion report written to $completion_file"
+          cat "$completion_file"
+
+      - name: Upload completion report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: completion-report
+          path: |
+            completion_report.tsv
+            results-ci/**

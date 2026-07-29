@@ -6,9 +6,8 @@ nextflow.enable.dsl = 2
 // Input value
 params.species_taxid = params.species_taxid ?: '10090'
 params.species_name = params.species_name ?: 'Mus musculus'
-params.candidates = params.candidates ?: '/no_backup/rg/ileahy/SecORFsearch_mammals/protein_sequences/false_positives.fasta'
-params.output_dir = params.output_dir ?: '/no_backup/rg/ileahy/mammalian_analysis'
-params.geneid_param = params.geneid_param ?: '/Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/human3iso.param'
+params.output_dir = params.output_dir ?: '/results'
+params.geneid_param = params.geneid_param ?: 'human3iso.param'
 params.help = params.help ?: false
 
 // Print help message if no parameters are provided
@@ -18,12 +17,11 @@ if (params.help) {
     =============
     
     Usage:
-    nextflow run main.nf --taxid <taxid> --candidates <file> [options]
+    nextflow run main.nf --taxid <taxid> --species <name> [options]
     
     Mandatory arguments:
       --taxid <taxid>          Taxonomic ID of the species
       --species <name>         Species name (for labeling) 
-      --candidates <file>      Path to candidate proteins file
 
     Optional arguments:
       --output_dir <dir>       Output directory (default: ./results)
@@ -212,11 +210,6 @@ workflow {
 
     // Step 21: Combine ORFsearch results with filtered SECISearch results
     ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis)
-
-    // Step 22a: Run Selenoprofiles with Candidate Proteins
-    // selenoprofiles_results = SELENOPROFILES_ANALYSIS(genome_for_selenoprofiles, params.candidates, params.species_name)
-    // Step 22b: Run selenoprofiles base on the genome and reference annotation
-    // selenoprofiles_genome_results = RUN_SELENOPROFILES(fasta.selenoprofiles_base, gff.selenoprofiles_base, params.species_name)
 
 }
 
