@@ -121,39 +121,16 @@ workflow {
     genome_fasta_unzipped = unzipped_files
         .filter { type, file -> type.endsWith(".fasta.gz") }
         .map { type, file -> file }
-    genome_fasta_unzipped
-    .multiMap { fasta ->
-        readme: fasta
-        split: fasta
-        selenoprofiles: fasta
-        selenoprofiles_base: fasta
-    }
-    .set { fasta }
     
     genome_gff_unzipped = unzipped_files
         .filter { type, file -> type.endsWith(".gff.gz") }
         .map { type, file -> file }
-    genome_gff_unzipped
-        .multiMap { gff ->
-            readme: gff
-            split: gff
-            selenoprofiles: gff
-            selenoprofiles_base: gff
-        }
-        .set { gff }
     
     // Step 1: Create readme
-    readme = CREATE_README(params.species_name, fasta.readme, gff.readme)
-    
-    genome_for_selenoprofiles =
-        fasta.selenoprofiles
-            .combine(gff.selenoprofiles)
-            .map { fasta, gff ->
-                tuple(params.species_taxid, fasta, gff)
-            }
+    readme = CREATE_README(params.species_name, genome_fasta_unzipped, genome_gff_unzipped)
     
     // Step 3: Split GTF/GFF
-    split_results = AGAT_SPLITGFF(gff.split)
+    split_results = AGAT_SPLITGFF(genome_gff_unzipped)
     
     // Step 4: Collect all .gff files from the output directory
     gff_files_ch = split_results.gff_files
@@ -173,7 +150,7 @@ workflow {
     }
 
     // Step 6: FASTA Processing Pipeline
-    split_fasta_dir_ch = SPLITFASTA(fasta.split).split_chr
+    split_fasta_dir_ch = SPLITFASTA(genome_fasta_unzipped).split_chr
     base_names_fasta = split_fasta_dir_ch.flatten().map { file ->
         def fname = file.name  // e.g. horse_genome.part_NW_027222397.1.fa
         def chr_match = fname =~ /part_(.+)\.fa/
