@@ -1,6 +1,6 @@
 process CLEAN_GTF {
     tag { "clean_gtf_${genome_gtf}" }
-
+    memory '4GB'
     cpus 1
 
     input:

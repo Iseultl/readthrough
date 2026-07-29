@@ -1,6 +1,6 @@
 process RUN_GENEID_ORIGINAL {
     tag { "run_geneid_original_${input_file}" }
-    
+    memory '4GB'
     cpus 1
     
     input:

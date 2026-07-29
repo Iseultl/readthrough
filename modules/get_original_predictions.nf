@@ -3,7 +3,8 @@ process GET_ORIGINAL_PREDICTIONS {
     label 'python'
     cpus 1
     time '1h'
-
+    memory '4GB'
+    
     input:
     path geneid_output
 

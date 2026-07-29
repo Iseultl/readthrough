@@ -2,7 +2,7 @@
 
 process SECISSEARCH {
     tag { input_fasta.baseName }
-    
+    memory '4GB' 
     label 'secissearch'
 
     input:

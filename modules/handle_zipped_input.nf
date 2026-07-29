@@ -2,6 +2,7 @@
 
 process UNZIP_IF_NEEDED {
     tag { "${file_type}" }
+    memory '4GB'
     
     input:
     tuple val(file_type), path(input_file)

@@ -1,7 +1,8 @@
 process AGAT_GFF2GTF {
     tag "${gff_file.baseName}"
     label 'agat'
-
+    memory '4GB'
+    
     input:
     path gff_file
 

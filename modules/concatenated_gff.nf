@@ -1,4 +1,6 @@
 process CONCATENATE_GTFS {
+    memory '4GB'
+    
     input:
     path gtf_files
     path gffread_out

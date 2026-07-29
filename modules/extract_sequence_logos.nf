@@ -4,6 +4,7 @@ process EXTRACT_SEQUENCE_LOGOS {
     publishDir "${params.output_dir}/sequence_logos", mode: 'copy'
     cpus 1
     time '1h'
+    memory '4GB'
     
     input:
     path result_csv

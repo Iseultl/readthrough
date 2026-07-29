@@ -1,11 +1,11 @@
 process RELOCATE_TRANSCRIPTS {
     tag { "relocate_${cleaned_gtf}" }
-    
     publishDir "${params.output_dir}/relocated_gtf", mode: 'copy'
     label 'python'
     cpus 1
     time '1h'
-    
+    memory '4GB'
+
     input:
     path cleaned_gtf
     

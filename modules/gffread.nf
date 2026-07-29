@@ -5,7 +5,7 @@ process GFFREAD {
     tag { "gffread_${id}" }
     label 'gffread'
     cpus 1
-    memory '8GB'
+    memory '4GB'
     time '1h'
 
     input:

@@ -1,7 +1,8 @@
 process MERGE_GFF {
     publishDir "${params.output_dir}/secis_final_gff", mode: 'copy'
     container 'ubuntu:22.04'
-
+    memory '4GB'
+    
     input:
     path gff_files
 

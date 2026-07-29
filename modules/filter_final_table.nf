@@ -3,6 +3,7 @@ process FILTER_FINAL_TABLE {
     label 'python'
     cpus 1
     time '2h'
+    memory '4GB'
     
     input:
     path("ORFsearch.filter")

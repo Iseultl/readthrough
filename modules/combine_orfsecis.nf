@@ -1,6 +1,7 @@
 process COMBINE_ORFSECIS {
     publishDir "${params.output_dir}/", mode: 'copy'
     label 'python'
+    memory '4GB'
 
     input:
     path orfsearch_result

@@ -1,6 +1,6 @@
 process AGAT_SPLITGFF {
     tag "${genome_gtf.baseName}"
-
+    memory '4GB'
     label 'agat'
 
     input:

@@ -3,6 +3,7 @@ process RECODE_TGA {
     label 'python'
     cpus 1
     time '1h'
+    memory '4GB'
     
     input:
     path(transcript_fasta)
