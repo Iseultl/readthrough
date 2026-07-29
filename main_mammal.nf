@@ -81,8 +81,11 @@ def get_chr_name(file) {
 }
 
 workflow {
-    printHelp() if params.help
-    
+    if (params.help) {
+        printHelp()
+        return
+    }
+
     // Step 0: Download genome files based on taxid
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
     
