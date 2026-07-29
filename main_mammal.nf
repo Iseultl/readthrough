@@ -82,7 +82,7 @@ include { SECISSEARCH } from './modules/secissearch'
 include { MERGE_GFF } from './modules/merge_gff'
 include { FILTER_SECIS } from './modules/filter_secis'
 include { COMBINE_ORFSECIS } from './modules/combine_orfsecis'
-include { CREATE_README } from './modules/create_readme'
+
 
 // Helper function to extract chromosome name (without extension)
 def get_chr_name(file) {
@@ -122,9 +122,7 @@ workflow {
         .filter { type, file -> type.endsWith(".gff.gz") }
         .map { type, file -> file }
     
-    // Step 1: Create readme
-    readme = CREATE_README(params.species_name, genome_fasta_unzipped, genome_gff_unzipped)
-    
+
     // Step 3: Split GTF/GFF
     split_results = AGAT_SPLITGFF(genome_gff_unzipped)
     

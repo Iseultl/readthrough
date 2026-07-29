@@ -22,7 +22,6 @@ process CREATE_README {
     # Sum sequence lengths (column 2 of the .fai file)
     awk '{sum+=\$2} END {print "Genome Length: " sum}' ${genome}.fai >> README.txt
 
-
     # Extract number of annotated genes from GTF file
     cut -f3 ${annotation_gtf} | grep -c 'gene'  | awk '{print "Number of Annotated Genes: " \$1}' >> README.txt
     """

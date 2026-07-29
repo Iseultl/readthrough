@@ -1,11 +1,11 @@
 species_taxid : "7740"
 species_name : "lancelets"
-candidates : "/Users/iseult/Desktop/Readthrough/split_false_positives"
+
 
 # Production settings
 debug: true
 max_cpus: 4  # Reduced for dev mode
-max_memory: '16GB'  # Reduced for dev mode
+max_memory: '8GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
 output_dir: "/Users/iseult/Desktop/Mammalian_selenoproteins/Readthrough"  # Local output directory

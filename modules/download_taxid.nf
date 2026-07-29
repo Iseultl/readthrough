@@ -14,7 +14,12 @@ process DOWNLOAD_TAXID {
     #!/bin/bash
     set -euo pipefail
 
-    annocli download --ref-only --taxids "${taxid}" --add-asm --mode links | head -n 1 | bash 
+    cmd=$(annocli download --ref-only --taxids "${taxid}" --add-asm --mode links | head -n1)
+
+    echo "Executing:"
+    echo "\$cmd"
+
+    bash -c "\$cmd"
     echo "Downloaded files for taxid ${taxid}."
 
     annotation_source=\$(find annotation_downloads -type f -name "*.gff.gz" ! -name "*.aliasMatch.gff.gz" | head -n 1)
