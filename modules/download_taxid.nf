@@ -14,7 +14,7 @@ process DOWNLOAD_TAXID {
     #!/bin/bash
     set -euo pipefail
 
-    cmd=$(annocli download --ref-only --taxids "${taxid}" --add-asm --mode links | head -n1)
+    cmd=\$(annocli download --ref-only --taxids "${taxid}" --add-asm --mode links | head -n1)
 
     echo "Executing:"
     echo "\$cmd"
