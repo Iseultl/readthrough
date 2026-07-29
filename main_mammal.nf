@@ -40,7 +40,6 @@ log.info """
 ========================================
 Input TaxID:  ${params.species_taxid}
 Input Species:  ${params.species_name}
-Candidate Proteins: ${params.candidates}
 Output dir:  ${params.output_dir}
 CPU's:       ${params.max_cpus}
 Memory:      ${params.max_memory}
