@@ -1,4 +1,4 @@
-name: Nextflow CI
+name: ORFsearch Mammals
 
 on:
   push:
@@ -47,7 +47,43 @@ on:
         type: string
 
 jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+        matrix: ${{ steps.matrix.outputs.matrix }}
+
+    steps:
+        - uses: actions/checkout@v4
+
+        - id: matrix
+          run: |
+            matrix=$(awk '
+            BEGIN{
+                FS="\t"
+                print "["
+            }
+            !/^#/ && NF>=2{
+                gsub(/ /,"_",$2)
+                printf "%s{\"taxid\":\"%s\",\"species\":\"%s\"}",
+                    (NR==1?"":","),
+                    $1,
+                    $2
+            }
+            END{
+                print "]"
+            }' mammals_to_search.tsv)
+
+            echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   nextflow:
+    needs: generate-matrix
+
+    strategy:
+        fail-fast: false
+        max-parallel: 5
+
+        matrix:
+          include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -80,15 +116,19 @@ jobs:
             docker pull quay.io/biocontainers/gffread:0.12.7--h077b44d_6
             docker pull maxtico/seblastian:latest
             docker pull ileahy/biopythonimage:latest
-            docker pull biocontainers/samtools:v1.9-4-deb_cv1
+
       - name: Install annocli
         if: steps.conda-cache.outputs.cache-hit != 'true'
         shell: bash -el {0}
         run: |
             git clone --branch v1.0.0 --depth 1 https://github.com/apollo994/annocli.git
             pip install ./annocli/
+      - name: Show matrix values
+        run: |
+            echo "TaxID: ${{ matrix.taxid }}"
+            echo "Species: ${{ matrix.species }}"
 
-      - name: Run pipeline for each mammal from mammals_to_search.tsv
+      - name: Run pipeline for matrix species
         shell: bash
         env:
           RUN_FULL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_full == 'true' }}
@@ -97,53 +137,22 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ ! -f mammals_to_search.tsv ]; then
-            echo "mammals_to_search.tsv not found" >&2
-            exit 1
-          fi
+          taxid="${{ matrix.taxid }}"
+          species="${{ matrix.species }}"
 
-          completion_file="${{ github.workspace }}/completion_report.tsv"
-          echo -e "taxid\tspecies\tstatus\toutput_dir\tnotes" > "$completion_file"
-
-          while IFS=$'\t' read -r taxid species class; do
-            [ -z "${taxid:-}" ] && continue
-            [ "${taxid#\#}" != "$taxid" ] && continue
-
-            taxid="$(echo "$taxid" | tr -d '[:space:]')"
-            species="$(echo "$species" | tr -d '[:space:]')"
-            [ -z "$species" ] && species="species_${taxid}"
-
-            safe_name=$(echo "$species" | tr ' /:' '__' | tr -cd '[:alnum:]._-')
-            output_dir="$OUTPUT_ROOT/$safe_name"
-            mkdir -p "$output_dir"
-
-            if [ -f "$output_dir/completion.txt" ] || [ -d "$output_dir/work" ]; then
-              echo "Skipping $species ($taxid): existing outputs found in $output_dir"
-              echo -e "$taxid\t$species\tskipped\t$output_dir\texisting outputs found" >> "$completion_file"
-              continue
-            fi
-
-            nextflow run main_mammal.nf \
-                -profile local \
-                --species_taxid "$taxid" \
-                --species_name "$species" \
-                --geneid_param "$GENEID_PARAM" \
-                --output_dir "$output_dir" \
-                --max_cpus 2 \
-                --max_memory '6GB' 
+          nextflow run main_mammal.nf \
+            -profile local \
+            --species_taxid "$taxid" \
+            --species_name "$species" \
+            --geneid_param "$GENEID_PARAM" \
+            --output_dir "$OUTPUT_ROOT" \
+            --max_cpus 2 \
+            --max_memory '6GB' 
             
-
-            echo -e "$taxid\t$species\t$status\t$output_dir\t$notes" >> "$completion_file"
-          done < mammals_to_search.tsv
-
-          echo "Completion report written to $completion_file"
-          cat "$completion_file"
-
       - name: Upload completion report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: completion-report
+          name: ORFsearch-${{ matrix.taxid }}
           path: |
-            completion_report.tsv
-            results-ci/**/ORFsearch_SECIS.result
+            results-ci/**/*SECIS.result

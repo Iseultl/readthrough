@@ -8,6 +8,7 @@ process concat_SECIS_ORFsearch {
     path merged_secis_gff
     path filtered_secis
     path orfsearch_result
+    val params.species_name
 
     output:
     path "ORFsearch.result"
@@ -19,6 +20,6 @@ process concat_SECIS_ORFsearch {
         --ORFsearch ${orfsearch_result} \\
         --all_secis ${merged_secis_gff} \\
         --filtered_secis ${filtered_secis} \\
-        --output ORFsearch.result
+        --output ${params.species_name}_ORFsearch.result
     """
 }

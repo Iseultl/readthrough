@@ -198,7 +198,7 @@ workflow {
     filtered_secis = FILTER_SECIS(merged_secis_gff)
 
     // Step 21: Combine ORFsearch results with filtered SECISearch results
-    ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis)
+    ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis, params.species_name)
 
     workflowCompletionMessage()
 }
