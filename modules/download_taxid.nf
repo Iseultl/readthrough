@@ -1,6 +1,7 @@
 process DOWNLOAD_TAXID {
     tag "Downloading TaxID"
-    publishDir "${params.output_dir}", mode: 'copy' 
+    publishDir "${params.output_dir}", mode: 'copy'
+    memory '4GB' 
 
     input:
     val taxid
