@@ -69,12 +69,24 @@ jobs:
 
       - name: Install Nextflow
         run: |
-          curl -fsSL https://get.nextflow.io | bash
-          sudo mv nextflow /usr/local/bin/
-          nextflow -version
+            curl -s https://get.nextflow.io | bash
+            chmod +x nextflow
+            echo "$PWD" >> $GITHUB_PATH
 
       - name: Show Docker availability
         run: docker --version
+    
+      - name: Pull Docker images
+        run: |
+            docker pull biocontainers/samtools:v1.9-4-deb_cv1
+            docker pull maxtico/selenoprofiles_container:v4.5.7
+            docker pull quay.io/biocontainers/agat:1.5.0--pl5321hdfd78af_0
+            docker pull quay.io/biocontainers/seqkit:2.3.0--h9ee0642_0
+            docker pull quay.io/biocontainers/gffread:0.12.7--h077b44d_6
+            docker pull maxtico/seblastian:latest
+            docker pull ileahy/biopythonimage:latest
+            docker pull biocontainers/samtools:v1.9-4-deb_cv1
+
 
       - name: Dry-run the workflow
         run: |
@@ -101,6 +113,6 @@ jobs:
             --geneid_param "${{ github.event.inputs.geneid_param }}" \
             --output_dir "${{ github.workspace }}/${{ github.event.inputs.output_dir }}" \
             --max_cpus 2 \
-            --max_memory '4GB' \
+            --max_memory '16GB' \
             -with-report report.html \
             -with-timeline timeline.html
