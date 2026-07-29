@@ -22,7 +22,17 @@ process DOWNLOAD_TAXID {
     bash -c "\$cmd"
     echo "Downloaded files for taxid ${taxid}."
 
-    annotation_source=\$(find annotation_downloads -type f -name "*.gff.gz" ! -name "*.aliasMatch.gff.gz" | head -n 1)
+    annotation_source=$(find annotation_downloads -type f \
+    \( \
+        -iname "*.gff.gz" \
+        -o -iname "*.gff3.gz" \
+        -o -iname "*.gtf.gz" \
+        -o -iname "*.gff" \
+        -o -iname "*.gff3" \
+        -o -iname "*.gtf" \
+    \) \
+    ! -iname "*.aliasMatch.gff.gz" \
+    | head -n 1)
     fasta_source=\$(find annotation_downloads -type f -name "*.fna.gz" | head -n 1)
 
     if [[ -z "\${annotation_source}" || -z "\${fasta_source}" ]]; then
