@@ -1,6 +1,5 @@
 process concat_SECIS_ORFsearch {
     tag "Concatenating SECIS and ORFsearch results"
-    publishDir "${params.output_dir}", mode: 'copy'
     label 'python'
     memory '4GB'
      

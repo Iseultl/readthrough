@@ -2,7 +2,7 @@
 
 process SPLITFASTA {
     tag { "${genome_fasta.getBaseName()}" }
-    memory '6GB'
+    memory '2GB'
     label 'splitfasta'
     
     input:
@@ -14,7 +14,7 @@ process SPLITFASTA {
     script:
     """
     mkdir -p split_chr
-    seqkit split -i -O split_chr ${genome_fasta}
+    seqkit split -i -O split_chr --two-pass ${genome_fasta}
 
     for f in split_chr/*; do
         mv "\$f" "\${f%.*}.fa"
