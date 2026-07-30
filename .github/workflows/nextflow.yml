@@ -101,7 +101,11 @@ jobs:
 
             echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   nextflow:
-    needs: generate-matrix
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/orfsearch-tools:latest
+    
+    needs: 
+      - generate-matrix
 
     strategy:
         fail-fast: false
@@ -117,37 +121,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Install Nextflow
+      - name: Free disk space
         run: |
-            curl -s https://get.nextflow.io | bash
-            chmod +x nextflow
-            echo "$PWD" >> $GITHUB_PATH
-
-      - name: Show Docker availability
-        run: docker --version
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          docker system prune -af
+          df -h
     
-      - name: Pull Docker images
-        run: |
-            docker pull biocontainers/samtools:v1.9-4-deb_cv1
-            docker pull maxtico/selenoprofiles_container:v4.5.7
-            docker pull quay.io/biocontainers/agat:1.5.0--pl5321hdfd78af_0
-            docker pull quay.io/biocontainers/seqkit:2.3.0--h9ee0642_0
-            docker pull quay.io/biocontainers/gffread:0.12.7--h077b44d_6
-            docker pull maxtico/seblastian:latest
-            docker pull ileahy/biopythonimage:latest
-
-      - name: Install annocli
-        if: steps.conda-cache.outputs.cache-hit != 'true'
-        shell: bash -el {0}
-        run: |
-            git clone --branch v1.0.0 --depth 1 https://github.com/apollo994/annocli.git
-            pip install ./annocli/
       - name: Show matrix values
         run: |
             echo "TaxID: ${{ matrix.taxid }}"
@@ -165,6 +146,7 @@ jobs:
           taxid="${{ matrix.taxid }}"
           species="${{ matrix.species }}"
 
+          # Run Nextflow
           nextflow run main_mammal.nf \
             -profile local \
             --species_taxid "$taxid" \
@@ -172,7 +154,9 @@ jobs:
             --geneid_param "$GENEID_PARAM" \
             --output_dir "$OUTPUT_ROOT" \
             --max_cpus 2 \
-            --max_memory '6GB' 
+            --max_memory '6GB'
+
+          nextflow clean -f
             
       - name: Upload completion report
         if: always()
