@@ -102,7 +102,7 @@ jobs:
             echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   nextflow:
     container:
-      image: ghcr.io/${{ github.repository_owner }}/orfsearch-tools:latest
+      image: ghcr.io/${{ github.repository_owner }}/readthrough:latest
     
     needs: 
       - generate-matrix
