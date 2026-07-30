@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /build
 
-RUN git clone --branch v1.0.0 --depth 1 \
+RUN git clone --depth 1 \
     https://gitlab.com/bioinformatics6495415/bioinf-rust/genid-rs.git
 
 WORKDIR /build/genid-rs
