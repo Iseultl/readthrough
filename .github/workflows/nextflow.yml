@@ -102,7 +102,7 @@ jobs:
             echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   nextflow:
     container:
-      image: ghcr.io/${{ github.repository }}:latest
+      image: ghcr.io/iseultl/readthrough:latest
     
     needs: 
       - generate-matrix
