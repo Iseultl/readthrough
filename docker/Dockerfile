@@ -50,10 +50,18 @@ RUN curl -s https://get.nextflow.io | bash && \
 # Install annocli
 ##################################################
 
+WORKDIR /tmp
+
 RUN git clone --branch v1.0.0 --depth 1 \
-    https://github.com/apollo994/annocli.git /opt/annocli && \
-    pip3 install /opt/annocli && \
-    rm -rf /opt/annocli
+    https://github.com/apollo994/annocli.git
+
+WORKDIR /tmp/annocli
+
+RUN pip3 install .
+
+WORKDIR /
+
+RUN rm -rf /tmp/annocli
 
 ##################################################
 # Install geneid-rs
