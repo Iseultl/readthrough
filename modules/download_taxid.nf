@@ -44,15 +44,8 @@ process DOWNLOAD_TAXID {
     annocli alias "\${annotation_source}" "\${fasta_source}" --output "\${alias_output}"
     rm -f "annotation_downloads/"*.aliasMappings.tsv 2>/dev/null || true
 
-    # Materialize regular files so downstream staging does not depend on source symlinks.
-    cat "\${fasta_source}" > "genome_${taxid}.fasta.gz"
-    cat "\${alias_output}" > "genome_${taxid}.gff.gz"
-
-    if [[ ! -s "genome_${taxid}.fasta.gz" || ! -s "genome_${taxid}.gff.gz" ]]; then
-        echo "Downloaded output files are missing or empty for taxid ${taxid}" >&2
-        ls -lah . >&2
-        exit 1
-    fi
+    cp "\${fasta_source}" "genome_${taxid}.fasta.gz"
+    cp "\${alias_output}" "genome_${taxid}.gff.gz"
 
     rm -rf annotation_downloads
     """
