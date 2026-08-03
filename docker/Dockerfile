@@ -59,7 +59,7 @@ RUN pip install /tmp/annocli
 # Install geneid on command line
 ##################################################
 
-COPY --from=builder /bin/geneid /usr/local/bin/
+COPY --from=builder geneid-1.5.2/bin/geneid /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/geneid
 
