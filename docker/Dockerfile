@@ -1,23 +1,30 @@
 ##############################################
-# Stage 1 - Build geneid-rs
+# Stage 1 - Build geneid og
 ##############################################
 
-FROM rust:1.89-bookworm AS geneid-builder
+FROM debian:stretch AS builder
 
-RUN apt-get update && apt-get install -y \
-    git \
-    pkg-config \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+ARG GENEID_VER=1.4.5
 
-WORKDIR /build
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+        curl \
+        ca-certificates \
+        build-essential
 
-RUN git clone --depth 1 \
-    https://gitlab.com/bioinformatics6495415/bioinf-rust/genid-rs.git
+RUN curl -L https://github.com/guigolab/geneid/archive/v${GENEID_VER}.tar.gz | \
+    tar xz && \
+    cd geneid-${GENEID_VER} && \
+    make BIN=/build
 
-WORKDIR /build/genid-rs
+FROM debian:stretch
 
-RUN cargo build --release
+LABEL author.name="Emilio Palumbo"
+LABEL author.email="emiliopalumbo@gmail.com"
+
+COPY --from=builder /build/geneid /usr/local/bin/
+
+ENTRYPOINT [ "/usr/local/bin/geneid" ]
 
 
 ##############################################
