@@ -87,28 +87,22 @@ workflow {
     }
     printHeader()
 
-    // Step 0: Download genome files based on taxid
+    // Step 1: Download genome files based on taxid
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
     
     // Print the downloaded files for debugging
     downloaded_files.view()
-    
-    input_files = downloaded_files.flatMap { fasta_file, gff_file ->
-        [
-            tuple(fasta_file.name, fasta_file),
-            tuple(gff_file.name, gff_file)
-        ]
-    }
-    
-    unzipped_files = UNZIP_IF_NEEDED(input_files)
+
+    // Step 2: Handle zipped input files
+    unzipped_files = UNZIP_IF_NEEDED(downloaded_files)
 
     // Separate outputs by file type
     genome_fasta_unzipped = unzipped_files
-        .filter { type, file -> type.endsWith(".fasta.gz") }
+        .filter { type, file -> type.endsWith(".fasta") }
         .map { type, file -> file }
     
     genome_gff_unzipped = unzipped_files
-        .filter { type, file -> type.endsWith(".gff.gz") }
+        .filter { type, file -> type.endsWith(".gff") }
         .map { type, file -> file }
     
 
