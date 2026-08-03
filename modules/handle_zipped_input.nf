@@ -6,7 +6,7 @@ process UNZIP_IF_NEEDED {
     
     input:
     tuple path(fasta), path(gff)
-    val ${params.species_taxid}
+    val taxid
     
     output:
     tuple path("*.fasta"), path("*.gff")
@@ -14,7 +14,7 @@ process UNZIP_IF_NEEDED {
     script:
     """
     #!/bin/bash
-    gunzip -c ${fasta} > genome_${params.species_taxid}.fasta
-    gunzip -c ${gff} > genome_${params.species_taxid}.gff
+    gunzip -c ${fasta} > genome_${taxid}.fasta
+    gunzip -c ${gff} > genome_${taxid}.gff
     """
 }
