@@ -5,7 +5,7 @@ process UNZIP_IF_NEEDED {
     memory '4GB'
     
     input:
-    tuple path(input_file), val(file_type)
+    tuple val(file_type), path(input_file)
     
     output:
     tuple val(file_type), path("${output_name}"), emit: unzipped_file

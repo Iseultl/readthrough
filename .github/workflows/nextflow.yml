@@ -26,7 +26,7 @@ on:
         type: string
       count:
         description: "Number of species to process"
-        default: "100"
+        default: "10"
         type: string
       geneid_param:
         description: 'Path to the GeneID parameter file (required for full run)'

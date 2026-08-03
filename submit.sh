@@ -3,8 +3,8 @@
 #SBATCH --mem 8G
 #SBATCH -p genoa64
 #SBATCH --time 02:00:00
-#SBATCH --output=/no_backup/rg/ileahy/logs/nf_orfsearch_horse_%A.out   # log per job
-#SBATCH --error=/no_backup/rg/ileahy/logs/nf_orfsearch_horse_%A.err   # error log
+#SBATCH --output=/no_backup/rg/ileahy/logs/nf_readthrough_%A.out   # log per job
+#SBATCH --error=/no_backup/rg/ileahy/logs/nf_readthrough_%A.err   # error log
  
 # Configure bash
 set -e          # exit immediately on error
@@ -32,7 +32,8 @@ export NXF_JVM_ARGS="-Xms2g -Xmx5g"
 # $ sbatch submit_nf.sh nextflow/rnatoy -with-singularity
 #
 # will use "nextflow/rnatoy -with-singularity" as arguments
-nextflow run ~/git/gitlab/secis_independent/main.nf -params-file ~/git/gitlab/secis_independent/params.yaml -profile cluster -w /nfs/scratch01/rg/ileahy 
+
+nextflow run main_mammal.nf -stub-run --species_taxid 10020 --species_name test_species --max_cpus 1 --max_memory '2GB'
  
 # Wait for the pipeline to finish
 echo "Waiting for ${pid}"
