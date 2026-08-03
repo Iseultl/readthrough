@@ -27,9 +27,9 @@ process GFFREAD {
     gffread -F -w transcripts.fa -g ${fasta} ${gtf}
     
     # Process transcripts
-    awk '/^>/ {sub(/^>/, ">"); print \$1; next} {print}'  transcripts.fa > transcripts_clean_${id}.fa 
+    awk '/^>/ {sub(/^>/, ">"); print \$1; next} {print}'  transcripts.fa > transcripts_clean.fa 
     # Move output to output directory
-    mv transcripts_clean_${id}.fa gffread_out/
+    mv transcripts_clean.fa gffread_out/
     
     """
 }
