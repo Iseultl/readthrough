@@ -1,30 +1,28 @@
 ##############################################
-# Stage 1 - Build geneid og
+# Stage 1 - Build geneid-rs
 ##############################################
 
-FROM debian:stretch AS builder
+FROM rust:1-slim-bookworm AS builder
+WORKDIR /usr/src/app
+COPY Cargo.toml Cargo.lock ./
 
-ARG GENEID_VER=1.4.5
+COPY src ./src
+COPY benches ./benches
+RUN cargo build --release
 
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-        curl \
-        ca-certificates \
-        build-essential
+FROM debian:bookworm-slim
 
-RUN curl -L https://github.com/guigolab/geneid/archive/v${GENEID_VER}.tar.gz | \
-    tar xz && \
-    cd geneid-${GENEID_VER} && \
-    make BIN=/build
+ARG INPUT_DIR=/data/input
+ARG OUTPUT_DIR=/data/output
 
-FROM debian:stretch
+ENV INPUT_DIR=${INPUT_DIR}
+ENV OUTPUT_DIR=${OUTPUT_DIR}
 
-LABEL author.name="Emilio Palumbo"
-LABEL author.email="emiliopalumbo@gmail.com"
+RUN mkdir -p ${INPUT_DIR} ${OUTPUT_DIR} \
+    && chmod 777 ${INPUT_DIR} ${OUTPUT_DIR}
 
-COPY --from=builder /build/geneid /usr/local/bin/
-
-ENTRYPOINT [ "/usr/local/bin/geneid" ]
+COPY --from=builder /usr/src/app/target/release/geneid-rs /usr/local/bin/geneid-rs
+ENTRYPOINT ["/usr/local/bin/geneid-rs"]
 
 
 ##############################################
