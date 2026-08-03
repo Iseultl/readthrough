@@ -5,22 +5,16 @@ process UNZIP_IF_NEEDED {
     memory '4GB'
     
     input:
-    tuple val(file_type), path(input_file)
+    tuple path(fasta), path(gff)
+    val ${params.species_taxid}
     
     output:
-    tuple val(file_type), path("${output_name}"), emit: unzipped_file
+    tuple path("*.fasta"), path("*.gff")
     
     script:
-    is_gzipped = input_file.name.endsWith('.gz')
-    output_name = is_gzipped ? input_file.name - '.gz' : input_file.name
-    
-    if (is_gzipped) {
-        """
-        gunzip -c ${input_file} > ${output_name}
-        """
-    } else {
-        """
-        cp ${input_file} ${output_name}
-        """
-    }
+    """
+    #!/bin/bash
+    gunzip -c ${fasta} > genome_${params.species_taxid}.fasta
+    gunzip -c ${gff} > genome_${params.species_taxid}.gff
+    """
 }

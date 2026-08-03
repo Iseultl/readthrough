@@ -94,7 +94,7 @@ workflow {
     downloaded_files.view()
 
     // Step 2: Handle zipped input files
-    unzipped_files = UNZIP_IF_NEEDED(downloaded_files)
+    unzipped_files = UNZIP_IF_NEEDED(downloaded_files, params.species_taxid)
 
     // Separate outputs by file type
     genome_fasta_unzipped = unzipped_files
