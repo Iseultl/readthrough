@@ -8,7 +8,7 @@ process EXTRACT_SEQUENCE_LOGOS {
     
     input:
     path result_csv
-    path gffread_files, stageAs: 'gffread_out/*'
+    path gffread_dir
      
     output:
     path "sequence_logos/*"
@@ -22,7 +22,7 @@ process EXTRACT_SEQUENCE_LOGOS {
     
     extract_sequence_logos.py \
         --result_file ${result_csv} \
-        --fasta_dir gffread_out \
+        --fasta_dir ${gffread_dir} \
         --output_dir sequence_logos
     """
 }

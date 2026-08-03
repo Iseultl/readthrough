@@ -24,18 +24,19 @@ RUN cargo build --release
 # Stage 2 - Final runtime image
 ##############################################
 
-FROM ubuntu:24.04
+FROM ileahy/biopythonimage:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     openjdk-17-jre \
-    python3 \
-    python3-pip \
     curl \
     git \
     unzip \
     gzip \
+    python3 \
+    python3-pip \
+    python-is-python3 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -50,18 +51,18 @@ RUN curl -s https://get.nextflow.io | bash && \
 # Install annocli
 ##################################################
 
-WORKDIR /tmp
+RUN pip install --upgrade pip
+
+RUN python -m pip install --no-cache-dir \
+    biopython \
+    matplotlib \
+    numpy \
+    pandas
 
 RUN git clone --branch v1.0.0 --depth 1 \
-    https://github.com/apollo994/annocli.git
+    https://github.com/apollo994/annocli.git /tmp/annocli
 
-WORKDIR /tmp/annocli
-
-RUN pip3 install .
-
-WORKDIR /
-
-RUN rm -rf /tmp/annocli
+RUN pip install /tmp/annocli
 
 ##################################################
 # Install geneid-rs

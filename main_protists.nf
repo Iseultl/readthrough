@@ -53,7 +53,6 @@ include { UNZIP_IF_NEEDED } from './modules/handle_zipped_input'
 include { AGAT_GFF2GTF } from './modules/agat_gff2gtf'
 include { AGAT_SPLITGFF } from './modules/agat_splitgff'
 include { CLEAN_GTF } from './modules/clean_gtf'
-include { CONCATENATE_GTFS } from './modules/concatenated_gff'
 include { RELOCATE_TRANSCRIPTS } from './modules/relocate_transcripts'
 include { SPLITFASTA } from './modules/splitfasta'
 include { GFFREAD } from './modules/gffread'
@@ -67,7 +66,6 @@ include { CREATE_SUMMARY_TABLE } from './modules/create_summary_table'
 include { FILTER_FINAL_TABLE } from './modules/filter_final_table'
 include { EXTRACT_SEQUENCE_LOGOS } from './modules/extract_sequence_logos'
 include { SECISSEARCH } from './modules/secissearch'
-include { MERGE_GFF } from './modules/merge_gff'
 include { FILTER_SECIS } from './modules/filter_secis'
 include { COMBINE_ORFSECIS } from './modules/combine_orfsecis'
 include { CREATE_README } from './modules/create_readme'
@@ -148,14 +146,14 @@ workflow {
     paired_ch = base_names_gtf.combine(base_names_fasta, by: 0)  
      
     // Step 6: Create relocated to transcript gff 
-    CONCATENATE_GTFS(split_gff_dir_ch.collect())
-    relocated_gtf = RELOCATE_TRANSCRIPTS(CONCATENATE_GTFS.out)
+    concatenated_gtf = split_gff_dir_ch.collectFile(name: 'concatenated.gtf')
+    relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf)
     
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD(paired_ch)
      
     // Step 10. Recode all transcripts 
-    recoded_transcripts = RECODE_TGA(GFFREAD.out)
+    recoded_transcripts = RECODE_TGA(gffread_out.transcripts)
 
     // Step 11. Split recoded transcripts if too large
     split_transcripts_ch = SPLIT_IF_TOO_LARGE(recoded_transcripts).split_fasta.flatten()
@@ -164,14 +162,14 @@ workflow {
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param)  
  
     // Step 14 & 15: Process original and recoded predictions
-    interesting_predictions = SELECT_INTERESTING(geneid_results_ch, RELOCATE_TRANSCRIPTS.out).interesting_predictions
+    interesting_predictions = SELECT_INTERESTING(geneid_results_ch, relocated_gtf.out).interesting_predictions
     original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
     
     // Combine the channels based on the scaffold ID
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
     
     // Step 16: Final Output - Pass the combined channel to the summary table process
-    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, RELOCATE_TRANSCRIPTS.out)
+    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf.out)
 
     result = CONCAT_SUMMARY_RESULTS(summary_tables.collect())
     
@@ -179,18 +177,17 @@ workflow {
     ORFsearch_result = FILTER_FINAL_TABLE(result)
 
     // Step 18: Extract sequences for logos
-    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.collect())
+    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.gffread_dir)
 
     // Step 19: Run SECISearch on the transcripts
     secissearch_results = SECISSEARCH(gffread_out)
-    secissearch_results.collect().set { all_gffs }
-    merged_secis_gff = MERGE_GFF(all_gffs)
+    merged_secis_gff = secissearch_results.collectFile(name: 'all_secis_combined.gff')
 
     // Step 20: Filter SECISearch results
     filtered_secis = FILTER_SECIS(merged_secis_gff)
 
     // Step 21: Combine ORFsearch results with filtered SECISearch results
-    ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis)
+    ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis, params.species_name)
 
 }
 

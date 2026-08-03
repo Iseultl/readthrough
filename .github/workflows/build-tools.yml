@@ -42,5 +42,5 @@ jobs:
           push: true
 
           tags: |
-            ghcr.io/iseultl/readthrough:latest 
+            ghcr.io/iseultl/readthrough:latest
             ghcr.io/iseultl/readthrough:${{ github.sha }}

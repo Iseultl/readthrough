@@ -101,15 +101,12 @@ jobs:
 
             echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   nextflow:
-    container:
-      image: ghcr.io/iseultl/readthrough:latest
-    
     needs: 
       - generate-matrix
 
     strategy:
         fail-fast: false
-        max-parallel: 5
+        max-parallel: 1
 
         matrix:
           include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
@@ -118,15 +115,24 @@ jobs:
       contents: read
 
     steps:
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Nextflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+
       - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Free disk space
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          docker system prune -af
           df -h
     
       - name: Show matrix values
@@ -137,14 +143,15 @@ jobs:
       - name: Run pipeline for matrix species
         shell: bash
         env:
-          RUN_FULL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_full == 'true' }}
-          GENEID_PARAM: human3iso.param
-          OUTPUT_ROOT: ${{ github.workspace }}/results-ci
+          NXF_OPTS: -Xms256m -Xmx1g
+          GENEID_PARAM: ${{ github.event.inputs.geneid_param || 'human3iso.param' }}
+          OUTPUT_ROOT: ${{ github.event.inputs.output_dir || 'results-ci' }}
         run: |
           set -euo pipefail
 
           taxid="${{ matrix.taxid }}"
           species="${{ matrix.species }}"
+          output_root="${GITHUB_WORKSPACE}/${OUTPUT_ROOT}"
 
           # Run Nextflow
           nextflow run main_mammal.nf \
@@ -152,7 +159,7 @@ jobs:
             --species_taxid "$taxid" \
             --species_name "$species" \
             --geneid_param "$GENEID_PARAM" \
-            --output_dir "$OUTPUT_ROOT" \
+            --output_dir "$output_root" \
             --max_cpus 2 \
             --max_memory '6GB'
 
@@ -164,4 +171,5 @@ jobs:
         with:
           name: ORFsearch-${{ matrix.taxid }}
           path: |
-            results-ci/**/*SECIS.result
+            ${{ github.event.inputs.output_dir || 'results-ci' }}/**/*SECIS.result
+            ${{ github.event.inputs.output_dir || 'results-ci' }}/**/sequence_logos
