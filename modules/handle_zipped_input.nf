@@ -9,7 +9,7 @@ process UNZIP_IF_NEEDED {
     val taxid
     
     output:
-    tuple path("*.fasta"), path("*.gff")
+    tuple path("genome_${taxid}.fasta"), path("genome_${taxid}.gff")
     
     script:
     """
