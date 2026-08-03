@@ -6,7 +6,8 @@ process DOWNLOAD_TAXID {
     val taxid
 
     output:
-    tuple path("genome_${taxid}.fasta"), path("genome_${taxid}.gff")
+    path("genome_${taxid}.fasta"), emit: fasta
+    path("genome_${taxid}.gff"), emit: gff
 
     script:
     """

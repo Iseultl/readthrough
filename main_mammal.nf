@@ -90,29 +90,8 @@ workflow {
     // Step 1: Download genome files based on taxid
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
 
-    // Separate outputs by file type
-    genome_fasta_unzipped = downloaded_files
-        .filter { type, file -> type.endsWith(".fasta") }
-        .map { type, file -> file }
-    
-    genome_gff_unzipped = downloaded_files
-        .filter { type, file -> type.endsWith(".gff") }
-        .map { type, file -> file }
-    
-    genome_fasta_unzipped.view { file ->
-        """
-        Unzipped FASTA: ${file}
-        class = ${file.getClass().name}
-        """
-    }
-    genome_gff_unzipped.view { file ->
-        """
-        Unzipped GFF: ${file}
-        class = ${file.getClass().name}
-        """
-    }
     // Step 3: Split GTF/GFF
-    split_results = AGAT_SPLITGFF(genome_gff_unzipped)
+    split_results = AGAT_SPLITGFF(downloaded_files.gff)
     
     // Step 4: Collect all .gff files from the output directory
     gff_files_ch = split_results.gff_files
@@ -132,7 +111,7 @@ workflow {
     }
 
     // Step 6: FASTA Processing Pipeline
-    split_fasta_dir_ch = SPLITFASTA(genome_fasta_unzipped).split_chr
+    split_fasta_dir_ch = SPLITFASTA(downloaded_files.fasta).split_chr
     base_names_fasta = split_fasta_dir_ch.flatten().map { file ->
         def fname = file.name  // e.g. horse_genome.part_NW_027222397.1.fa
         def chr_match = fname =~ /part_(.+)\.fa/
