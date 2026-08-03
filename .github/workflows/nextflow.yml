@@ -53,7 +53,7 @@ jobs:
           shell: bash
           run: |
             start=${{ github.event.inputs.start || '1' }}
-            count=${{ github.event.inputs.count || '100' }}
+            count=${{ github.event.inputs.count || '10' }}
 
             matrix=$(awk -v start="$start" -v count="$count" '
             BEGIN {

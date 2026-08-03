@@ -1,7 +1,7 @@
 // modules/handle_zipped_input.nf
 
 process UNZIP_IF_NEEDED {
-    tag { "${file_type}" }
+    tag { "unzip" }
     memory '4GB'
     
     input:
