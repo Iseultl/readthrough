@@ -1,6 +1,5 @@
-species_taxid : "7740"
-species_name : "lancelets"
-
+species_taxid : "10020"
+species_name : "Dipodomys ordii"
 
 # Production settings
 debug: true
