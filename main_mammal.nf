@@ -91,7 +91,15 @@ workflow {
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
     
     // Print the downloaded files for debugging
-    downloaded_files.view()
+    downloaded_files.view { fasta, gff ->
+        """
+        FASTA: ${fasta}
+        class = ${fasta.getClass().name}
+
+        GFF:   ${gff}
+        class = ${gff.getClass().name}
+        """
+    }
 
     // Step 2: Handle zipped input files
     unzipped_files = UNZIP_IF_NEEDED(downloaded_files, params.species_taxid)
