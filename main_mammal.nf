@@ -95,12 +95,10 @@ workflow {
     gtf_files_ch = AGAT_GFF2GTF(downloaded_files.gff)
     
     // Create a channel of cleaned GTF files for downstream processing
-    cleaned_gtf_ch = CLEAN_GTF(gtf_files_ch)
+    cleaned_gtf_ch = CLEAN_GTF(gtf_files_ch.gtf_file)
 
     // Step 8: Now pass the paired channel to GFFREAD
-    gffread_outputs = GFFREAD(
-        tuple(cleaned_gtf_ch, downloaded_files.fasta)
-    )
+    gffread_outputs = GFFREAD(cleaned_gtf_ch.cleaned_gtf, downloaded_files.fasta)
 
     // Step 9: Create relocated to transcript gff 
     relocated_gtf = RELOCATE_TRANSCRIPTS(cleaned_gtf_ch)

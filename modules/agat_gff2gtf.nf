@@ -7,7 +7,7 @@ process AGAT_GFF2GTF {
     path gff_file
 
     output:
-    path "${gff_file.baseName}.gtf", emit: gtf_files
+    path "${gff_file.baseName}.gtf", emit: gtf_file
 
     script:
     """
