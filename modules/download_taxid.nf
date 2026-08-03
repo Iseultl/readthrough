@@ -6,7 +6,7 @@ process DOWNLOAD_TAXID {
     val taxid
 
     output:
-    tuple path("genome_${taxid}.fasta.gz"), path("genome_${taxid}.gff.gz")
+    tuple path("genome_${taxid}.fasta"), path("genome_${taxid}.gff")
 
     script:
     """
@@ -46,6 +46,10 @@ process DOWNLOAD_TAXID {
 
     mv "\${fasta_source}" "genome_${taxid}.fasta.gz"
     mv "\${alias_output}" "genome_${taxid}.gff.gz"
+
+    gunzip -c "genome_${taxid}.fasta.gz" > "genome_${taxid}.fasta"
+    gunzip -c "genome_${taxid}.gff.gz" > "genome_${taxid}.gff"
+    rm -f "genome_${taxid}.fasta.gz" "genome_${taxid}.gff.gz"
 
     rm -rf annotation_downloads
     """

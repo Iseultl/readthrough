@@ -33,7 +33,7 @@ export NXF_JVM_ARGS="-Xms2g -Xmx5g"
 #
 # will use "nextflow/rnatoy -with-singularity" as arguments
 
-nextflow run main_mammal.nf -stub-run --species_taxid 10020 --species_name test_species --max_cpus 1 --max_memory '8GB' -w /nfs/scratch01/rg/ileahy/ -profile cluster
+nextflow run main_mammal.nf -stub-run --species_taxid 10020 --species_name test_species --max_cpus 1 --max_memory '8GB' -w /nfs/scratch01/rg/ileahy/ -profile cluster -resume
  
 # Wait for the pipeline to finish
 echo "Waiting for ${pid}"

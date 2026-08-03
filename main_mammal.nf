@@ -102,14 +102,14 @@ workflow {
     }
 
     // Step 2: Handle zipped input files
-    unzipped_files = UNZIP_IF_NEEDED(downloaded_files, params.species_taxid)
+    // unzipped_files = UNZIP_IF_NEEDED(downloaded_files, params.species_taxid)
 
     // Separate outputs by file type
-    genome_fasta_unzipped = unzipped_files
+    genome_fasta_unzipped = downloaded_files
         .filter { type, file -> type.endsWith(".fasta") }
         .map { type, file -> file }
     
-    genome_gff_unzipped = unzipped_files
+    genome_gff_unzipped = downloaded_files
         .filter { type, file -> type.endsWith(".gff") }
         .map { type, file -> file }
     
