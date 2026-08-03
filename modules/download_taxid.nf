@@ -44,8 +44,8 @@ process DOWNLOAD_TAXID {
     annocli alias "\${annotation_source}" "\${fasta_source}" --output "\${alias_output}"
     rm -f "annotation_downloads/"*.aliasMappings.tsv 2>/dev/null || true
 
-    cp "\${fasta_source}" "genome_${taxid}.fasta.gz"
-    cp "\${alias_output}" "genome_${taxid}.gff.gz"
+    mv "\${fasta_source}" "genome_${taxid}.fasta.gz"
+    mv "\${alias_output}" "genome_${taxid}.gff.gz"
 
     rm -rf annotation_downloads
     """

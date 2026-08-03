@@ -91,14 +91,12 @@ workflow {
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
     
     // Print the downloaded files for debugging
-    downloaded_files.map { fasta, gff ->
-        println "$fasta $gff"
-    }
+    downloaded_files.view()
     
     input_files = downloaded_files.flatMap { fasta_file, gff_file ->
         [
-            tuple("genome_${params.species_taxid}.fasta.gz", fasta_file),
-            tuple("genome_${params.species_taxid}.gff.gz", gff_file)
+            tuple(fasta_file.name, fasta_file),
+            tuple(gff_file.name, gff_file)
         ]
     }
     
