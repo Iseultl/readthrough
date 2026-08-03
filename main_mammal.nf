@@ -89,20 +89,6 @@ workflow {
 
     // Step 1: Download genome files based on taxid
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
-    
-    // Print the downloaded files for debugging
-    downloaded_files.view { fasta, gff ->
-        """
-        FASTA: ${fasta}
-        class = ${fasta.getClass().name}
-
-        GFF:   ${gff}
-        class = ${gff.getClass().name}
-        """
-    }
-
-    // Step 2: Handle zipped input files
-    // unzipped_files = UNZIP_IF_NEEDED(downloaded_files, params.species_taxid)
 
     // Separate outputs by file type
     genome_fasta_unzipped = downloaded_files
@@ -113,7 +99,18 @@ workflow {
         .filter { type, file -> type.endsWith(".gff") }
         .map { type, file -> file }
     
-
+    genome_fasta_unzipped.view { file ->
+        """
+        Unzipped FASTA: ${file}
+        class = ${file.getClass().name}
+        """
+    }
+    genome_gff_unzipped.view { file ->
+        """
+        Unzipped GFF: ${file}
+        class = ${file.getClass().name}
+        """
+    }
     // Step 3: Split GTF/GFF
     split_results = AGAT_SPLITGFF(genome_gff_unzipped)
     

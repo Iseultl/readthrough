@@ -31,17 +31,21 @@ process DOWNLOAD_TAXID {
         -o -iname "*.gtf" \
         \\) \
     ! -iname "*.aliasMatch.gff.gz" | head -n 1)
-    fasta_source=\$(find annotation_downloads -type f -name "*.fna.gz" | head -n 1)
+    fasta_source=\$(find annotation_downloads -type f -iname "*.fna.gz" -o -iname "*.fasta.gz" | head -n 1)
 
     if [[ -z "\${annotation_source}" || -z "\${fasta_source}" ]]; then
         echo "Could not locate downloaded annotation or assembly files under annotation_downloads/" >&2
         find annotation_downloads -type f | sort >&2
         exit 1
+    else
+        echo "Located annotation file: \${annotation_source}"
+        echo "Located assembly file: \${fasta_source}"
     fi
 
     alias_output="\${annotation_source%.gff.gz}.aliasMatch.gff.gz"
 
     annocli alias "\${annotation_source}" "\${fasta_source}" --output "\${alias_output}"
+    echo "Generated alias mapping file: \${alias_output}"
     rm -f "annotation_downloads/"*.aliasMappings.tsv 2>/dev/null || true
 
     mv "\${fasta_source}" "genome_${taxid}.fasta.gz"
