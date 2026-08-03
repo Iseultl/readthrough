@@ -2,28 +2,25 @@
 # Stage 1 - Build geneid-rs
 ##############################################
 
-FROM rust:1-slim-bookworm AS builder
-WORKDIR /usr/src/app
-COPY Cargo.toml Cargo.lock ./
+FROM debian:stretch AS builder
 
-COPY src ./src
-COPY benches ./benches
-RUN cargo build --release
+ARG GENEID_VER=1.5.2
 
-FROM debian:bookworm-slim
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+        curl \
+        ca-certificates \
+        build-essential
 
-ARG INPUT_DIR=/data/input
-ARG OUTPUT_DIR=/data/output
+RUN curl -O https://github.com/guigolab/geneid/archive/refs/tags/v1.5.2.tar.gz && \
+    tar xz && \
+    cd geneid-${GENEID_VER} && \
+    make BIN=/build
 
-ENV INPUT_DIR=${INPUT_DIR}
-ENV OUTPUT_DIR=${OUTPUT_DIR}
+FROM debian:stretch
+COPY --from=builder /build/geneid /usr/local/bin/
 
-RUN mkdir -p ${INPUT_DIR} ${OUTPUT_DIR} \
-    && chmod 777 ${INPUT_DIR} ${OUTPUT_DIR}
-
-COPY --from=builder /usr/src/app/target/release/geneid-rs /usr/local/bin/geneid-rs
-ENTRYPOINT ["/usr/local/bin/geneid-rs"]
-
+ENTRYPOINT [ "/usr/local/bin/geneid" ]
 
 ##############################################
 # Stage 2 - Final runtime image
@@ -39,9 +36,6 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     gzip \
-    python3 \
-    python3-pip \
-    python-is-python3 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -52,17 +46,12 @@ RUN apt-get update && apt-get install -y \
 RUN curl -s https://get.nextflow.io | bash && \
     mv nextflow /usr/local/bin/
 
+
 ##################################################
 # Install annocli
 ##################################################
 
 RUN pip install --upgrade pip
-
-RUN python -m pip install --no-cache-dir \
-    biopython \
-    matplotlib \
-    numpy \
-    pandas
 
 RUN git clone --branch v1.0.0 --depth 1 \
     https://github.com/apollo994/annocli.git /tmp/annocli
@@ -73,11 +62,10 @@ RUN pip install /tmp/annocli
 # Install geneid-rs
 ##################################################
 
-COPY --from=geneid-builder \
-    /build/genid-rs/target/release/geneid-rs \
-    /usr/local/bin/
+COPY --from=builder \
+    /build/geneid /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/geneid-rs
+RUN chmod +x /usr/local/bin/geneid
 
 ##################################################
 
