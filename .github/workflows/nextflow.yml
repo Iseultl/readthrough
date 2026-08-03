@@ -160,7 +160,7 @@ jobs:
             --output_dir "$output_root" \
             --max_cpus 2 \
             --max_memory '6GB' \
-            --work "$GITHUB_WORKSPACE/work/${taxid}"
+            -w "$GITHUB_WORKSPACE/work/${taxid}"
 
           nextflow clean -f
             
