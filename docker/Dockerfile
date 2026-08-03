@@ -1,26 +1,23 @@
 ##############################################
-# Stage 1 - Build geneid-rs
+# Stage 1 - Build geneid
 ##############################################
 
-FROM debian:stretch AS builder
+FROM debian:bookworm AS builder
 
 ARG GENEID_VER=1.5.2
 
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
+    apt-get install -y \
+        build-essential \
         curl \
-        ca-certificates \
-        build-essential
+        ca-certificates
 
-RUN curl -O https://github.com/guigolab/geneid/archive/refs/tags/v1.5.2.tar.gz && \
-    tar xz && \
-    cd geneid-${GENEID_VER} && \
-    make BIN=/build
-
-FROM debian:stretch
-COPY --from=builder /build/geneid /usr/local/bin/
-
-ENTRYPOINT [ "/usr/local/bin/geneid" ]
+RUN curl -L \
+    https://github.com/guigolab/geneid/archive/refs/tags/v1.5.2.tar.gz \
+    -o geneid.tar.gz && \
+    tar xzf geneid.tar.gz && \
+    cd geneid-1.5.2 && \
+    make
 
 ##############################################
 # Stage 2 - Final runtime image
@@ -59,11 +56,10 @@ RUN git clone --branch v1.0.0 --depth 1 \
 RUN pip install /tmp/annocli
 
 ##################################################
-# Install geneid-rs
+# Install geneid on command line
 ##################################################
 
-COPY --from=builder \
-    /build/geneid /usr/local/bin/
+COPY --from=builder /bin/geneid /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/geneid
 
