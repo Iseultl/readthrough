@@ -90,44 +90,20 @@ workflow {
     // Step 1: Download genome files based on taxid
     downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
 
-    // Step 3: Split GTF/GFF
-    split_results = AGAT_SPLITGFF(downloaded_files.gff)
-    
-    // Step 4: Collect all .gff files from the output directory
-    gff_files_ch = split_results.gff_files
-    gff_files_ch = gff_files_ch.flatten()
 
     // Step 5: Run AGAT_GFF2GTF in parallel to standardise each GFF file 
-    gtf_files_ch = AGAT_GFF2GTF(gff_files_ch)
+    gtf_files_ch = AGAT_GFF2GTF(downloaded_files.gff)
     
     // Create a channel of cleaned GTF files for downstream processing
-    split_gff_dir_ch = CLEAN_GTF(gtf_files_ch)
-    
-    // Create paired channels for GTF and FASTA files
-    // First, create a channel for GTF files with chromosome names
-    base_names_gtf = gtf_files_ch.map { file ->
-        def chr = file.name.replaceFirst(/\.gtf$/, '')
-        tuple(chr, file)
-    }
+    cleaned_gtf_ch = CLEAN_GTF(gtf_files_ch)
 
-    // Step 6: FASTA Processing Pipeline
-    split_fasta_dir_ch = SPLITFASTA(downloaded_files.fasta).split_chr
-    base_names_fasta = split_fasta_dir_ch.flatten().map { file ->
-        def fname = file.name  // e.g. horse_genome.part_NW_027222397.1.fa
-        def chr_match = fname =~ /part_(.+)\.fa/
-        def chr = chr_match ? chr_match[0][1] : null
-        tuple(chr, file)
-    }
-    
-    // Step 7: Create paired gtf & fasta channel
-    paired_ch = base_names_gtf.combine(base_names_fasta, by: 0)  
-    
     // Step 8: Now pass the paired channel to GFFREAD
-    gffread_outputs = GFFREAD(paired_ch)
+    gffread_outputs = GFFREAD(
+        tuple(cleaned_gtf_ch, downloaded_files.fasta)
+    )
 
     // Step 9: Create relocated to transcript gff 
-    concatenated_gtf = split_gff_dir_ch.collectFile(name: 'concatenated.gtf')
-    relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf)
+    relocated_gtf = RELOCATE_TRANSCRIPTS(cleaned_gtf_ch)
      
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(gffread_outputs.transcripts)
@@ -157,7 +133,7 @@ workflow {
     extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_outputs.gffread_dir)
 
     // Step 19: Run SECISearch on the transcripts
-    secissearch_results = SECISSEARCH(split_transcripts_ch)
+    secissearch_results = SECISSEARCH(gffread_outputs.transcripts)
     merged_secis_gff = secissearch_results.collectFile(name: 'all_secis_combined.gff')
 
     // Step 20: Filter SECISearch results

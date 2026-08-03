@@ -8,7 +8,7 @@ process GFFREAD {
     time '1h'
 
     input:
-    tuple val(id), path(gtf), path(fasta)
+    tuple path(gtf), path(fasta)
     
     output:
     path("gffread_out/*"), emit: transcripts
