@@ -20,16 +20,6 @@ on:
       - '.github/workflows/nextflow.yml'
   workflow_dispatch:
     inputs:
-      species_taxid:
-        description: 'NCBI taxid for the target species'
-        required: false
-        default: '10090'
-        type: string
-      species_name:
-        description: 'Species name used in logs and outputs'
-        required: false
-        default: 'Mus musculus'
-        type: string
       start:
         description: "First row to process"
         default: "1"
@@ -41,7 +31,7 @@ on:
       geneid_param:
         description: 'Path to the GeneID parameter file (required for full run)'
         required: false
-        default: ''
+        default: 'human3iso.param'
         type: string
       output_dir:
         description: 'Where to write workflow outputs'
