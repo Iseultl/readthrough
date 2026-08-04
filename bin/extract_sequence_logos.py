@@ -160,6 +160,9 @@ def main():
 
     for row in df.itertuples(index=False):
         tid = row.transcript_name
+        if pd.isna(row.TGA_site_score):
+            print(f"Warning: Skipping {tid} due to NA in TGA_site_score", file=sys.stderr)
+            continue
         pos = int(row.TGA_site_score)
         if pd.isna(row.re_score_score):
             print(f"Warning: Skipping {tid} due to NA in re_score_score", file=sys.stderr)
