@@ -161,6 +161,9 @@ def main():
     for row in df.itertuples(index=False):
         tid = row.transcript_name
         pos = int(row.TGA_site_score)
+        if pd.isna(row.re_score_score):
+            print(f"Warning: Skipping {tid} due to NA in re_score_score", file=sys.stderr)
+            continue
         stop = int(row.re_score_end)
         re_score = float(row.re_score_score)
         og_score = float(row.og_score_score)
@@ -175,14 +178,14 @@ def main():
         # Check for TGA within +/-1 of annotated pos
         actual_pos, codon = infer_sec_start(seq, pos)
         if actual_pos is None:
-            print(f"Warning: {tid} TGA not found within +/-1 at pos {pos}")
+            print(f"Warning: {tid} TGA not found within +/-1 at pos {pos}", file=sys.stderr)
             continue  # Skip if TGA not found within +/-1
         print(f"Found TGA for {tid} at actual_pos {actual_pos}", file=sys.stderr)
 
         # Check for stop codon within +/-1 of annotated stop
         actual_stop, stop_codon = infer_stop_from_cds_end(seq, stop, actual_pos)
         if actual_stop is None:
-            print(f"Warning: {tid} stop codon not found within +/-1 at stop {stop}")
+            print(f"Warning: {tid} stop codon not found within +/-1 at stop {stop}", file=sys.stderr)
             continue  # Skip if stop codon not found within +/-1
         print(f"Found stop for {tid} at actual_stop {actual_stop}", file=sys.stderr)
 
