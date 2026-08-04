@@ -101,7 +101,7 @@ workflow {
     gffread_outputs = GFFREAD(cleaned_gtf_ch.cleaned_gtf, downloaded_files.fasta)
 
     // Step 9: Create relocated to transcript gff 
-    relocated_gtf = RELOCATE_TRANSCRIPTS(cleaned_gtf_ch)
+    relocated_gtf = RELOCATE_TRANSCRIPTS(cleaned_gtf_ch.cleaned_gtf)
      
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(gffread_outputs.transcripts)

@@ -1,7 +1,7 @@
 // modules/gffread.nf
 
 process GFFREAD {
-    tag { "gffread_${id}" }
+    tag { "gffread" }
     label 'gffread'
     cpus 1
     memory '4GB'
