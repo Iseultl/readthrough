@@ -112,7 +112,8 @@ def main():
         start_300 = max(0, left_300)
         end_300 = min(len(seq), right_300)
         extracted_300 = 'N' * left_pad_300 + seq[start_300:end_300] + 'N' * right_pad_300
-        assert extracted_300[300:303] == 'TGA'
+        print(extracted_300[300:304], file=sys.stderr)
+        assert extracted_300[301:303] == 'TGA'
 
         # Extract -300 and +300 around full stop codon (223bp total), padded with N.
         left_stop_300 = actual_stop - 300
