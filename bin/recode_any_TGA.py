@@ -39,7 +39,9 @@ def recode(sequences, recodon, tga_positions, output_fasta):
         
         seq_str = str(seq)  # Convert Seq object to string
         positions = tga_positions.get(transcript_name, [])  # Get TGA positions or empty list
-
+        if len(seq_str) > 4000:
+            # Skip sequences longer than 4000 bases
+            continue
         # Store the original sequence first
         original_record = SeqRecord(Seq(seq_str), id=f"{transcript_name}_original", description="")
         records.append(original_record)
