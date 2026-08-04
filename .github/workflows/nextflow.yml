@@ -31,7 +31,7 @@ on:
       geneid_param:
         description: 'Path to the GeneID parameter file (required for full run)'
         required: false
-        default: '$projectDir/human3iso.param'
+        default: '${projectDir}/human3iso.param'
         type: string
       output_dir:
         description: 'Where to write workflow outputs'
@@ -142,7 +142,7 @@ jobs:
         shell: bash
         env:
           NXF_OPTS: -Xms256m -Xmx1g
-          GENEID_PARAM: ${{ github.event.inputs.geneid_param || '$projectDir/human3iso.param' }}
+          GENEID_PARAM: ${{ github.event.inputs.geneid_param || '${projectDir}/human3iso.param' }}
           OUTPUT_ROOT: ${{ github.event.inputs.output_dir || 'results-ci' }}
         run: |
           set -euo pipefail
