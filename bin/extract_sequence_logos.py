@@ -6,6 +6,8 @@ import os
 import sys
 import pandas as pd
 
+STOP_CODONS = {"TAA", "TAG", "TGA"}
+
 def read_fasta_dir(fasta_dir, target_ids):
     seqs = {}
     for filename in os.listdir(fasta_dir):
@@ -26,6 +28,107 @@ def read_fasta_dir(fasta_dir, target_ids):
                 if current_id and current_id in target_ids:
                     seqs[current_id] = ''.join(current_seq)
     return seqs
+
+######
+# Check positions are stop or sec codons
+######
+
+def _codon_at(seq, start_1based):
+    start_0 = start_1based - 1
+    if start_0 < 0 or start_0 + 3 > len(seq):
+        return None
+    return seq[start_0 : start_0 + 3]
+
+
+def infer_sec_start(seq,
+                    sec_raw_1based):
+
+    refs = [sec_raw_1based]
+
+    offsets = [0, 1, -1]
+    candidates = []
+
+    for ref in refs:
+        for off in offsets:
+            pos = ref + off
+            codon = _codon_at(seq, pos)
+
+            if codon == "TGA":
+                candidates.append(
+                    (
+                        abs(off),
+                        abs(pos - sec_raw_1based),
+                        pos
+                    )
+                )
+
+    if candidates:
+        candidates.sort()
+        return candidates[0][2], "TGA"
+
+    return None, None
+
+
+def infer_stop_from_cds_end(seq, cds_end_1based, sec_start_1based):
+    """Infer stop-codon start using CDS-end guidance with robust offset handling."""
+    refs = [cds_end_1based]
+
+    stop_positions = [
+        i + 1 for i in range(len(seq) - 2) if seq[i : i + 3] in STOP_CODONS
+    ]
+    inframe_after_sec = [
+        p for p in stop_positions if p > sec_start_1based and (p - sec_start_1based) % 3 == 0
+    ]
+
+    offsets = [1, -1, 0]
+    direct_candidates = []
+    for ref in refs:
+        for off in offsets:
+            pos = ref + off
+            codon = _codon_at(seq, pos)
+            if codon in STOP_CODONS and pos > sec_start_1based:
+                inframe_penalty = 0 if (pos - sec_start_1based) % 3 == 0 else 1
+                direct_candidates.append((inframe_penalty, abs(off), abs(pos - ref), pos, codon))
+
+    if direct_candidates:
+        direct_candidates.sort()
+        _, _, _, pos, codon = direct_candidates[0]
+        return pos, codon
+
+    if inframe_after_sec:
+        target_ref = refs[-1]
+        pos = min(inframe_after_sec, key=lambda p: abs(p - target_ref))
+        return pos, _codon_at(seq, pos)
+
+    downstream_stops = [p for p in stop_positions if p > sec_start_1based]
+    if downstream_stops:
+        target_ref = refs[-1]
+        pos = min(downstream_stops, key=lambda p: abs(p - target_ref))
+        return pos, _codon_at(seq, pos)
+
+    return None, None
+
+def extract_window(seq, codon_start_1based, upstream, downstream):
+    """Extract window around codon start with N padding.
+
+    Window length is upstream + 3 + downstream.
+    """
+    codon_start_0 = codon_start_1based - 1
+    left = codon_start_0 - upstream
+    right = codon_start_0 + 3 + downstream
+
+    left_pad = max(0, -left)
+    right_pad = max(0, right - len(seq))
+
+    start = max(0, left)
+    end = min(len(seq), right)
+    return ("N" * left_pad) + seq[start:end] + ("N" * right_pad)
+
+
+def write_fasta(path, records):
+    with open(path, "w", encoding="utf-8") as handle:
+        for header, seq in records:
+            handle.write(f">{header}\n{seq}\n")
 
 def main():
     parser = argparse.ArgumentParser(description='Extract sequences around TGA sites for positive and negative transcripts')
@@ -49,15 +152,13 @@ def main():
     # Create output directory
     os.makedirs(args.output_dir, exist_ok=True)
 
-    # Open output files
-    files = {
-        'positives_603': open(os.path.join(args.output_dir, 'positives_603.fa'), 'w'),
-        'negatives_603': open(os.path.join(args.output_dir, 'negatives_603.fa'), 'w'),
-        'positives_stop_603': open(os.path.join(args.output_dir, 'positives_stop_603.fa'), 'w'),
-        'negatives_stop_603': open(os.path.join(args.output_dir, 'negatives_stop_603.fa'), 'w'),
-    }
 
-    for idx, row in df.iterrows():
+    sec_pos_records = []
+    sec_neg_records = []
+    stop_pos_records = []
+    stop_neg_records = []
+
+    for row in df.itertuples(index=False):
         tid = row['transcript_name']
         print(tid, file=sys.stderr)
         try:
@@ -79,67 +180,42 @@ def main():
         seq = seqs[tid]
         
         # Check for TGA within +/-1 of annotated pos
-        actual_pos = None
-        if pos-1 >= 0 and pos+2 <= len(seq) and seq[pos-1:pos+2] == 'TGA':
-            actual_pos = pos
-        elif pos-2 >= 0 and pos+1 <= len(seq) and seq[pos-2:pos+1] == 'TGA':
-            actual_pos = pos - 1
-        elif pos >= 0 and pos+3 <= len(seq) and seq[pos:pos+3] == 'TGA':
-            actual_pos = pos + 1
+        actual_pos, codon = infer_sec_start(seq, pos)
         if actual_pos is None:
             print(f"Warning: {tid} TGA not found within +/-1 at pos {pos}")
             continue  # Skip if TGA not found within +/-1
         print(f"Found TGA for {tid} at actual_pos {actual_pos}", file=sys.stderr)
 
         # Check for stop codon within +/-1 of annotated stop
-        actual_stop = None
-        if stop-1 >= 0 and stop+2 <= len(seq) and (seq[stop-1:stop+2] == 'TGA' or seq[stop-1:stop+2] == 'TAG' or seq[stop-1:stop+2] == 'TAA'):
-            actual_stop = stop
-        elif stop-2 >= 0 and stop+1 <= len(seq) and (seq[stop-2:stop+1] == 'TGA' or seq[stop-2:stop+1] == 'TAG' or seq[stop-2:stop+1] == 'TAA'):
-            actual_stop = stop - 1
-        elif stop >= 0 and stop+3 <= len(seq) and (seq[stop:stop+3] == 'TGA' or seq[stop:stop+3] == 'TAG' or seq[stop:stop+3] == 'TAA'):
-            actual_stop = stop + 1
+        actual_stop, stop_codon = infer_stop_from_cds_end(seq, stop, actual_pos)
         if actual_stop is None:
             print(f"Warning: {tid} stop codon not found within +/-1 at stop {stop}")
             continue  # Skip if stop codon not found within +/-1
         print(f"Found stop for {tid} at actual_stop {actual_stop}", file=sys.stderr)
 
-        # Extract -300 and +300 around full TGA codon (223bp total), padded with N.
-        left_300 = actual_pos - 300
-        right_300 = actual_pos + 3 + 300
-        left_pad_300 = max(0, -left_300)
-        right_pad_300 = max(0, right_300 - len(seq))
-        start_300 = max(0, left_300)
-        end_300 = min(len(seq), right_300)
-        extracted_300 = 'N' * left_pad_300 + seq[start_300:end_300] + 'N' * right_pad_300
-        print(extracted_300[300:304], file=sys.stderr)
-        assert extracted_300[301:303] == 'TGA'
-
-        # Extract -300 and +300 around full stop codon (223bp total), padded with N.
-        left_stop_300 = actual_stop - 300
-        right_stop_300 = actual_stop + 3 + 300
-        left_pad_stop_300 = max(0, -left_stop_300)
-        right_pad_stop_300 = max(0, right_stop_300 - len(seq))
-        start_stop_300 = max(0, left_stop_300)
-        end_stop_300 = min(len(seq), right_stop_300)
-        extracted_stop_300 = 'N' * left_pad_stop_300 + seq[start_stop_300:end_stop_300] + 'N' * right_pad_stop_300
-
-        header = f">{tid}_{actual_pos}"
-        header_stop = f">{tid}_{actual_stop}"
+        # Extract sequences
+        extracted_300 = extract_window(seq, actual_pos, 300, 300)
+        extracted_stop_300 = extract_window(seq, actual_stop, 300, 300)
+        
+        
+        
         is_positive = (re_score - og_score) >= -1.8 and re_score >= -1.5
         print(f"{tid} is_positive: {is_positive} (re={re_score}, og={og_score})", file=sys.stderr)
+                
         if is_positive:
-            files['positives_603'].write(f"{header}\n{extracted_300}\n")
-            files['positives_stop_603'].write(f"{header_stop}\n{extracted_stop_300}\n")
-            print(f"Wrote positive for {tid}", file=sys.stderr)
+            sec_pos_records.append((f"{tid}|sec_start={actual_pos}|codon={codon}", extracted_300))
+            stop_pos_records.append((f"{tid}|sec_start={actual_stop}|codon={stop_codon}", extracted_stop_300))       
         else:
-            files['negatives_603'].write(f"{header}\n{extracted_300}\n")
-            files['negatives_stop_603'].write(f"{header_stop}\n{extracted_stop_300}\n")
-            print(f"Wrote negative for {tid}", file=sys.stderr)
+            sec_neg_records.append((f"{tid}|sec_start={actual_pos}|codon={codon}", extracted_300))
+            stop_neg_records.append((f"{tid}|sec_start={actual_stop}|codon={stop_codon}", extracted_stop_300))
 
-    # Close all files
-    for f in files.values():
-        f.close()
+    # Write to files
+    write_fasta(os.path.join(args.output_dir, 'positives_603.fa'), sec_pos_records)
+    write_fasta(os.path.join(args.output_dir, 'negatives_603.fa'), sec_neg_records)
+    write_fasta(os.path.join(args.output_dir, 'positives_stop_603.fa'), stop_pos_records)
+    write_fasta(os.path.join(args.output_dir, 'negatives_stop_603.fa'), stop_neg_records)
+    
+
 
 if __name__ == '__main__':
     main()
