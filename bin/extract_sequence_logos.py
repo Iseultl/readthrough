@@ -159,24 +159,17 @@ def main():
     stop_neg_records = []
 
     for row in df.itertuples(index=False):
-        tid = row['transcript_name']
-        print(tid, file=sys.stderr)
-        try:
-            pos = int(row['TGA_site_score'])
-            stop = int(row['re_score_end'])
-            re_score = float(row['re_score_score'])
-            og_score = float(row['og_score_score'])
-            print(f"Parsed scores for {tid}: pos={pos}, stop={stop}, re={re_score}, og={og_score}", file=sys.stderr)
-        except (ValueError, KeyError) as e:
-            print(f"Warning: Failed to parse row for {tid}: {e}", file=sys.stderr)
-            continue
+        tid = row.transcript_name
+        pos = int(row.TGA_site_score)
+        stop = int(row.re_score_end)
+        re_score = float(row.re_score_score)
+        og_score = float(row.og_score_score)
         if pd.isna(re_score) or pd.isna(og_score):
             print(f"Warning: Skipping {tid} due to NA in scores", file=sys.stderr)
             continue
         if tid not in seqs:
             print(f"Warning: {tid} not found in FASTA", file=sys.stderr)
             continue
-        print(f"Found sequence for {tid}, length: {len(seqs[tid])}", file=sys.stderr)
         seq = seqs[tid]
         
         # Check for TGA within +/-1 of annotated pos
@@ -197,11 +190,7 @@ def main():
         extracted_300 = extract_window(seq, actual_pos, 300, 300)
         extracted_stop_300 = extract_window(seq, actual_stop, 300, 300)
         
-        
-        
         is_positive = (re_score - og_score) >= -1.8 and re_score >= -1.5
-        print(f"{tid} is_positive: {is_positive} (re={re_score}, og={og_score})", file=sys.stderr)
-                
         if is_positive:
             sec_pos_records.append((f"{tid}|sec_start={actual_pos}|codon={codon}", extracted_300))
             stop_pos_records.append((f"{tid}|sec_start={actual_stop}|codon={stop_codon}", extracted_stop_300))       
