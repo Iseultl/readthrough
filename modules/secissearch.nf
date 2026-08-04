@@ -26,5 +26,7 @@ process SECISSEARCH {
         -temp secis_temp \\
         -no_complement \\
         -secis_energy 0.0002
+
+    rm -r secis_temp ${input_fasta}
     """
 }

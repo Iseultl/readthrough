@@ -17,5 +17,8 @@ process RUN_GENEID_ORIGINAL {
         ${input_file} \
         geneid_original_predictions \
         ${param_file}
+
+    rm ${input_file}
+    rm ${param_file}
     """
 }

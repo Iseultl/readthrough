@@ -24,5 +24,7 @@ process EXTRACT_SEQUENCE_LOGOS {
         --result_file ${result_csv} \
         --fasta_dir ${gffread_dir} \
         --output_dir sequence_logos
+
+    rm -rf ${gffread_dir} ${result_csv}
     """
 }

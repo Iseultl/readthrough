@@ -18,5 +18,7 @@ process RELOCATE_TRANSCRIPTS {
     relocate_transcripts.py \
         --gff ${cleaned_gtf} \
         --output relocated_gtf/relocated.gtf
+
+    rm ${cleaned_gtf}
     """
 }

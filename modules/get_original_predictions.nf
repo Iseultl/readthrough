@@ -18,5 +18,7 @@ process GET_ORIGINAL_PREDICTIONS {
         --geneid ${geneid_output} \
         --score "${id}_original_score.csv" \
         --longest "${id}_original_longest.csv"
+
+    rm ${geneid_output}
     """
 }

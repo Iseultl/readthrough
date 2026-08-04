@@ -36,7 +36,7 @@ def recode(sequences, recodon, tga_positions, output_fasta):
     records = []
     
     for transcript_name, seq in sequences.items():
-        print("Processing ", transcript_name)
+        
         seq_str = str(seq)  # Convert Seq object to string
         positions = tga_positions.get(transcript_name, [])  # Get TGA positions or empty list
 

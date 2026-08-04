@@ -19,5 +19,7 @@ process RECODE_TGA {
         --fasta ${transcript_fasta} \
         --recodon TGC \
         --output ${out_name}
+
+    rm ${transcript_fasta}
     """
 }
