@@ -31,5 +31,6 @@ process GFFREAD {
     # Move output to output directory
     mv transcripts_clean.fa gffread_out/
     
+    rm ${fasta} ${gtf}
     """
 }

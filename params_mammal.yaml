@@ -8,4 +8,4 @@ max_memory: '8GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
 output_dir: "Readthrough/test"  # Local output directory
-geneid_param: "human3iso.param"  # Update to your geneid parameter file location
+geneid_param: "$projectDir/human3iso.param"  # Update to your geneid parameter file location

@@ -14,5 +14,6 @@ process CLEAN_GTF {
     #!/bin/bash
     # Run the GTF cleaning script
     bash clean_gtf.sh ${genome_gtf}
+    rm ${genome_gtf}
     """
 }

@@ -33,5 +33,7 @@ process AGAT_GFF2GTF {
             --gff "${gff_file.baseName}.temp.gtf" \\
             --gtf_version 3 \\
             --output "${gff_file.baseName}.gtf"
+
+    rm ${gff_file.baseName}.temp.gtf ${gff_file}
     """
 }
