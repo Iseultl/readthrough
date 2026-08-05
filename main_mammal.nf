@@ -10,11 +10,13 @@ def printHelp() {
     =============
     
     Usage:
-        nextflow run main_mammal.nf --species_taxid <taxid> --species_name <name> [options]
+        nextflow run main_mammal.nf --species_taxid <taxid> --species_name <name> --annotation_url <url> --fasta_url <url> [options]
     
     Mandatory arguments:
             --species_taxid <taxid>  Taxonomic ID of the species
             --species_name <name>    Species name (for labeling)
+            --annotation_url <url>   URL to the genome GFF/GTF annotation file
+            --fasta_url <url>        URL to the genome FASTA file
 
     Optional arguments:
             --output_dir <dir>       Output directory (default: results)
@@ -34,6 +36,8 @@ def printHeader() {
     ========================================
     Input TaxID:  ${params.species_taxid}
     Input Species:  ${params.species_name}
+    Annotation URL: ${params.annotation_url}
+    FASTA URL: ${params.fasta_url}
     Output dir:  ${params.output_dir}
     CPU's:       ${params.max_cpus}
     Memory:      ${params.max_memory}
@@ -88,7 +92,7 @@ workflow {
     printHeader()
 
     // Step 1: Download genome files based on taxid
-    downloaded_files = DOWNLOAD_TAXID(params.species_taxid)
+    downloaded_files = DOWNLOAD_TAXID(params.species_taxid, params.annotation_url, params.fasta_url)
 
 
     // Step 5: Run AGAT_GFF2GTF in parallel to standardise each GFF file 

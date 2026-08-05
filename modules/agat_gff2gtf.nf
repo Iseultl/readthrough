@@ -20,7 +20,7 @@ process AGAT_GFF2GTF {
         parent = ""
 
         for (i = 1; i <= n; i++) {
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", attrs[i])
+            gsub(/^[[:space:]]+|[[:space:]]+\$/, "", attrs[i])
 
             if (attrs[i] ~ /^ID=/)
                 id = attrs[i]

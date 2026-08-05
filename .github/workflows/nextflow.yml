@@ -63,7 +63,7 @@ jobs:
                 idx=0
             }
 
-            !/^#/ && NF>=2 {
+            !/^#/ && NF>=6 {
                 idx++
 
                 if (idx < start)
@@ -72,19 +72,19 @@ jobs:
                 if (idx >= start + count)
                     next
 
-                gsub(/ /, "_", $2)
+                gsub(/ /, "_", $3)
 
                 if (!first)
                     printf ","
 
-                printf "{\"taxid\":\"%s\",\"species\":\"%s\"}", $1, $2
+                printf "{\"taxid\":\"%s\",\"species\":\"%s\",\"annotation_url\":\"%s\",\"fasta_url\":\"%s\"}", $2, $3, $5, $6
                 first=0
             }
 
             END {
                 printf "]"
             }
-            ' mammals_to_search.tsv)
+            ' mammalia_annotations.tsv)
 
             echo "Generated matrix:"
             echo "$matrix"
@@ -137,6 +137,8 @@ jobs:
         run: |
             echo "TaxID: ${{ matrix.taxid }}"
             echo "Species: ${{ matrix.species }}"
+            echo "Annotation URL: ${{ matrix.annotation_url }}"
+            echo "FASTA URL: ${{ matrix.fasta_url }}"
 
       - name: Run pipeline for matrix species
         shell: bash
@@ -149,20 +151,48 @@ jobs:
 
           taxid="${{ matrix.taxid }}"
           species="${{ matrix.species }}"
+          annotation_url="${{ matrix.annotation_url }}"
+          fasta_url="${{ matrix.fasta_url }}"
           output_root="${GITHUB_WORKSPACE}/${OUTPUT_ROOT}"
+          retry_list="${GITHUB_WORKSPACE}/retry-list.tsv"
 
-          # Run Nextflow
+          if [[ ! -f "$retry_list" ]]; then
+            printf 'taxid\tspecies\tannotation_url\tfasta_url\tstatus\n' > "$retry_list"
+          fi
+
+          sleep_seconds=$(( (RANDOM % 15) + 5 ))
+          echo "Sleeping ${sleep_seconds}s before starting ${taxid} to reduce burst pressure"
+          sleep "$sleep_seconds"
+
+          set +e
+
           nextflow run main_mammal.nf \
             -profile local \
             --species_taxid "$taxid" \
             --species_name "$species" \
+            --annotation_url "$annotation_url" \
+            --fasta_url "$fasta_url" \
             --geneid_param "$GENEID_PARAM" \
             --output_dir "$output_root" \
             --max_cpus 2 \
             --max_memory '6GB' \
             -w "$GITHUB_WORKSPACE/work/${taxid}"
 
-          nextflow clean -f
+          status=$?
+          set -e
+
+          if [[ "$status" -ne 0 ]]; then
+            printf '%s\t%s\t%s\t%s\tnextflow-failed\n' "$taxid" "$species" "$annotation_url" "$fasta_url" >> "$retry_list"
+
+            retry_workfile=$(find "$GITHUB_WORKSPACE/work/${taxid}" -name 'download_retry.tsv' -print -quit 2>/dev/null || true)
+            if [[ -n "$retry_workfile" && -f "$retry_workfile" ]]; then
+              tail -n +2 "$retry_workfile" >> "$retry_list" || true
+            fi
+          fi
+
+          nextflow clean -f || true
+
+          exit "$status"
             
       - name: Upload completion report
         if: always()
@@ -172,6 +202,13 @@ jobs:
           path: |
             ${{ github.event.inputs.output_dir || 'results-ci' }}/**/*SECIS.result
             ${{ github.event.inputs.output_dir || 'results-ci' }}/**/sequence_logos
+
+      - name: Upload retry list
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ORFsearch-retry-list-${{ matrix.taxid }}
+          path: retry-list.tsv
 
   aggregate-artifacts:
     needs:

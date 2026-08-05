@@ -1,9 +1,13 @@
 process DOWNLOAD_TAXID {
     tag "Downloading TaxID"
     memory '4GB' 
+    errorStrategy 'retry'
+    maxRetries 2
 
     input:
     val taxid
+    val annotation_url
+    val fasta_url
 
     output:
     path("genome_${taxid}.fasta"), emit: fasta
@@ -14,25 +18,13 @@ process DOWNLOAD_TAXID {
     #!/bin/bash
     set -euo pipefail
 
-    annocli download --ref-only --taxids "${taxid}" --add-asm --fix-alias --output annotation_downloads
+    download_file.py --taxid ${taxid} --annotation-url "${annotation_url}" --fasta-url "${fasta_url}" --retry-log download_retry.tsv --download-delay 8 --retry-delay 15 --max-attempts 3
 
-    echo "Downloaded files for taxid ${taxid}."
+    annocli alias annotation.gff.gz annotation.fasta.gz --output annotation.aliasMatch.gff.gz
 
-    fasta_source=\$(find annotation_downloads -type f -iname "*.fna.gz" -o -iname "*.fasta.gz" | head -n 1)
-    alias_output=\$(find annotation_downloads -type f -iname "*.aliasMatch.g*.gz" | head -n 1)
+    gunzip -c "annotation.aliasMatch.gff.gz" > "genome_${taxid}.gff"
+    gunzip -c "annotation.fasta.gz" > "genome_${taxid}.fasta"
 
-    if [[ -z "\${alias_output}" || -z "\${fasta_source}" ]]; then
-        echo "Could not locate downloaded annotation or assembly files under annotation_downloads/" >&2
-        find annotation_downloads -type f | sort >&2
-        exit 1
-    else
-        echo "Located annotation file: \${alias_output}"
-        echo "Located assembly file: \${fasta_source}"
-    fi
-
-    gunzip -c "\${fasta_source}" > "genome_${taxid}.fasta"
-    gunzip -c "\${alias_output}" > "genome_${taxid}.gff"
-
-    rm -rf annotation_downloads
+    rm -rf annotation.*
     """
 }

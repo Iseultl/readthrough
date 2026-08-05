@@ -10,8 +10,9 @@ The purpose of the nextflow.yml is to download all the available mammalian genom
 - Check that all the inputs and outputs for each step of the nextflow pipeline transfer their inputs and outputs to each other smoothly. 
 
 ## Key Development Commands 
-- The first step is to build the matrix which reads the mammals_to_search.tsv file and builds a matrix for input into the nextflow pipeline. 
-- The next step is the nextflow pipeline which uses the matrix as input, and runs the main_mammal.nf script usig the species taxid, species name, and geneid parameter file. 
+- The first step is to build the matrix which reads the mammalia_annotations.tsv file and builds a matrix for input into the nextflow pipeline, including the annotation and fasta URLs.
+- The next step is the nextflow pipeline which uses the matrix as input, and runs the main_mammal.nf script using the species taxid, species name, annotation URL, fasta URL, and geneid parameter file.
+- If a download or pipeline run fails, the workflow writes the affected species and URLs to a retry list so the run can be repeated later.
 - The output of the nextflow pipeline is the *SECIS.result file and the folder containing the sequence_logos. This will allow us to identify the genes with positive recoding scores and also align the genes across species using the outputted sequence files. 
 
 ## Verification requirements
