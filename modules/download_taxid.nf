@@ -19,7 +19,7 @@ process DOWNLOAD_TAXID {
     echo "Downloaded files for taxid ${taxid}."
 
     fasta_source=\$(find annotation_downloads -type f -iname "*.fna.gz" -o -iname "*.fasta.gz" | head -n 1)
-    alias_output="\$(find annotation_downloads -type f -iname *.aliasMatch.g*.gz" | head -n 1)
+    alias_output=\$(find annotation_downloads -type f -iname "*.aliasMatch.g*.gz" | head -n 1)
 
     if [[ -z "\${alias_output}" || -z "\${fasta_source}" ]]; then
         echo "Could not locate downloaded annotation or assembly files under annotation_downloads/" >&2
