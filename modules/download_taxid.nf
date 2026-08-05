@@ -14,44 +14,24 @@ process DOWNLOAD_TAXID {
     #!/bin/bash
     set -euo pipefail
 
-    cmd=\$(annocli download --ref-only --taxids "${taxid}" --add-asm --mode links | head -n1)
+    annocli download --ref-only --taxids "${taxid}" --add-asm --fix-alias --output-dir annotation_downloads
 
-    echo "Executing:"
-    echo "\$cmd"
-
-    bash -c "\$cmd"
     echo "Downloaded files for taxid ${taxid}."
 
-    annotation_source=\$(find annotation_downloads -type f \
-    \\( \
-        -iname "*.gff.gz" \
-        -o -iname "*.gff3.gz" \
-        -o -iname "*.gtf.gz" \
-        -o -iname "*.gff" \
-        -o -iname "*.gff3" \
-        -o -iname "*.gtf" \
-        \\) \
-    ! -iname "*.aliasMatch.gff.gz" | head -n 1)
     fasta_source=\$(find annotation_downloads -type f -iname "*.fna.gz" -o -iname "*.fasta.gz" | head -n 1)
+    alias_output="\$(find annotation_downloads -type f -iname *.aliasMatch.g*.gz" | head -n 1)
 
-    if [[ -z "\${annotation_source}" || -z "\${fasta_source}" ]]; then
+    if [[ -z "\${alias_output}" || -z "\${fasta_source}" ]]; then
         echo "Could not locate downloaded annotation or assembly files under annotation_downloads/" >&2
         find annotation_downloads -type f | sort >&2
         exit 1
     else
-        echo "Located annotation file: \${annotation_source}"
+        echo "Located annotation file: \${alias_output}"
         echo "Located assembly file: \${fasta_source}"
     fi
 
-    alias_output="\${annotation_source%.gff.gz}.aliasMatch.gff.gz"
-
-    annocli alias "\${annotation_source}" "\${fasta_source}" --output "\${alias_output}"
-    echo "Generated alias mapping file: \${alias_output}"
-    rm -f "annotation_downloads/"*.aliasMappings.tsv 2>/dev/null || true
-
     gunzip -c "\${fasta_source}" > "genome_${taxid}.fasta"
     gunzip -c "\${alias_output}" > "genome_${taxid}.gff"
-    rm -f "\${fasta_source}" "\${alias_output}"
 
     rm -rf annotation_downloads
     """
