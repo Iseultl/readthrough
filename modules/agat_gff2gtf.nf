@@ -12,28 +12,37 @@ process AGAT_GFF2GTF {
     script:
     """
     #!/bin/bash
-    awk -F'\t' 'BEGIN{OFS="\t"}
+    awk -F'\\t' 'BEGIN{OFS="\\t"}
     {
-        gene=""
-        transcript=""
+        n = split(\$9, attrs, ";")
 
-        if (match(\$9, /gene_id "[^"]+"/))
-            gene = substr(\$9, RSTART, RLENGTH)
+        id = ""
+        parent = ""
 
-        if (match(\$9, /transcript_id "[^"]+"/))
-            transcript = substr(\$9, RSTART, RLENGTH)
+        for (i = 1; i <= n; i++) {
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", attrs[i])
 
-        if (gene && transcript)
-            \$9 = gene_id " " gene "; " transcript_id " " transcript ";"
+            if (attrs[i] ~ /^ID=/)
+                id = attrs[i]
+            else if (attrs[i] ~ /^Parent=/)
+                parent = attrs[i]
+        }
 
+        out = ""
+        if (id != "")
+            out = id
+        if (parent != "")
+            out = (out == "" ? parent : out ";" parent)
+
+        \$9 = out
         print
-    }' ${gff_file} > ${gff_file.baseName}.temp.gtf
+    }' "${gff_file}" > "${gff_file.baseName}.temp.gff" 
 
     agat_convert_sp_gff2gtf.pl \\
-            --gff "${gff_file.baseName}.temp.gtf" \\
+            --gff "${gff_file.baseName}.temp.gff" \\
             --gtf_version 3 \\
             --output "${gff_file.baseName}.gtf"
 
-    rm ${gff_file.baseName}.temp.gtf ${gff_file}
+    rm ${gff_file.baseName}.temp.gff ${gff_file}
     """
 }

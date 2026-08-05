@@ -7,23 +7,24 @@ process EXTRACT_SEQUENCE_LOGOS {
     memory '4GB'
     
     input:
+    val species
     path result_csv
     path gffread_dir
      
     output:
-    path "sequence_logos/*"
+    path "${species}_sequence_logos/*"
     
     script:
     """
     #!/bin/bash
     set -euo pipefail
 
-    mkdir -p sequence_logos
+    mkdir -p ${species}_sequence_logos
     
     extract_sequence_logos.py \
         --result_file ${result_csv} \
         --fasta_dir ${gffread_dir} \
-        --output_dir sequence_logos
+        --output_dir ${species}_sequence_logos
 
     rm -rf ${gffread_dir} ${result_csv}
     """

@@ -49,12 +49,9 @@ process DOWNLOAD_TAXID {
     echo "Generated alias mapping file: \${alias_output}"
     rm -f "annotation_downloads/"*.aliasMappings.tsv 2>/dev/null || true
 
-    mv "\${fasta_source}" "genome_${taxid}.fasta.gz"
-    mv "\${alias_output}" "genome_${taxid}.gff.gz"
-
-    gunzip -c "genome_${taxid}.fasta.gz" > "genome_${taxid}.fasta"
-    gunzip -c "genome_${taxid}.gff.gz" > "genome_${taxid}.gff"
-    rm -f "genome_${taxid}.fasta.gz" "genome_${taxid}.gff.gz"
+    gunzip -c "\${fasta_source}" > "genome_${taxid}.fasta"
+    gunzip -c "\${alias_output}" > "genome_${taxid}.gff"
+    rm -f "\${fasta_source}" "\${alias_output}"
 
     rm -rf annotation_downloads
     """
