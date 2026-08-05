@@ -1,5 +1,5 @@
 process COMBINE_ORFSECIS {
-    publishDir "${params.output_dir}/", mode: 'copy'
+    publishDir "${params.output_dir}/${species_name}", mode: 'copy'
     memory '4GB'
 
     input:
