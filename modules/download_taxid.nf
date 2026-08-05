@@ -14,7 +14,7 @@ process DOWNLOAD_TAXID {
     #!/bin/bash
     set -euo pipefail
 
-    annocli download --ref-only --taxids "${taxid}" --add-asm --fix-alias --output-dir annotation_downloads
+    annocli download --ref-only --taxids "${taxid}" --add-asm --fix-alias --output annotation_downloads
 
     echo "Downloaded files for taxid ${taxid}."
 
