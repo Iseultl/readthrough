@@ -53,7 +53,7 @@ jobs:
           shell: bash
           run: |
             start=${{ github.event.inputs.start || '1' }}
-            count=${{ github.event.inputs.count || '20' }}
+            count=${{ github.event.inputs.count || '253' }}
 
             matrix=$(awk -v start="$start" -v count="$count" '
             BEGIN {
@@ -96,7 +96,7 @@ jobs:
 
     strategy:
         fail-fast: false
-        max-parallel: 4
+        max-parallel: 253
 
         matrix:
           include: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
