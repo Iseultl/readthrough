@@ -26,7 +26,7 @@ on:
         type: string
       count:
         description: "Number of species to process"
-        default: "10"
+        default: "100"
         type: string
       geneid_param:
         description: 'Path to the GeneID parameter file (required for full run)'
@@ -53,7 +53,7 @@ jobs:
           shell: bash
           run: |
             start=${{ github.event.inputs.start || '1' }}
-            count=${{ github.event.inputs.count || '10' }}
+            count=${{ github.event.inputs.count || '100' }}
 
             matrix=$(awk -v start="$start" -v count="$count" '
             BEGIN {
