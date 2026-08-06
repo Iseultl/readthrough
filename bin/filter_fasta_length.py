@@ -1,73 +1,33 @@
 #!/usr/bin/env python3
 
 import argparse
+from Bio import SeqIO
 
 parser = argparse.ArgumentParser(
     description="Remove FASTA sequences longer than a specified length."
 )
-parser.add_argument(
-    "--input",
-    "-i",
-    required=True,
-    help="Input FASTA file"
-)
-parser.add_argument(
-    "--output",
-    "-o",
-    required=True,
-    help="Output FASTA file"
-)
-parser.add_argument(
-    "--max_length",
-    "-m",
-    type=int,
-    default=4000,
-    help="Maximum allowed sequence length (default: 4000)"
-)
+
+parser.add_argument("-i", "--input", required=True,
+                    help="Input FASTA file")
+parser.add_argument("-o", "--output", required=True,
+                    help="Output FASTA file")
+parser.add_argument("-m", "--max_length", type=int, default=4000,
+                    help="Maximum allowed sequence length (default: 4000)")
 
 args = parser.parse_args()
 
+records = SeqIO.parse(args.input, "fasta")
 
-def write_record(header, seq, out_handle):
-    """Write a FASTA record if it meets the length threshold."""
-    if header is not None and len(seq) <= args.max_length:
-        out_handle.write(header)
-        for i in range(0, len(seq), 60):
-            out_handle.write(seq[i:i+60] + "\n")
+kept_records = (
+    record for record in records
+    if len(record.seq) <= args.max_length
+)
 
+kept = SeqIO.write(kept_records, args.output, "fasta")
 
-kept = 0
-removed = 0
-
-with open(args.input) as infile, open(args.output, "w") as outfile:
-
-    header = None
-    sequence = []
-
-    for line in infile:
-        if line.startswith(">"):
-            if header is not None:
-                seq = "".join(sequence)
-                if len(seq) <= args.max_length:
-                    kept += 1
-                    write_record(header, seq, outfile)
-                else:
-                    removed += 1
-
-            header = line
-            sequence = []
-
-        else:
-            sequence.append(line.strip())
-
-    # Write final record
-    if header is not None:
-        seq = "".join(sequence)
-        if len(seq) <= args.max_length:
-            kept += 1
-            write_record(header, seq, outfile)
-        else:
-            removed += 1
+# Determine how many were removed
+total = sum(1 for _ in SeqIO.parse(args.input, "fasta"))
+removed = total - kept
 
 print(f"Kept {kept} sequences.")
 print(f"Removed {removed} sequences (> {args.max_length} nt).")
