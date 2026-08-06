@@ -19,6 +19,11 @@ process SECISSEARCH {
 
     mkdir -p secis_temp
 
+    # Remove sequences who's length is greater than 4000
+    filter_fasta_length.py \\
+    --input ${input_fasta} \\
+    --output ${input_fasta}.filtered.fa
+
     python /Seblastian/Seblastian.py \\
         -t ${input_fasta} \\
         -o ${fileName} \\

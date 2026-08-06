@@ -53,7 +53,7 @@ jobs:
           shell: bash
           run: |
             start=${{ github.event.inputs.start || '1' }}
-            count=${{ github.event.inputs.count || '253' }}
+            count=${{ github.event.inputs.count || '10' }}
 
             matrix=$(awk -v start="$start" -v count="$count" '
             BEGIN {
@@ -154,7 +154,7 @@ jobs:
           annotation_url="${{ matrix.annotation_url }}"
           fasta_url="${{ matrix.fasta_url }}"
           output_root="${GITHUB_WORKSPACE}/${OUTPUT_ROOT}"
-          retry_list="${GITHUB_WORKSPACE}/retry-list.tsv"
+          retry_list="${GITHUB_WORKSPACE}/retry-${taxid}.tsv"
 
           if [[ ! -f "$retry_list" ]]; then
             printf 'taxid\tspecies\tannotation_url\tfasta_url\tstatus\n' > "$retry_list"
@@ -167,7 +167,7 @@ jobs:
           set +e
 
           nextflow run main_mammal.nf \
-            -profile local \
+            -profile github \
             --species_taxid "$taxid" \
             --species_name "$species" \
             --annotation_url "$annotation_url" \
@@ -181,8 +181,9 @@ jobs:
           status=$?
           set -e
 
+          status_label='success'
           if [[ "$status" -ne 0 ]]; then
-            printf '%s\t%s\t%s\t%s\tnextflow-failed\n' "$taxid" "$species" "$annotation_url" "$fasta_url" >> "$retry_list"
+            status_label='nextflow-failed'
 
             retry_workfile=$(find "$GITHUB_WORKSPACE/work/${taxid}" -name 'download_retry.tsv' -print -quit 2>/dev/null || true)
             if [[ -n "$retry_workfile" && -f "$retry_workfile" ]]; then
@@ -201,7 +202,7 @@ jobs:
           name: ORFsearch-${{ matrix.taxid }}
           path: |
             ${{ github.event.inputs.output_dir || 'results-ci' }}/**/*SECIS.result
-            ${{ github.event.inputs.output_dir || 'results-ci' }}/**/sequence_logos
+            ${{ github.event.inputs.output_dir || 'results-ci' }}/**/*sequence_logos
 
       - name: Upload retry list
         if: always()

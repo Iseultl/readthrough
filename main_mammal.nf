@@ -19,7 +19,7 @@ def printHelp() {
             --fasta_url <url>        URL to the genome FASTA file
 
     Optional arguments:
-            --output_dir <dir>       Output directory (default: results)
+      --output_dir <dir>       Output directory (default: results)
       --max_cpus <int>         Maximum number of CPUs (default: 4)
       --max_memory <mem>       Maximum memory (default: 8GB)
       --geneid_param <file>    Path to geneid parameter file

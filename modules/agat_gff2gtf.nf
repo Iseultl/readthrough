@@ -1,7 +1,7 @@
 process AGAT_GFF2GTF {
     tag "${gff_file.baseName}"
     label 'agat'
-    memory '4GB'
+    memory '6GB'
     
     input:
     path gff_file
@@ -43,6 +43,14 @@ process AGAT_GFF2GTF {
             --gtf_version 3 \\
             --output "${gff_file.baseName}.gtf"
 
-    rm ${gff_file.baseName}.temp.gff ${gff_file}
+    if [ ! -s "${gff_file.baseName}.gtf" ]; then
+        echo "Error: GTF file is empty or not created."
+        mv "${gff_file.baseName}.temp.gff" "${gff_file.baseName}.gtf"
+        rm "${gff_file}"
+    else
+        echo "GTF file created successfully."
+        rm "${gff_file.baseName}.temp.gff" "${gff_file}"
+    fi
+    
     """
 }
