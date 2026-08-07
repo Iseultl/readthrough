@@ -77,6 +77,7 @@ include { EXTRACT_SEQUENCE_LOGOS } from './modules/extract_sequence_logos'
 include { SECISSEARCH } from './modules/secissearch'
 include { FILTER_SECIS } from './modules/filter_secis'
 include { COMBINE_ORFSECIS } from './modules/combine_orfsecis'
+include { FILTER_FOR_SECISSEARCH } from './modules/filter_for_secissearch'
 
 
 // Helper function to extract chromosome name (without extension)
@@ -135,7 +136,8 @@ workflow {
     extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_outputs.gffread_dir, params.species_name)
 
     // Step 19: Run SECISearch on the transcripts
-    secissearch_results = SECISSEARCH(gffread_outputs.transcripts)
+    filtered_transcripts = FILTER_FOR_SECISSEARCH(gffread_outputs.transcripts)
+    secissearch_results = SECISSEARCH(filtered_transcripts)
     merged_secis_gff = secissearch_results.collectFile(name: 'all_secis_combined.gff')
 
     // Step 20: Filter SECISearch results
