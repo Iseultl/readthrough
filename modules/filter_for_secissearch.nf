@@ -9,7 +9,7 @@ process FILTER_FOR_SECISSEARCH {
     path(input_fasta)
 
     output:
-    path("${input_fasta}.filtered.fa")
+    path("${input_fasta.baseName}.filtered.fa")
 
     script:
     """
