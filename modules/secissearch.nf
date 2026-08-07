@@ -12,7 +12,7 @@ process SECISSEARCH {
     path("*.gff")
 
     script:
-    def fileName = input_fasta.baseName.stripSuffix('.filtered.fa')
+    def fileName = input_fasta.baseName - '.filtered'
     """
     #!/bin/bash
     set -euo pipefail

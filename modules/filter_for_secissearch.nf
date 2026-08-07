@@ -17,7 +17,7 @@ process FILTER_FOR_SECISSEARCH {
     # Remove sequences who's length is greater than 4000
     filter_fasta_length.py \\
     --input ${input_fasta} \\
-    --output ${input_fasta}.filtered.fa
+    --output ${input_fasta.baseName}.filtered.fa
     rm ${input_fasta}
     """
 }
