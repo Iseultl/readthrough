@@ -52,8 +52,8 @@ jobs:
         - id: matrix
           shell: bash
           run: |
-            start=${{ github.event.inputs.start || '1' }}
-            count=${{ github.event.inputs.count || '100' }}
+            start=${{ github.event.inputs.start || '388' }}
+            count=${{ github.event.inputs.count || '253' }}
 
             matrix=$(awk -v start="$start" -v count="$count" '
             BEGIN {
