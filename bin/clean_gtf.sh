@@ -86,6 +86,13 @@ $3 == "gene" {
             $3 == "mrna") {
             gene_id = value
         }
+        # TOGA exon/CDS rows only carry the transcript parent.
+        # Remember the gene for later rows that share the same transcript.
+        else if (transcript_id != "") {
+            if (gene_by_transcript[transcript_id] == "") {
+                gene_by_transcript[transcript_id] = value
+            }
+        }
     }
 
 
@@ -102,6 +109,21 @@ $3 == "gene" {
             sub(/^.*Parent=/, "", value)
             transcript_id = value
         }
+    }
+
+    if ((($3 == "transcript") || ($3 == "mRNA") || ($3 == "mrna")) && \
+        gene_id != "" && transcript_id != "" && \
+        gene_by_transcript[transcript_id] == "") {
+        gene_by_transcript[transcript_id] = gene_id
+    }
+
+    if (gene_id == "" && transcript_id != "" && \
+        gene_by_transcript[transcript_id] != "") {
+        gene_id = gene_by_transcript[transcript_id]
+    }
+
+    if (gene_id == "" && transcript_id != "") {
+        gene_id = transcript_id
     }
 
 
