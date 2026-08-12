@@ -11,78 +11,25 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import time
 
-
-def extract_feature_ids(attributes, feature):
-    gene_id = pd.NA
-    transcript_id = pd.NA
-
-    if pd.isna(attributes):
-        return gene_id, transcript_id
-
-    gene_match = pd.Series([attributes]).str.extract(r'gene_id "([^"]+)"')[0].iloc[0]
-    if pd.notna(gene_match):
-        gene_id = gene_match
-    else:
-        gene_match = pd.Series([attributes]).str.extract(r'(?:^|;)gene=([^;]+)')[0].iloc[0]
-        if pd.notna(gene_match):
-            gene_id = gene_match
-
-    transcript_match = pd.Series([attributes]).str.extract(r'transcript_id "([^"]+)"')[0].iloc[0]
-    if pd.notna(transcript_match):
-        transcript_id = transcript_match
-    else:
-        transcript_match = pd.Series([attributes]).str.extract(r'(?:^|;)transcript=([^;]+)')[0].iloc[0]
-        if pd.notna(transcript_match):
-            transcript_id = transcript_match
-        else:
-            id_match = pd.Series([attributes]).str.extract(r'(?:^|;)ID=([^;]+)')[0].iloc[0]
-            if pd.notna(id_match):
-                if feature in {'gene'}:
-                    gene_id = id_match
-                elif feature in {'transcript', 'mRNA', 'mrna'}:
-                    transcript_id = id_match
-                else:
-                    transcript_id = id_match
-
-    parent_match = pd.Series([attributes]).str.extract(r'(?:^|;)Parent=([^;]+)')[0].iloc[0]
-    if pd.notna(parent_match):
-        if feature in {'transcript', 'mRNA', 'mrna'} and pd.isna(gene_id):
-            gene_id = parent_match
-        elif feature in {'exon', 'CDS', 'start_codon', 'stop_codon'} and pd.isna(transcript_id):
-            transcript_id = parent_match
-
-    if pd.notna(gene_id):
-        gene_id = str(gene_id).replace('gene-', '').replace('rna-', '')
-    if pd.notna(transcript_id):
-        transcript_id = str(transcript_id).replace('transcript-', '').replace('rna-', '').replace('exon-', '').replace('cds-', '')
-
-    return gene_id, transcript_id
-
 # Load GFF file into dataframe
 def load_gff(gff_file):
-    df = pd.read_csv(gff_file, sep='\t', comment='#', header=None)
+    df = pd.read_csv(gff_file, sep='\t', header=None)
     df.columns = ['Chromosome', 'Source', 'Feature', 'Start', 'End', 'Score', 'Strand', 'Frame', 'Attributes']
     df['Start'] -= 1  # Convert to 0-based indexing
+    
+    # Extract gene names from Attributes column
+    extracted_gene_id = df['Attributes'].str.extract(r'gene_id "(.*?)"')[0]
+    print("Extracted gene IDs:", extracted_gene_id.head())
+    if extracted_gene_id.isna().any():
+        extracted_gene_id = df['Attributes'].str.extract(r'gene=([^;]+)')[0]
+    extracted_gene_id = extracted_gene_id.str.replace(r'^(gene-|rna-|exon-|cds-)', '', regex=True)
 
-    ids = df.apply(lambda row: extract_feature_ids(row['Attributes'], row['Feature']), axis=1, result_type='expand')
-    ids.columns = ['gene_id', 'transcript_id']
-
-    df['gene_id'] = ids['gene_id']
-    df['transcript_id'] = ids['transcript_id']
-
-    transcript_mask = df['Feature'].isin(['transcript', 'mRNA', 'mrna'])
-    transcript_gene_map = (
-        df.loc[transcript_mask & df['gene_id'].notna() & df['transcript_id'].notna(), ['transcript_id', 'gene_id']]
-        .drop_duplicates(subset=['transcript_id'])
-        .set_index('transcript_id')['gene_id']
-    )
-    missing_gene_mask = df['gene_id'].isna() & df['transcript_id'].notna()
-    df.loc[missing_gene_mask, 'gene_id'] = df.loc[missing_gene_mask, 'transcript_id'].map(transcript_gene_map)
-
-    # Keep only rows where we can map both levels; downstream code groups on this key.
-    df = df.dropna(subset=['gene_id', 'transcript_id']).copy()
-
-    df['Attributes'] = df['gene_id'].astype(str) + " ; " + df['transcript_id'].astype(str)
+    extracted_transcript_id = df['Attributes'].str.extract(r'transcript_id "(.*?)"')[0]
+    if extracted_transcript_id.isna().any():
+        extracted_transcript_id = df['Attributes'].str.extract(r'ID=([^;]+)')[0]
+    extracted_transcript_id = extracted_transcript_id.str.replace(r'^(gene-|rna-|exon-|cds-)', '', regex=True)
+    extracted_transcript_id = extracted_transcript_id.str.split('-', n=1).str[0]
+    df['Attributes'] = extracted_gene_id + " ; " + extracted_transcript_id
  
     return df
 
@@ -357,6 +304,8 @@ if __name__ == "__main__":
     
     start = time.time()
     gff = load_gff(args.gff)
+    print("Load GFF")
+    print(gff.head())
     groups = group_attributes(gff)
     transcript_lst = relocate_trancripts(gff)
     print("Relocate transcripts took", time.time() - start, "seconds")
@@ -378,7 +327,7 @@ if __name__ == "__main__":
         df = pd.DataFrame()
     else:
         df = pd.DataFrame(all_dcts)
- 
+    print(df.head())
     df = handle_negs(df)
     print("Relocate negatives took", time.time() - start, "seconds")
     print(df.head())
