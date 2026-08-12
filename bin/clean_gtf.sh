@@ -44,7 +44,7 @@ $3 == "gene" {
         gene_id = substr($9, RSTART + 9, RLENGTH - 10)
 
     if (match($9, /transcript_id "[^"]+"/))
-        transcript_id = substr($9, RSTART + 14, RLENGTH - 15)
+        transcript_id = substr($9, RSTART + 15, RLENGTH - 16)
 
     if (match($9, /gene_name "[^"]+"/))
         gene_name = substr($9, RSTART + 10, RLENGTH - 11)
