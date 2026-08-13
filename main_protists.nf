@@ -195,10 +195,10 @@ workflow {
     ORFsearch_result = FILTER_FINAL_TABLE(result)
 
     // Step 18: Extract sequences for logos
-    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.gffread_dir)
+    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.gffread_dir, params.species_name)
 
     // Step 19: Run SECISearch on the transcripts
-    secissearch_results = SECISSEARCH(gffread_out)
+    secissearch_results = SECISSEARCH(gffread_out.transcripts)
     merged_secis_gff = secissearch_results.collectFile(name: 'all_secis_combined.gff')
 
     // Step 20: Filter SECISearch results
