@@ -51,7 +51,7 @@ RUN curl -s https://get.nextflow.io | bash && \
 
 RUN pip install --upgrade pip
 
-RUN git clone --branch v1.0.0 --depth 1 \
+RUN git clone --branch v1.0.2 --depth 1 \
     https://github.com/apollo994/annocli.git /tmp/annocli
 
 RUN pip install /tmp/annocli

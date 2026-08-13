@@ -11,7 +11,7 @@ process GFFREAD_CHR {
     tuple val(id), path(gtf), path(fasta)
     
     output:
-    path("gffread_out/*")
+    path("gffread_out/*"), emit: transcripts
     
     script:
     """
