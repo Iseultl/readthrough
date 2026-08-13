@@ -13,7 +13,7 @@ params.geneid_param = params.geneid_param ?: '/Users/iseult/Desktop/Geneid_Recod
 params.help = params.help ?: false
 
 // Print help message if no parameters are provided
-if (params.help) {
+def printHelp() {
     log.info """
     SECIS Independent Pipeline
     =============
@@ -37,17 +37,29 @@ if (params.help) {
 }
 
 // Print pipeline header
-log.info """
-========================================
- ORFsearch Pipeline - Nextflow Pipeline
-========================================
-Input GFF:  ${params.genome_gtf}
-Input FASTA: ${params.genome_fasta}
-Output dir:  ${params.output_dir}
-CPU's:       ${params.max_cpus}
-Memory:      ${params.max_memory}
-========================================
-"""
+def printHeader() {
+    log.info """
+    ========================================
+    ORFsearch Pipeline - Nextflow Pipeline
+    ========================================
+    Input GFF:  ${params.genome_gtf}
+    Input FASTA: ${params.genome_fasta}
+    Output dir:  ${params.output_dir}
+    CPU's:       ${params.max_cpus}
+    Memory:      ${params.max_memory}
+    ========================================
+    """
+}
+
+// Workflow completion message
+def workflowCompletionMessage() {
+    log.info """
+    ========================================
+    Pipeline completed successfully!
+    Results are in: ${params.output_dir}
+    ========================================
+    """
+}
 
 // Load modules
 include { UNZIP_IF_NEEDED } from './modules/handle_zipped_input'
@@ -79,6 +91,11 @@ def get_chr_name(file) {
 }
 
 workflow {
+    if (params.help) {
+        printHelp()
+        return
+    }
+    printHeader()
     // Step -1: Handle zipped input files
     input_files = Channel.of(
         tuple('genome_fasta', file(params.genome_fasta)),
@@ -163,11 +180,11 @@ workflow {
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param)  
  
     // Step 14 & 15: Process original and recoded predictions
-    interesting_predictions_out = SELECT_INTERESTING(geneid_results_ch, relocated_gtf.out)
-    original_predictions_out = GET_ORIGINAL_PREDICTIONS(geneid_results_ch)
+    interesting_predictions = SELECT_INTERESTING(geneid_results_ch, relocated_gtf.out).interesting_predictions
+    original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
     
     // Combine the channels based on the scaffold ID
-    combined_predictions = interesting_predictions_out.interesting_predictions.combine(original_predictions_out.original_predictions, by: 0)
+    combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
     
     // Step 16: Final Output - Pass the combined channel to the summary table process
     summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf.out)
@@ -190,14 +207,5 @@ workflow {
     // Step 21: Combine ORFsearch results with filtered SECISearch results
     ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis, params.species_name)
 
-}
-
-// Workflow completion message
-workflow.onComplete {
-    log.info """
-    ========================================
-    Pipeline completed successfully!
-    Results are in: ${params.output_dir}
-    ========================================
-    """
+    workflowCompletionMessage()
 }
