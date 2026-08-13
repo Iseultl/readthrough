@@ -163,11 +163,11 @@ workflow {
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param)  
  
     // Step 14 & 15: Process original and recoded predictions
-    interesting_predictions = SELECT_INTERESTING(geneid_results_ch, relocated_gtf.out).interesting_predictions
-    original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
+    interesting_predictions_out = SELECT_INTERESTING(geneid_results_ch, relocated_gtf.out)
+    original_predictions_out = GET_ORIGINAL_PREDICTIONS(geneid_results_ch)
     
     // Combine the channels based on the scaffold ID
-    combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
+    combined_predictions = interesting_predictions_out.interesting_predictions.combine(original_predictions_out.original_predictions, by: 0)
     
     // Step 16: Final Output - Pass the combined channel to the summary table process
     summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf.out)
