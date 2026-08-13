@@ -56,7 +56,7 @@ include { AGAT_SPLITGFF } from './modules/agat_splitgff'
 include { CLEAN_GTF } from './modules/clean_gtf'
 include { RELOCATE_TRANSCRIPTS } from './modules/relocate_transcripts'
 include { SPLITFASTA } from './modules/splitfasta'
-include { GFFREAD } from './modules/gffread'
+include { GFFREAD_CHR } from './modules/gffread_chr'
 include { RECODE_TGA } from './modules/recode_tga'
 include { SPLIT_IF_TOO_LARGE } from './modules/split_if_too_large'
 include { RUN_GENEID_ORIGINAL } from './modules/run_geneid_original'
@@ -151,7 +151,7 @@ workflow {
     relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf)
     
     // Step 7: Now pass the paired channel to GFFREAD
-    gffread_out = GFFREAD(paired_ch)
+    gffread_out = GFFREAD_CHR(paired_ch)
      
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(gffread_out.transcripts)
