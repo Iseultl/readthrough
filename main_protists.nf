@@ -102,7 +102,7 @@ workflow {
         .map { type, f -> f }
 
     // Step 0: Create readme
-    CREATE_README(genome_fasta_unzipped, genome_gtf_unzipped)
+    CREATE_README(params.species_name, genome_fasta_unzipped, genome_gtf_unzipped)
 
     // Step 0.1: Run Selenoprofiles
     selenoprofiles_results = RUN_SELENOPROFILES(
