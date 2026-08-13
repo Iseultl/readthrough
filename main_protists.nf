@@ -19,12 +19,13 @@ if (params.help) {
     =============
     
     Usage:
-    nextflow run main.nf --genome_gtf <file.gff> --genome_fasta <file.fa> [options]
+    nextflow run main.nf --genome_gtf <file.gff> --genome_fasta <file.fa> --lyric_gtf <file.gtf> [options]
     
     Mandatory arguments:
       --genome_gtf <file>      Input GFF/GTF file
       --genome_fasta <file>    Input FASTA file
-      
+      --lyric_gtf <file>       Input LyRic GTF file
+
     Optional arguments:
       --output_dir <dir>       Output directory (default: ./results)
       --max_cpus <int>         Maximum number of CPUs (default: 4)

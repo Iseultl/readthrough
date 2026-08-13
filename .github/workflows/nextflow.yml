@@ -1,16 +1,6 @@
 name: ORFsearch Mammals
 
 on:
-  push:
-    branches:
-      - main
-      - master
-    paths:
-      - 'main_mammal.nf'
-      - 'modules/**'
-      - 'bin/**'
-      - 'nextflow.config'
-      - '.github/workflows/nextflow.yml'
   pull_request:
     paths:
       - 'main_mammal.nf'

@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff.gz"
-genome_fasta : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.fna.gz"
-genome_gtf : "/no_backup/rg/ileahy/Horse_Analysis/GCF_041296265.1_TB-T2T_genomic.gff.gz"
-species_name : "Horse"
+lyric_gtf : "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/LyRic_complete.gff.gz"
+genome_fasta : "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/GCA_000499385.1_ENH001_genomic.fna.gz"
+genome_gtf : "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/Eimeria_necatrix_51315_GenBank_GCA_000499385.1_4476e2c1f88e5154cd9a4495e0ab625e.gff.gz"
+species_name : "Eimeria_necatrix"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Horse_Analysis/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/ileahy/geneid/params/human/human3iso.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Eimeria_necatrix/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/Eimeria_necatrix_51315.geneid.edit.param"  # Update to your geneid parameter file location
 

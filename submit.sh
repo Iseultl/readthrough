@@ -3,8 +3,8 @@
 #SBATCH --mem 8G
 #SBATCH -p genoa64
 #SBATCH --time 01:00:00
-#SBATCH --output=/no_backup/rg/ileahy/logs/nf_readthrough_%A.out   # log per job
-#SBATCH --error=/no_backup/rg/ileahy/logs/nf_readthrough_%A.err   # error log
+#SBATCH --output=/no_backup/rg/ileahy/logs/nf_Eimeria_necatrix_%A.out   # log per job
+#SBATCH --error=/no_backup/rg/ileahy/logs/nf_Eimeria_necatrix_%A.err   # error log
  
 # Configure bash
 set -e          # exit immediately on error
@@ -33,7 +33,7 @@ export NXF_JVM_ARGS="-Xms2g -Xmx5g"
 #
 # will use "nextflow/rnatoy -with-singularity" as arguments
 
-nextflow run main_mammal.nf -stub-run --species_taxid 10034 --species_name Cricetus_cricetus --max_cpus 1 --max_memory '8GB' -w /nfs/scratch01/rg/ileahy/ -profile cluster -resume
+nextflow run main_protists.nf --params-file params.yaml -profile cluster --max_cpus 4 --max_memory 16GB
  
 # Wait for the pipeline to finish
 echo "Waiting for ${pid}"
