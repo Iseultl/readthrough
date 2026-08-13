@@ -20,7 +20,7 @@ process UNZIP_IF_NEEDED {
         """
     } else {
         """
-        cp ${input_file} ${output_name}
+        mv ${input_file} ${output_name}
         """
     }
 }
