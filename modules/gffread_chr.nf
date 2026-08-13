@@ -12,6 +12,7 @@ process GFFREAD_CHR {
     
     output:
     path("gffread_out/*"), emit: transcripts
+    path("gffread_out"), emit: gffread_dir
     
     script:
     """
