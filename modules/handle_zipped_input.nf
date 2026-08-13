@@ -1,20 +1,26 @@
 // modules/handle_zipped_input.nf
 
 process UNZIP_IF_NEEDED {
-    tag { "unzip" }
+    tag { "${file_type}" }
     memory '4GB'
-    
+
     input:
-    tuple path(fasta), path(gff)
-    val taxid
-    
+    tuple val(file_type), path(input_file)
+
     output:
-    tuple path("genome_${taxid}.fasta"), path("genome_${taxid}.gff")
-    
+    tuple val(file_type), path("${output_name}"), emit: unzipped_file
+
     script:
-    """
-    #!/bin/bash
-    gunzip -c ${fasta} > genome_${taxid}.fasta
-    gunzip -c ${gff} > genome_${taxid}.gff
-    """
+    is_gzipped = input_file.name.endsWith('.gz')
+    output_name = is_gzipped ? input_file.name - '.gz' : input_file.name
+
+    if (is_gzipped) {
+        """
+        gunzip -c ${input_file} > ${output_name}
+        """
+    } else {
+        """
+        cp ${input_file} ${output_name}
+        """
+    }
 }
