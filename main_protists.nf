@@ -187,7 +187,7 @@ workflow {
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
     
     // Step 16: Final Output - Pass the combined channel to the summary table process
-    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf.out)
+    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf)
 
     result = CONCAT_SUMMARY_RESULTS(summary_tables.collect())
     
