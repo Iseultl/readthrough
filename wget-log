@@ -1,0 +1,15 @@
+--2026-08-11 14:59:01--  https://genome.senckenberg.de/download/TOGA2/TOGA2integration/v1/Mammalia/Ovis_vignei__Urial__HLoviVign1__GCA_053525375.1/query_annotation.gff.gz
+Resolving genome.senckenberg.de (genome.senckenberg.de)... 141.2.171.24
+Connecting to genome.senckenberg.de (genome.senckenberg.de)|141.2.171.24|:443... connected.
+HTTP request sent, awaiting response... 504 Gateway Time-out
+Retrying.
+
+--2026-08-11 15:00:02--  (try: 2)  https://genome.senckenberg.de/download/TOGA2/TOGA2integration/v1/Mammalia/Ovis_vignei__Urial__HLoviVign1__GCA_053525375.1/query_annotation.gff.gz
+Reusing existing connection to genome.senckenberg.de:443.
+HTTP request sent, awaiting response... Read error (Operation timed out) in headers.
+Retrying.
+
+--2026-08-14 11:03:59--  (try: 3)  https://genome.senckenberg.de/download/TOGA2/TOGA2integration/v1/Mammalia/Ovis_vignei__Urial__HLoviVign1__GCA_053525375.1/query_annotation.gff.gz
+Connecting to genome.senckenberg.de (genome.senckenberg.de)|141.2.171.24|:443... failed: No route to host.
+Resolving genome.senckenberg.de (genome.senckenberg.de)... failed: nodename nor servname provided, or not known.
+wget: unable to resolve host address ‘genome.senckenberg.de’
