@@ -6,57 +6,43 @@
 # producing a new transcript for each recoding instance
 
 import argparse
-import pandas as pd
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 
-# Load FASTA sequences into a dictionary
-def load_fasta(fasta_file):
-    return {record.id: record.seq for record in SeqIO.parse(fasta_file, 'fasta')}  
-
 # Identify positions of TGA codons in each transcript sequence
-def find_tga_occurrences(sequences):
-    tga_positions = {}
-    
-    for transcript_name, seq in sequences.items():
-        seq_str = str(seq)  # Convert Seq object to string
-        positions = [pos for pos in range(len(seq_str) - 2) if seq_str[pos:pos+3] == "TGA"]
-        
-        if positions:
-            tga_positions[transcript_name] = positions  # Map transcript name to TGA positions
-            # print("Found TGAs for ", transcript_name)
-        else:
-            continue
-    
-    return tga_positions
-          
-# Perform recoding
-def recode(sequences, recodon, tga_positions, output_fasta):
-    records = []
-    
-    for transcript_name, seq in sequences.items():
-        
-        seq_str = str(seq)  # Convert Seq object to string
-        positions = tga_positions.get(transcript_name, [])  # Get TGA positions or empty list
-        if len(seq_str) > 8000:
-            # Skip sequences longer than 4000 bases
-            continue
-        # Store the original sequence first
-        original_record = SeqRecord(Seq(seq_str), id=f"{transcript_name}_original", description="")
-        records.append(original_record)
-        
-        for pos in positions:
-            # Create a new sequence with TGA replaced by the recodon at position `pos`
-            new_seq = seq_str[:pos] + recodon + seq_str[pos+3:]  
-            # Create a new record for FASTA output
-            record_id = f"{transcript_name}_TGA_{pos}_recode"
-            record = SeqRecord(Seq(new_seq), id=record_id, description="")
-            records.append(record)
+def find_tga_occurrences(seq_str):
+    positions = []
+    start = 0
 
-    # Write all modified sequences to output FASTA
+    while True:
+        pos = seq_str.find("TGA", start)
+        if pos == -1:
+            break
+        positions.append(pos)
+        start = pos + 1
+
+    return positions
+
+
+# Perform recoding without holding all records in memory
+def recode(fasta_file, recodon, output_fasta):
     with open(output_fasta, "w") as out_fasta:
-        SeqIO.write(records, out_fasta, "fasta")
+        for record in SeqIO.parse(fasta_file, "fasta"):
+            seq_str = str(record.seq)
+
+            if len(seq_str) > 8000:
+                # Skip sequences longer than 8000 bases
+                continue
+
+            original_record = SeqRecord(Seq(seq_str), id=f"{record.id}_original", description="")
+            SeqIO.write(original_record, out_fasta, "fasta")
+
+            for pos in find_tga_occurrences(seq_str):
+                new_seq = seq_str[:pos] + recodon + seq_str[pos + 3:]
+                record_id = f"{record.id}_TGA_{pos}_recode"
+                recoded_record = SeqRecord(Seq(new_seq), id=record_id, description="")
+                SeqIO.write(recoded_record, out_fasta, "fasta")
 
     print(f"Rewritten sequences saved to {output_fasta}")
         
@@ -69,10 +55,7 @@ if __name__ == "__main__":
      
     args = parser.parse_args()
     
-    fasta = load_fasta(args.fasta)  # Load sequences
-    
-    TGAs = find_tga_occurrences(fasta)  # Find TGA positions
-    recode(fasta, args.recodon, TGAs, args.output)  # Recode sequences and save
+    recode(args.fasta, args.recodon, args.output)  # Recode sequences and save
 
 
 
