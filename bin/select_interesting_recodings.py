@@ -46,8 +46,7 @@ def process_recoding_predictions(geneid_txt):
         for line in f:
             if line.startswith("# Sequence"):
                 prediction_count = 0
-                if current_seq and "original" not in current_seq:
-                    print(current_seq)
+                if current_seq and "original" not in current_seq: 
                     transcript_name = get_transcript_name(current_seq)
                     gene_name = get_gene_name(transcript_name)
                     if transcript_name not in best_by_score:
@@ -72,7 +71,6 @@ def process_recoding_predictions(geneid_txt):
                 
                 total_predictions += 1
                 fields = line.strip().split()
-                print(fields)
                 start = int(fields[1])
                 end = int(fields[2]) - 3
 

@@ -3,7 +3,7 @@ process RELOCATE_TRANSCRIPTS {
     label 'python'
     cpus 1
     time '1h'
-    memory '4GB'
+    memory '8GB'
 
     input:
     path cleaned_gtf

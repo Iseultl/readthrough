@@ -7,7 +7,7 @@ process RUN_SELENOPROFILES {
     errorStrategy 'retry'
     maxRetries 2
     memory { 8.GB * task.attempt }
-    time '1h'
+    time '3h'
 
     input:
     path genome

@@ -9,7 +9,7 @@ process FILTER_FOR_SECISSEARCH {
     path(input_fasta)
 
     output:
-    path("${input_fasta.baseName}.filtered.fa")
+    path "${input_fasta.baseName}.filtered_part_*.fa", emit: split_for_secissearch
 
     script:
     """
@@ -18,6 +18,7 @@ process FILTER_FOR_SECISSEARCH {
     filter_fasta_length.py \\
     --input ${input_fasta} \\
     --max_length 8000 \\
+    --split_size 1000 \\
     --output ${input_fasta.baseName}.filtered.fa
     rm ${input_fasta}
     """
