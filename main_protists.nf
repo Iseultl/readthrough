@@ -178,23 +178,23 @@ workflow {
      
     // Step 12: Run geneid on all the transcript sequences 
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param).out.geneid_results 
-    geneid_results_ch.view("Geneid results: ${it}")
+    geneid_results_ch.view { item -> "Geneid results: ${item}"}
     // Step 14 & 15: Process original and recoded predictions
     interesting_predictions = SELECT_INTERESTING(geneid_results_ch, relocated_gtf).interesting_predictions
-    interesting_predictions.view("Interesting predictions: ${it}")
+    interesting_predictions.view { item -> "Interesting predictions: ${item}" }
     original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
-    original_predictions.view("Original predictions: ${it}")
+    original_predictions.view { item -> "Original predictions: ${item}" }
     // Combine the channels based on the scaffold ID
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
-    combined_predictions.view("Combined predictions: ${it}")
+    combined_predictions.view { item -> "Combined predictions: ${item}" }
     // Step 16: Final Output - Pass the combined channel to the summary table process
     summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf)
-    summary_tables.view("Summary tables: ${it}")
+    summary_tables.view { item -> "Summary tables: ${item}" }
     result = CONCAT_SUMMARY_RESULTS(summary_tables.collect())
-    result.view("Concatenated summary results: ${it}")
+    result.view { item -> "Concatenated summary results: ${item}" }
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
-    ORFsearch_result.view("Filtered ORFsearch results: ${it}")
+    ORFsearch_result.view { item -> "Filtered ORFsearch results: ${item}" }
     // Step 18: Extract sequences for logos
     extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.gffread_dir, params.species_name)
 
@@ -207,6 +207,6 @@ workflow {
 
     // Step 21: Combine ORFsearch results with filtered SECISearch results
     ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis, params.species_name)
-    ORFsearch_result.view("Combined ORFsearch and SECISearch results: ${it}")
+    ORFsearch_result.view { item -> "Combined ORFsearch and SECISearch results: ${item}" }
     workflowCompletionMessage()
 }
