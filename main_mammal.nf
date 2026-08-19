@@ -115,7 +115,7 @@ workflow {
     split_transcripts_ch = SPLIT_IF_TOO_LARGE(recoded_transcripts).split_fasta.flatten()
      
     // Step 12: Run geneid on all the transcript sequences 
-    geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param).out.geneid_results 
+    geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param).geneid_results 
  
     // Step 14 & 15: Process original and recoded predictions
     interesting_predictions = SELECT_INTERESTING(geneid_results_ch, relocated_gtf).interesting_predictions
