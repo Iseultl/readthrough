@@ -122,11 +122,11 @@ workflow {
     CREATE_README(params.species_name, genome_fasta_unzipped, genome_gtf_unzipped)
 
     // Step 0.1: Run Selenoprofiles
-    selenoprofiles_results = RUN_SELENOPROFILES(
-        genome_fasta_unzipped,
-        genome_gtf_unzipped,
-        params.species_name
-    )
+    // selenoprofiles_results = RUN_SELENOPROFILES(
+    //    genome_fasta_unzipped,
+    //    genome_gtf_unzipped,
+    //    params.species_name
+    // )
 
     // Step 0.2: Run Secmarker
     secmarker_results = RUN_SECMARKER(genome_fasta_unzipped)
