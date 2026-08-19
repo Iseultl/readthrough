@@ -7,7 +7,6 @@ process SELECT_INTERESTING {
 
     input:
     path geneid_output
-    path relocated_gtf
 
     output:
     tuple val(id), path("${id}_recoded_score.csv"), path("${id}_recoded_longest.csv"), emit: interesting_predictions

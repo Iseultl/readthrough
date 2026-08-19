@@ -135,7 +135,7 @@ if __name__ == "__main__":
     parser.add_argument('--geneid', type=str, required=True, help="Path to geneid scores of all ORFs")
     parser.add_argument('--score', type=str, required=True, help="Path to output file")
     parser.add_argument('--longest', type=str, required=True, help="Path to output file")
-    parser.add_argument('--gff', type=str, required=True, help="Path to relocated to transcript gff")
+
     args = parser.parse_args()
     
     score_df, longest_df = process_recoding_predictions(args.geneid)

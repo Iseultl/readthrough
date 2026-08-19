@@ -180,7 +180,7 @@ workflow {
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param).geneid_results 
     geneid_results_ch.view { item -> "Geneid results: ${item}"}
     // Step 14 & 15: Process original and recoded predictions
-    interesting_predictions = SELECT_INTERESTING(geneid_results_ch, relocated_gtf).interesting_predictions
+    interesting_predictions = SELECT_INTERESTING(geneid_results_ch).interesting_predictions
     interesting_predictions.view { item -> "Interesting predictions: ${item}" }
     original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
     original_predictions.view { item -> "Original predictions: ${item}" }
