@@ -8,7 +8,7 @@ process RUN_GENEID_ORIGINAL {
     path(param_file)
     
     output:
-    path("geneid_original_predictions/*.txt")
+    path("geneid_original_predictions/*.txt"), emit: geneid_results
     
     script:
     """

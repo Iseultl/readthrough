@@ -177,23 +177,24 @@ workflow {
     split_transcripts_ch = SPLIT_IF_TOO_LARGE(recoded_transcripts).split_fasta.flatten()
      
     // Step 12: Run geneid on all the transcript sequences 
-    geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param)  
- 
+    geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param).out.geneid_results 
+    geneid_results_ch.view("Geneid results: ${it}")
     // Step 14 & 15: Process original and recoded predictions
     interesting_predictions = SELECT_INTERESTING(geneid_results_ch, relocated_gtf).interesting_predictions
+    interesting_predictions.view("Interesting predictions: ${it}")
     original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
-    
+    original_predictions.view("Original predictions: ${it}")
     // Combine the channels based on the scaffold ID
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
-    
+    combined_predictions.view("Combined predictions: ${it}")
     // Step 16: Final Output - Pass the combined channel to the summary table process
     summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf)
-
+    summary_tables.view("Summary tables: ${it}")
     result = CONCAT_SUMMARY_RESULTS(summary_tables.collect())
-    
+    result.view("Concatenated summary results: ${it}")
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
-
+    ORFsearch_result.view("Filtered ORFsearch results: ${it}")
     // Step 18: Extract sequences for logos
     extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.gffread_dir, params.species_name)
 
@@ -206,6 +207,6 @@ workflow {
 
     // Step 21: Combine ORFsearch results with filtered SECISearch results
     ORFsearch_result = COMBINE_ORFSECIS(ORFsearch_result, merged_secis_gff, filtered_secis, params.species_name)
-
+    ORFsearch_result.view("Combined ORFsearch and SECISearch results: ${it}")
     workflowCompletionMessage()
 }
