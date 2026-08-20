@@ -107,7 +107,8 @@ workflow {
 
     // Step 9: Create relocated to transcript gff 
     relocated_gtf = RELOCATE_TRANSCRIPTS(cleaned_gtf_ch.cleaned_gtf).relocated_gtf
-     
+    relocated_gtf_val = relocated_gtf.first()
+    
     // Step 10. Recode all transcripts 
     recoded_transcripts = RECODE_TGA(gffread_outputs.transcripts)
 
@@ -125,9 +126,9 @@ workflow {
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
     
     // Step 16: Final Output - Pass the combined channel to the summary table process
-    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf)
+    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf_val)
 
-    result = CONCAT_SUMMARY_RESULTS(summary_tables.collect())
+    result = summary_tables.summary_table.collectFile(name: 'ORFsearch.filter')
     
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
