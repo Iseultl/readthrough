@@ -165,7 +165,7 @@ workflow {
      
     // Step 6: Create relocated to transcript gff 
     concatenated_gtf = split_gff_dir_ch.collectFile(name: 'concatenated.gtf')
-    relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf)
+    relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf).relocated_gtf
     
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD_CHR(paired_ch)

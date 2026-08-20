@@ -9,7 +9,7 @@ process RELOCATE_TRANSCRIPTS {
     path cleaned_gtf
     
     output:
-    path "relocated_gtf/*"
+    path "relocated_gtf/*", emit: relocated_gtf
     
     script:
     """
