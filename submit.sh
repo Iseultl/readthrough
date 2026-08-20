@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --no-requeue
-#SBATCH --mem 8G
+#SBATCH --mem 4G
 #SBATCH -p genoa64
-#SBATCH --time 04:00:00
+#SBATCH --qos=pipelines
 #SBATCH --output=/no_backup/rg/ileahy/logs/nf_Eimeria_necatrix_%A.out   # log per job
 #SBATCH --error=/no_backup/rg/ileahy/logs/nf_Eimeria_necatrix_%A.err   # error log
  

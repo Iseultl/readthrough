@@ -190,7 +190,7 @@ workflow {
     // Step 16: Final Output - Pass the combined channel to the summary table process
     summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf)
     summary_tables.view { item -> "Summary tables: ${item}" }
-    result = CONCAT_SUMMARY_RESULTS(summary_tables.collect())
+    result = CONCAT_SUMMARY_RESULTS(summary_tables.summary_table.collect())
     result.view { item -> "Concatenated summary results: ${item}" }
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)

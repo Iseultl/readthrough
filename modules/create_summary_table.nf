@@ -9,7 +9,7 @@ process CREATE_SUMMARY_TABLE {
     path relocated_gtf
     
     output:
-    path("summary_results/${id}.csv")
+    path("summary_results/${id}.csv"), emit: summary_table
     
     script:
     """
