@@ -166,6 +166,8 @@ workflow {
     // Step 6: Create relocated to transcript gff 
     concatenated_gtf = split_gff_dir_ch.collectFile(name: 'concatenated.gtf')
     relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf).relocated_gtf
+    relocated_gtf_ch = relocated_gtf
+    relocated_gtf_ch = Channel.value(relocated_gtf)
     
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD_CHR(paired_ch)
@@ -178,17 +180,17 @@ workflow {
      
     // Step 12: Run geneid on all the transcript sequences 
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param).geneid_results 
-    geneid_results_ch.view { item -> "Geneid results: ${item}"}
+    
     // Step 14 & 15: Process original and recoded predictions
     interesting_predictions = SELECT_INTERESTING(geneid_results_ch).interesting_predictions
-    interesting_predictions.view { item -> "Interesting predictions: ${item}" }
+    
     original_predictions = GET_ORIGINAL_PREDICTIONS(geneid_results_ch).original_predictions
-    original_predictions.view { item -> "Original predictions: ${item}" }
+    
     // Combine the channels based on the scaffold ID
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
-    combined_predictions.view { item -> "Combined predictions: ${item}" }
+    
     // Step 16: Final Output - Pass the combined channel to the summary table process
-    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf)
+    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf_ch)
     summary_tables.view { item -> "Summary tables: ${item}" }
     result = CONCAT_SUMMARY_RESULTS(summary_tables.summary_table.collect())
     result.view { item -> "Concatenated summary results: ${item}" }
