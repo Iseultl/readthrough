@@ -166,7 +166,8 @@ workflow {
     // Step 6: Create relocated to transcript gff 
     concatenated_gtf = split_gff_dir_ch.collectFile(name: 'concatenated.gtf')
     relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf).relocated_gtf
-     
+    relocated_gtf_val = relocated_gtf.first()
+
     // Step 7: Now pass the paired channel to GFFREAD
     gffread_out = GFFREAD_CHR(paired_ch)
      
@@ -188,11 +189,11 @@ workflow {
     combined_predictions = interesting_predictions.combine(original_predictions, by: 0)
     
     // Step 16: Final Output - Pass the combined channel to the summary table process
-    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf_ch)
+    summary_tables = CREATE_SUMMARY_TABLE(combined_predictions, relocated_gtf_val)
     
     result = summary_tables.summary_table.collectFile(name: 'ORFsearch.filter')
     result.view { item -> "Concatenated summary results: ${item}" }
-    
+
     // Step 17: Filter final table to handle the duplicates from split_if_too_large
     ORFsearch_result = FILTER_FINAL_TABLE(result)
     ORFsearch_result.view { item -> "Filtered ORFsearch results: ${item}" }
