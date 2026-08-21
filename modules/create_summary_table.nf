@@ -3,7 +3,7 @@ process CREATE_SUMMARY_TABLE {
     label 'python'
     cpus 1
     memory '4GB'
-    maxForks 5
+
     
     input:
     tuple val(id), path(interesting_score), path(interesting_longest), path(original_score), path(original_longest)
