@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/LyRic_complete.gff.gz"
-genome_fasta : "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/GCA_000499385.1_ENH001_genomic.fna.gz"
-genome_gtf : "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/Eimeria_necatrix_51315_GenBank_GCA_000499385.1_4476e2c1f88e5154cd9a4495e0ab625e.gff.gz"
-species_name : "Eimeria_necatrix"
+lyric_gtf : "/no_backup/rg/references/species/Emiliania_huxleyi_CCMP1516.280463/GCA_000372725.1/LyRic_complete.gff.gz"
+genome_fasta : "/no_backup/rg/references/species/Emiliania_huxleyi_CCMP1516.280463/GCA_000372725.1/GCA_000372725.1_Emiliana_huxleyi_CCMP1516_main_genome_assembly_v1.0_genomic.fna.gz"
+genome_gtf : "/no_backup/rg/references/species/Emiliania_huxleyi_CCMP1516.280463/GCA_000372725.1/Emiliania_huxleyi_CCMP1516_280463_GenBank_GCA_000372725.1_8a13c6da4caf6ee357b8d2ab50cc8221.gff.gz"
+species_name : "Emiliania_huxleyi_CCMP1516"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Eimeria_necatrix/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Eimeria_necatrix.51315/GCA_000499385.1/Eimeria_necatrix_51315.geneid.edit.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Emiliania_huxleyi_CCMP1516/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Emiliania_huxleyi_CCMP1516.280463/GCA_000372725.1/Emiliania_huxleyi_CCMP1516_280463.geneid.edit.param"  # Update to your geneid parameter file location
 

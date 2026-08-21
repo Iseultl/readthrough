@@ -33,7 +33,7 @@ export NXF_JVM_ARGS="-Xms2g -Xmx5g"
 #
 # will use "nextflow/rnatoy -with-singularity" as arguments
 
-nextflow run main_protists.nf -params-file params.yaml -profile cluster --max_cpus 4 --max_memory 16GB -w /nfs/scratch01/rg/ileahy/ -resume
+nextflow run main_protists.nf -params-file params.yaml -profile cluster --max_cpus 4 --max_memory 16GB -w /nfs/scratch01/rg/ileahy/
  
 # Wait for the pipeline to finish
 echo "Waiting for ${pid}"
