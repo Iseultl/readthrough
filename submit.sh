@@ -3,8 +3,8 @@
 #SBATCH --mem 4G
 #SBATCH -p genoa64
 #SBATCH --qos=pipelines
-#SBATCH --output=/no_backup/rg/ileahy/logs/nf_Eimeria_necatrix_%A.out   # log per job
-#SBATCH --error=/no_backup/rg/ileahy/logs/nf_Eimeria_necatrix_%A.err   # error log
+#SBATCH --output=/no_backup/rg/ileahy/logs/nf_Entamoeba_histolytica_HM-1:IMSS_%A.out   # log per job
+#SBATCH --error=/no_backup/rg/ileahy/logs/nf_Entamoeba_histolytica_HM-1:IMSS_%A.err   # error log
  
 # Configure bash
 set -e          # exit immediately on error
