@@ -1,6 +1,6 @@
-lyric_gtf : "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1\:IMSS.5759/GCA_000208925.2/LyRic_complete.gff.gz"
-genome_fasta : "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1\:IMSS.5759/GCA_000208925.2/GCA_000208925.2_JCVI_ESG2_1.0_genomic.fna.gz"
-genome_gtf : "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1\:IMSS.5759/GCA_000208925.2/Entamoeba_histolytica_HM-1\:IMSS_294381_GenBank_GCA_000208925.2_1a2c9f19a006c80cf10914368ca55b85.gff.gz"
+lyric_gtf : "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1IMSS.5759/GCA_000208925.2/LyRic_complete.gff.gz"
+genome_fasta : "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1IMSS.5759/GCA_000208925.2/GCA_000208925.2_JCVI_ESG2_1.0_genomic.fna.gz"
+genome_gtf : "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1IMSS.5759/GCA_000208925.2/Entamoeba_histolytica_HM-1IMSS_294381_GenBank_GCA_000208925.2_1a2c9f19a006c80cf10914368ca55b85.gff.gz"
 species_name : "Entamoeba_histolytica_HM-1:IMSS"
 
 
@@ -11,5 +11,5 @@ max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
 output_dir: "/no_backup/rg/ileahy/Entamoeba_histolytica_HM-1IMSS/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1\:IMSS.5759/GCA_000208925.2/Entamoeba_histolytica_HM-1\:IMSS_294381.geneid.edit.param"  # Update to your geneid parameter file location
+geneid_param: "/no_backup/rg/references/species/Entamoeba_histolytica_HM-1IMSS.5759/GCA_000208925.2/Entamoeba_histolytica_HM-1IMSS_294381.geneid.edit.param"  # Update to your geneid parameter file location
 
