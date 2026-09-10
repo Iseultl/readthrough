@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/LyRic_complete.gff.gz"
-genome_fasta : "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/GCA_006247105.1_UU_GM_1.1_genomic.fna.gz"
-genome_gtf : "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/GCA_006247105.1_UU_GM_1.1_genomic.gff.gz"
-species_name : "Giardia_muris.5742"
+lyric_gtf : "/no_backup/rg/references/species/Hamiltosporidium_tvaerminnensis.1176355/GCA_022605425.2/LyRic_complete.gff.gz"
+genome_fasta : "/no_backup/rg/references/species/Hamiltosporidium_tvaerminnensis.1176355/GCA_022605425.2/GCA_022605425.2_FIOER33_v3_genomic.fna.gz"
+genome_gtf : "/no_backup/rg/references/species/Hamiltosporidium_tvaerminnensis.1176355/GCA_022605425.2/Hamiltosporidium_tvaerminnensis_1176355_GenBank_GCA_022605425.2_c2116c0656121ce315ed4aa906a3ba2f.gff.gz"
+species_name : "Hamiltosporidium_tvaerminnensis.1176355"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Giardia_muris/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/Giardia_muris_5742_lyric.geneid.edit.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Hamiltosporidium_tvaerminnensis/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Hamiltosporidium_tvaerminnensis.1176355/GCA_022605425.2/Hamiltosporidium_tvaerminnensis_1176355.geneid.edit.param"  # Update to your geneid parameter file location
 
