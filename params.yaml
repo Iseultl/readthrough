@@ -11,5 +11,5 @@ max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
 output_dir: "/no_backup/rg/ileahy/Giardia_duodenalis/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Giardia_duodenalis.5741/GCA_000002435.2/Giardia_duodenalis_5741.geneid.edit.param"  # Update to your geneid parameter file location
+geneid_param: "/no_backup/rg/references/species/Giardia_duodenalis.5741/GCA_000002435.2/Giardia_duodenalis_5741_lyric.geneid.edit.param"  # Update to your geneid parameter file location
 
