@@ -1,7 +1,7 @@
-lyric_gtf : "/no_backup/rg/references/species/Giardia_duodenalis.5741/GCA_000002435.2/LyRic_complete.gff.gz"
-genome_fasta : "/no_backup/rg/references/species/Giardia_duodenalis.5741/GCA_000002435.2/GCA_000002435.2_UU_WB_2.1_genomic.fna.gz"
-genome_gtf : "/no_backup/rg/references/species/Giardia_duodenalis.5741/GCA_000002435.2/Giardia_duodenalis_5741_GenBank_GCA_000002435.2_178703f4361c262630d6afbf095afd5d.gff.gz"
-species_name : "Giardia_duodenalis.5741"
+lyric_gtf : "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/LyRic_complete.gff.gz"
+genome_fasta : "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/GCA_006247105.1_UU_GM_1.1_genomic.fna.gz"
+genome_gtf : "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/GCA_006247105.1_UU_GM_1.1_genomic.gff.gz"
+species_name : "Giardia_muris.5742"
 
 
 # Production settings
@@ -10,6 +10,6 @@ max_cpus: 4  # Reduced for dev mode
 max_memory: '16GB'  # Reduced for dev mode
 
 # Optional: Add these if you want to customize the output directory
-output_dir: "/no_backup/rg/ileahy/Giardia_duodenalis/ORFsearch"  # Local output directory
-geneid_param: "/no_backup/rg/references/species/Giardia_duodenalis.5741/GCA_000002435.2/Giardia_duodenalis_5741_lyric.geneid.edit.param"  # Update to your geneid parameter file location
+output_dir: "/no_backup/rg/ileahy/Giardia_muris/ORFsearch"  # Local output directory
+geneid_param: "/no_backup/rg/references/species/Giardia_muris.5742/GCA_006247105.1/Giardia_muris_5742_lyric.geneid.edit.param"  # Update to your geneid parameter file location
 
