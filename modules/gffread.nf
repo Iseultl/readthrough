@@ -19,6 +19,7 @@ process GFFREAD {
     """
     #!/bin/bash
     set -euo pipefail
+    . /usr/local/env-activate.sh
     
     # Create output directory if it doesn't exist
     mkdir -p gffread_out

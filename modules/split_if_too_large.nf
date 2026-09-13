@@ -13,6 +13,7 @@ process SPLIT_IF_TOO_LARGE {
 
     script:
     """
+    . /usr/local/env-activate.sh
     echo "Processing file: ${input_file}"
     echo "[\$(date '+%F %T')] split_if_too_large: starting size check for ${input_file}"
     # Use seqkit stats with tabular output and headers to robustly get sequence count

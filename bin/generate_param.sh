@@ -105,7 +105,6 @@ if [[ -z "$PARAM_FILE" ]]; then
     exit 1
 fi
 cp "$PARAM_FILE" "${OUTPUT_DIR}/${SPECIES_NAME}.param"
-cp "$PARAM_FILE" "${OUTPUT_DIR}/${SPECIES_NAME}.param"
 
 # Record end time
 end_time=$(date +%s)
@@ -119,4 +118,26 @@ echo "Memory usage saved in slurm_memory_usage.txt"
 #### Make Param Single Exon Mode ############
 #############################################
 
-# Remove species lines from the parameter file 
+PARAM_FILE="${OUTPUT_DIR}/${SPECIES_NAME}.param"
+
+# Remove species lines: the trainer may insert lines with the species name or ID
+# that are not valid geneid directives
+sed -i "/${SPECIES_NAME}/d" "$PARAM_FILE"
+
+# Remove any standalone "species" keyword lines (case-insensitive) not part of a known directive
+sed -i '/^[Ss][Pp][Ee][Cc][Ii][Ee][Ss]$/d' "$PARAM_FILE"
+
+# Replace the gene model section with single-exon-only rules.
+# The trainer may produce a multi-exon model with acceptor/donor connections,
+# but our pipeline works on transcript-relative coordinates where each "gene"
+# is a single CDS, so we only need Begin -> Single -> End connections.
+sed -i '/^# GENE MODEL:/,$d' "$PARAM_FILE"
+cat >> "$PARAM_FILE" << 'EOF'
+# GENE MODEL: Rules about gene assembling (GenAmic)
+General_Gene_Model
+# BEGINNING and END of prediction
+Begin+                          Single+ 0:Infinity
+Begin-                          Single- 0:Infinity
+Single+               End+              0:Infinity
+Single-               End-              0:Infinity
+EOF

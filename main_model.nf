@@ -88,6 +88,11 @@ def get_chr_name(file) {
 }
 
 workflow {
+    params.help = params.help ?: false
+    params.output_dir = params.output_dir ?: 'results'
+    params.max_cpus = params.max_cpus ?: 4
+    params.max_memory = params.max_memory ?: '8GB'
+
     if (params.help) {
         printHelp()
         return
@@ -109,8 +114,8 @@ workflow {
     // Step 3: Split the GTF files
     split_gtf_ch = AGAT_SPLITGFF(cleaned_gtf_ch.cleaned_gtf)
 
-    // Step 4: Clean the GTF files
-    final_cleaned_gtf_ch = CLEAN_SPLIT_GTF(split_gtf_ch.split_gtf)
+    // Step 4: Clean the split GTF files
+    final_cleaned_gtf_ch = CLEAN_SPLIT_GTF(split_gtf_ch.gff_files)
     // Step 5: Now pass the paired channel to GFFREAD
     gffread_outputs = GFFREAD(final_cleaned_gtf_ch.cleaned_gtf, downloaded_files.fasta)
 

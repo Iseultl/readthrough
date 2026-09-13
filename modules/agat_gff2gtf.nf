@@ -12,6 +12,7 @@ process AGAT_GFF2GTF {
     script:
     """
     #!/bin/bash
+    . /usr/local/env-activate.sh
     awk -F'\\t' 'BEGIN { OFS="\\t" }
 
     # Leave comments untouched

@@ -5,6 +5,7 @@ work/
 # Nextflow files
 .nextflow.log*
 nextflow_report.html
+pipeline_report.html
 timeline.html
 trace.txt
 

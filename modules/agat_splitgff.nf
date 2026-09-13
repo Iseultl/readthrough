@@ -13,6 +13,7 @@ process AGAT_SPLITGFF {
     """
     #!/bin/bash
     set -euo pipefail
+    . /usr/local/env-activate.sh
     
     # Create output directory
     mkdir -p agat_gff2gtf
