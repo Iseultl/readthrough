@@ -63,6 +63,7 @@ def workflowCompletionMessage() {
 
 // Load modules
 include { UNZIP_IF_NEEDED } from './modules/handle_zipped_input'
+include { FILTER_ORPHAN_CDS } from './modules/filter_orphan_cds'
 include { AGAT_GFF2GTF } from './modules/agat_gff2gtf'
 include { AGAT_SPLITGFF } from './modules/agat_splitgff'
 include { CLEAN_GTF } from './modules/clean_gtf'
@@ -131,8 +132,13 @@ workflow {
     // Step 0.2: Run Secmarker
     secmarker_results = RUN_SECMARKER(genome_fasta_unzipped)
 
+    // Step 0.3: Remove orphan CDS records from the LyRic GFF (transdecoder
+    // ORF scans with .pN parents and no transcript line; gffread would
+    // otherwise materialize them as spurious CDS-only transcripts)
+    lyric_gtf_clean = FILTER_ORPHAN_CDS(lyric_gtf_unzipped)
+
     // Step 1: Split GTF/GFF
-    split_results = AGAT_SPLITGFF(lyric_gtf_unzipped)
+    split_results = AGAT_SPLITGFF(lyric_gtf_clean)
 
     // Step 2: Collect all .gff files from the output directory
     gff_files_ch = split_results.gff_files

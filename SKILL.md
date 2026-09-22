@@ -300,12 +300,22 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   batch runs use `runs/params_<sp>.yaml` only.
 - Duplicate CSV row: `Pythium_sp._B7052-1` appears twice in `protist_filepaths.csv`;
   run it once.
+- The merged gidRef GFFs can contain **orphan CDS records** (transdecoder ORF scans,
+  `Parent=<transcript>.pN` with no corresponding transcript line) — gffread materializes
+  each as a spurious CDS-only "transcript". Chlorella_sorokiniana: 19,907 spurious
+  (46,367 gffread vs 26,460 real; 19,907 orphan parents, CDS-only, no orphan exons).
+  Removed by the `FILTER_ORPHAN_CDS` process (`bin/filter_orphan_cds.py`), wired between
+  UNZIP_IF_NEEDED and AGAT_SPLITGFF (2026-09-22). If a run shows gffread > lyric
+  transcripts, suspect this.
 
 ## 9. Status (update every session)
 
 - Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
   15 min → on completion verify → analyse → record → cleanup → next species, no approval
-- Current species: `Chlorella_sorokiniana` (4/46) — RUNNING (job 28642581, submitted 2026-09-22 16:18); all species from #4 on run with `--limit 100000` (43e4aae)
+- Current species: `Chlorella_sorokiniana` (4/46) — RE-RUNNING after orphan-CDS fix
+  (attempt 1, job 28642581: 19,907 spurious CDS-only transcripts from transdecoder ORF
+  records; user-diagnosed, fix = FILTER_ORPHAN_CDS, commit 0288259); all species run
+  with `--limit 100000` (43e4aae)
 - Completed: 3 / 46
   - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
     (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
