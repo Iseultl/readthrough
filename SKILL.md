@@ -312,11 +312,8 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 - Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
   15 min → on completion verify → analyse → record → cleanup → next species, no approval
-- Current species: `Chlorella_sorokiniana` (4/46) — RE-RUNNING after orphan-CDS fix
-  (attempt 1, job 28642581: 19,907 spurious CDS-only transcripts from transdecoder ORF
-  records; user-diagnosed, fix = FILTER_ORPHAN_CDS, commit 0288259); all species run
-  with `--limit 100000` (43e4aae)
-- Completed: 3 / 46
+- Current species: species 5 — see tracker (submitted/running)
+- Completed: 4 / 46
   - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
     (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
   - Chaetoceros_neogracilis (job 28633444): lyric 88,400 → gffread 88,400 → result
@@ -325,6 +322,11 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   - Chlamydomonas_reinhardtii (job 28639838): lyric 19,527 → gffread 19,526 → result
     19,526 unique (100%); first run with --limit 100000 (long transcripts included);
     1 candidate (rna-XM_001696020.2, score_diff 0.37)
+  - Chlorella_sorokiniana (job 28645869, re-run after orphan-CDS fix 51610a3):
+    lyric 26,460 → gffread 26,460 → result 26,460 unique (100% three-way match;
+    attempt 1, 28642581, had 19,907 spurious CDS-only transcripts from transdecoder
+    ORF records — user-diagnosed, fixed by FILTER_ORPHAN_CDS; attempt-1 output
+    backed up ORFsearch_old_20260922_171225); 3 candidates, top agat-rna-13006 (2.12)
 - Done this session (2026-09-22):
   - [x] Pipeline fixes: sequence_logos per-scaffold overwrite (bb7da54 + e87c972:
         `collectFile` on dirs → `collect()` of files), global publishDir removed
@@ -334,9 +336,12 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
         gz-integrity check (§5.1), recode --limit note (§5.3), publishDir quirk corrected
         + bind-mounted bin/ note (§8)
   - [x] Chaetoceros closed out: analysis (6 candidates), work dir removed (42 GB)
+  - [x] Orphan-CDS fix: bin/filter_orphan_cds.py + FILTER_ORPHAN_CDS wired between
+        UNZIP and AGAT_SPLITGFF (51610a3); Chlorella re-run 28645869 closed out:
+        100% three-way, 3 candidates
 - Next:
-  - [ ] Monitor Chlorella_sorokiniana (15-min polls) → verify → analyse → record
-        → species 5 (`Conticribra_weissflogii`)
+  - [ ] Monitor current species (15-min polls) → verify → analyse → record
+        → next species
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
