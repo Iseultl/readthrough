@@ -1,7 +1,7 @@
 process EXTRACT_SEQUENCE_LOGOS {
     tag { "extract_sequence_logos_${result_csv}" }
     label 'python'
-    publishDir "${params.output_dir}/${params.species_name}", mode: 'copy'
+    publishDir "${params.output_dir}/sequence_logos", mode: 'copy'
     cpus 1
     time '1h'
     memory '4GB'
