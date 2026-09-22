@@ -8,9 +8,9 @@ process EXTRACT_SEQUENCE_LOGOS {
     
     input:
     path result_csv
-    path gffread_dir
+    path gffread_files
     val species
-     
+      
     output:
     path "${species}_sequence_logos/*"
     
@@ -20,12 +20,14 @@ process EXTRACT_SEQUENCE_LOGOS {
     set -euo pipefail
 
     mkdir -p ${species}_sequence_logos
+    mkdir -p gffread_dir
+    cp ${gffread_files.join(' ')} gffread_dir/
     
     extract_sequence_logos.py \
         --result_file ${result_csv} \
-        --fasta_dir ${gffread_dir} \
+        --fasta_dir gffread_dir \
         --output_dir ${species}_sequence_logos
 
-    rm -rf ${gffread_dir} ${result_csv}
+    rm -rf gffread_dir ${result_csv}
     """
 }
