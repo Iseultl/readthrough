@@ -91,6 +91,13 @@ For the current species `<sp>`, with input dir `REF` and files from `protist_fil
 ```
 (Timestamped suffix so a same-day re-run never clobbers an earlier backup.)
 
+**Pre-flight: verify every `.gz` input decompresses to TEXT with a single gunzip**
+(Chlamydomonas 2026-09-22 had a double-gzipped GFF — one `gunzip` left binary that
+would have broken AGAT). Check `zcat <f> | head -c 16 | od -An -tx1`: if the output
+starts `1f 8b` the file is double-compressed — recompress in place
+(`zcat <f> | zcat | gzip -c > <f>.fixed && mv <f>.fixed <f>`, keep the original as a
+timestamped backup) and verify the transcript feature count.
+
 Then I write `runs/params_<sp>.yaml` and `runs/submit_<sp>.sh` directly into the cluster
 repo (`/users/rg/ileahy/git/gitlab/readthrough/runs/`).
 Params template:
@@ -133,6 +140,12 @@ nextflow run main_protists.nf -params-file runs/params_<sp>.yaml -profile cluste
 Always judge success from the Nextflow log, not the sbatch exit code.)
 
 ### 5.2 Monitor
+**Poll every ~15 minutes** until the job leaves the queue (user preference 2026-09-22:
+advance the next steps WITHOUT waiting for user approval). Practical form: a background
+loop that checks `squeue` every 900 s and exits when the job is gone (or re-check
+between messages at ~15-min intervals). On confirmed completion (signals below), go
+straight through §5.3 → §5.4 → §5.5 and submit the next species.
+
 I poll directly (don't block the session; check between messages):
 
 ```bash
@@ -201,6 +214,9 @@ Checklist:
       A shortfall beyond that → suspect scaffold-name mismatch in the GTF↔FASTA
       join (`main_protists.nf:164` `combine(by: 0)` silently drops non-matching
       scaffolds); investigate before accepting the run.
+      Also: transcripts longer than the recode `--limit` are dropped by design
+      (`modules/recode_tga.nf`; protists 100,000 bp ≈ none, mammals 8,000).
+      Chaetoceros (old hardcoded 8,000) lost 1,320 (1.5%) to this — fixed in 43e4aae.
 - [ ] Spot-check `head -3` of the result file: columns `og_score_*`, `re_score_*`,
       `TGA_site_score`, `all_secis_*`, `filtered_secis_*` present.
 
@@ -239,8 +255,10 @@ I check the printed summary:
   ```
   Do the §5.3 gffread count and the `nextflow log <uuid>` audit BEFORE this step.
   On a FAILED run, keep the work dir for §7 debugging.
-- I send the user a one-page verification report for `<sp>` and **wait for their
-  go-ahead** before submitting the next species in `protist_filepaths.csv` order.
+- I send the user a one-page verification report for `<sp>`, then **automatically
+  submit the next species** in `protist_filepaths.csv` order — no approval needed
+  (user preference 2026-09-22). Exception: if any §5.3 check fails, stop at §7 and
+  report to the user before advancing.
 
 ## 6. Batch completion
 
@@ -269,9 +287,15 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 ## 8. Known quirks (context, not action items)
 
 - `main_protists.nf:12` default `geneid_param` is a macOS path — always supply via params file.
-- Most intermediate processes inherit the global cluster `publishDir`
-  (`/no_backup/rg/ileahy/SecORFsearch/results`); same-named intermediates can overwrite
-  across species. Final per-species outputs are unaffected.
+- There is NO global `publishDir` any more (removed 2026-09-22, bb7da54): intermediates
+  live only in the work dir and are removed after a successful run (§5.5). The old shared
+  `/no_backup/rg/ileahy/SecORFsearch/results` folder (268 GB) was a legacy of that block
+  (user purging it). The `local` profile still has a harmless `publishDir './results'`
+  (only active with `-profile local`).
+- Pipeline scripts come from this repo's `bin/`, **bind-mounted into the containers**
+  (the readthrough image, Aug 2026, contains none of them) — repo edits to `bin/` take
+  effect on the next task run without an image rebuild (verified 2026-09-22 via
+  `.command.run` `-B` lines).
 - `params.yaml` in the repo root is a stale single-species example (Leishmania) —
   batch runs use `runs/params_<sp>.yaml` only.
 - Duplicate CSV row: `Pythium_sp._B7052-1` appears twice in `protist_filepaths.csv`;
@@ -279,29 +303,30 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 ## 9. Status (update every session)
 
-- Phase: **1 — species 1 done, awaiting user go-ahead for species 2**
-- Current species: `Babesia_duncani` (1/46) — **DONE** (job 28607869, run `magical_crick`,
-  UUID `f8cc350d-3f21-41bc-a2a4-e3db27e300dc`): COMPLETED 0:0, finished 2026-09-21 18:56
-  (2h19m), run status OK, 1,656/1,656 tasks succeeded. Counts: lyric 12,133 → gffread
-  12,133 → result 12,076 unique / 12,080 rows (99.5% — the 57-gap is the known gffread
-  ~70 bp fragment quirk, accepted by user 2026-09-22). Old outputs backed up to
-  `Babesia_duncani/ORFsearch_old_20260921_163513`. Work dir (2.7 GB) removed.
-- Completed: 1 / 46
+- Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
+  15 min → on completion verify → analyse → record → cleanup → next species, no approval
+- Current species: `Chlorella_sorokiniana` (4/46) — RUNNING (job 28642581, submitted 2026-09-22 16:18); all species from #4 on run with `--limit 100000` (43e4aae)
+- Completed: 3 / 46
+  - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
+    (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
+  - Chaetoceros_neogracilis (job 28633444): lyric 88,400 → gffread 88,400 → result
+    87,080 unique (98.5% — 1,320 transcripts >8 kb dropped by the old hardcoded recode
+    limit; NOT re-run per user); 6 candidates, top agat-rna-20420 (score_diff 15.75)
+  - Chlamydomonas_reinhardtii (job 28639838): lyric 19,527 → gffread 19,526 → result
+    19,526 unique (100%); first run with --limit 100000 (long transcripts included);
+    1 candidate (rna-XM_001696020.2, score_diff 0.37)
 - Done this session (2026-09-22):
-  - [x] Verified Babesia_duncani end-to-end (§5.3) — sacct OK, run OK, README sane
-        (10.4 Mb genome, 4,068 genes), result columns OK, transcript counts reconciled
-  - [x] Reconciled the 12,133 vs 12,076 transcript discrepancy with the user
-        (gffread fragment quirk — user accepts the ~0.5% shortfall)
-  - [x] New §5.3 transcript-count check: lyric / gffread / result with 99% thresholds;
-        old `grep -c 'transcript'` check removed (over-counts on GFF3 files)
-  - [x] Submit template (§5.1): added `--mail-type=ALL` + `--mail-user=iseult.leahy@crg.eu`
-  - [x] §5.5: work-dir cleanup step added (successful runs only)
-  - [x] `analyse_protist.py`: prints transcript reconciliation (`--gffread-count`,
-        `--lyric-count`); §5.4 updated to pass them
-  - [x] `run_tracker.tsv`: added `gffread_transcripts` column; Babesia row filled
-  - [x] Babesia work dir removed (2.7 GB); SKILL.md + analysis/ committed to git
+  - [x] Pipeline fixes: sequence_logos per-scaffold overwrite (bb7da54 + e87c972:
+        `collectFile` on dirs → `collect()` of files), global publishDir removed
+        (bb7da54, intermediates in work dir only), logo header fix
+  - [x] Chlamydomonas double-gzipped reference GFF fixed in place (backup kept)
+  - [x] SKILL.md: 15-min polling + autonomous species advance (§5.2/§5.5), pre-flight
+        gz-integrity check (§5.1), recode --limit note (§5.3), publishDir quirk corrected
+        + bind-mounted bin/ note (§8)
+  - [x] Chaetoceros closed out: analysis (6 candidates), work dir removed (42 GB)
 - Next:
-  - [ ] Species 2: `Chaetoceros_neogracilis` — first run with the new SBATCH mail lines
+  - [ ] Monitor Chlorella_sorokiniana (15-min polls) → verify → analyse → record
+        → species 5 (`Conticribra_weissflogii`)
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
