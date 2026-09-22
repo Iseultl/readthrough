@@ -1,7 +1,7 @@
 species	status	job_id	submitted	finished	result_rows	lyric_transcripts	gffread_transcripts	all_secis	filtered_secis	predicted_overall	predicted_all_secis	predicted_filtered_secis	candidates	notes
 Babesia_duncani	done	28607869	2026-09-21 16:36	2026-09-21 18:56	12080	12133	12133	116	3	1971	28	1	1	gffread 57 broken ~70bp fragments dropped in recode (12133->12076 unique, 99.5%), user accepted 2026-09-22; candidate agat-rna-5082 (score_diff 0.81); work dir removed
-Chaetoceros_neogracilis	pending													
-Chlamydomonas_reinhardtii	pending													
+Chaetoceros_neogracilis	done	28633444	2026-09-22 13:03	2026-09-22 13:37	87100	88400	88400	1762	16	22061	595	6	6	1320 transcripts >8kb dropped by old hardcoded 8000bp limit in recode_any_TGA.py (result 87080 unique = 98.5% of gffread; expected, not a bug); limit now a --limit input (commit 43e4aae, protists=100000) effective from Chlamydomonas on; not re-run per user 2026-09-22; attempts 1-2 (28627359 publishDir collision, 28633040 collectFile EISDIR) fixed bb7da54/e87c972; top candidate agat-rna-20420 (score_diff 15.75)
+Chlamydomonas_reinhardtii	running	28639838	2026-09-22 15:05											old Apr-07 run (3.2GB, old layout) backed up to ORFsearch_old_20260922_150519; first run with new --limit 100000 (43e4aae) - long transcripts no longer dropped; LyRic GFF ref was double-gzipped, fixed 2026-09-22 (orig kept as *_doublegz_backup_20260922); expect ~19527 lyric/gffread transcripts
 Chlorella_sorokiniana	pending													
 Conticribra_weissflogii	pending													
 Cryptosporidium_parvum_Iowa_II	pending													
