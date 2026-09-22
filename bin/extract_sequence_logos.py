@@ -139,6 +139,10 @@ def main():
 
     # Read target list
     df = pd.read_csv(args.result_file)
+    # The final published result file has an unnamed index column (header
+    # starts with ','); the intermediate pipeline file has 'transcript_name'.
+    if "transcript_name" not in df.columns:
+        df = df.rename(columns={df.columns[0]: "transcript_name"})
     print(f"Loaded {len(df)} rows from result file", file=sys.stderr)
 
     # Get target transcript IDs (from df and target list)

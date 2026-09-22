@@ -198,7 +198,12 @@ workflow {
     ORFsearch_result = FILTER_FINAL_TABLE(result)
     ORFsearch_result.view { item -> "Filtered ORFsearch results: ${item}" }
     // Step 18: Extract sequences for logos
-    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.gffread_dir, params.species_name)
+    // Collect the per-scaffold gffread dirs into ONE directory first: passing the
+    // channel of dirs directly makes EXTRACT_SEQUENCE_LOGOS run once per scaffold,
+    // and every instance overwrites the same four output files (only the last
+    // scaffold's sequences survive).
+    gffread_all = gffread_out.gffread_dir.collectFile(name: 'gffread_all')
+    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_all, params.species_name)
 
     // Step 19: Run SECISearch on the transcripts
     secissearch_results = SECISSEARCH(gffread_out.transcripts)
