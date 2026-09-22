@@ -7,6 +7,7 @@ process RECODE_TGA {
     
     input:
     path(transcript_fasta)
+    val limit
     
     output:
     path("*.fa")
@@ -18,6 +19,7 @@ process RECODE_TGA {
     recode_any_TGA.py \
         --fasta ${transcript_fasta} \
         --recodon TGC \
+        --limit ${limit} \
         --output ${out_name}
 
     rm ${transcript_fasta}

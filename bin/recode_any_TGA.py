@@ -26,13 +26,13 @@ def find_tga_occurrences(seq_str):
 
 
 # Perform recoding without holding all records in memory
-def recode(fasta_file, recodon, output_fasta):
+def recode(fasta_file, recodon, limit, output_fasta):
     with open(output_fasta, "w") as out_fasta:
         for record in SeqIO.parse(fasta_file, "fasta"):
             seq_str = str(record.seq)
 
-            if len(seq_str) > 8000:
-                # Skip sequences longer than 8000 bases
+            if len(seq_str) > limit:
+                # Skip sequences longer than the limit
                 continue
 
             original_record = SeqRecord(Seq(seq_str), id=f"{record.id}_original", description="")
@@ -51,11 +51,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Recode TGA codons at selenocysteine positions in a genome FASTA file")
     parser.add_argument('--fasta', type=str, required=True, help="Path to transcript FASTA file") 
     parser.add_argument('--recodon', type=str, required=True, choices=['TGT', 'TGC'], help="Codon to replace TGA (TGT or TGC)")
+    parser.add_argument('--limit', type=int, default=100000, help="Maximum sequence length to process (default: 100000)")
     parser.add_argument('--output', type=str, required=True, help="Output FASTA file of recoded sequences")
      
     args = parser.parse_args()
     
-    recode(args.fasta, args.recodon, args.output)  # Recode sequences and save
+    recode(args.fasta, args.recodon, args.limit, args.output)  # Recode sequences and save
 
 
 

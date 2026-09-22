@@ -172,7 +172,7 @@ workflow {
     gffread_out = GFFREAD_CHR(paired_ch)
      
     // Step 10. Recode all transcripts 
-    recoded_transcripts = RECODE_TGA(gffread_out.transcripts)
+    recoded_transcripts = RECODE_TGA(gffread_out.transcripts, 100000)
 
     // Step 11. Split recoded transcripts if too large
     split_transcripts_ch = SPLIT_IF_TOO_LARGE(recoded_transcripts).split_fasta.flatten()
