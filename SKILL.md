@@ -334,14 +334,14 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 - Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
   15 min → on completion verify → analyse → record → cleanup → next species, no approval
-- Current species: species 8 — Cyanidioschyzon_merolae_strain_10D (job 28728435,
-  submitted 2026-09-23 13:45)
+- Current species: species 9 — Cyanidium_caldarium (job 28730609,
+  submitted 2026-09-23 14:41)
 - Deferred: species 5 — Conticribra_weissflogii. Attempt 2 (28713877) scancelled
   2026-09-23 12:35 at user decision (16–25 h ETA too slow; user may run it over the
   weekend when the cluster is less busy). Work dir
   `/nfs/scratch01/rg/ileahy/nf_work/Conticribra_weissflogii` KEPT — a re-run with
   `-resume` reuses the attempt-2 partial cache (AGAT stage ~done).
-- Completed: 6 / 46
+- Completed: 7 / 46
   - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
     (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
   - Chaetoceros_neogracilis (job 28633444): lyric 88,400 → gffread 88,400 → result
@@ -365,6 +365,12 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
     three-way match; GenBank reference annotation, 20 scaffolds, 7m19s with -resume);
     1 candidate rna-gnl|WGS:VWRR|F1559_005062-T1_mrna (score_diff 0.84);
     old Apr-08 output backed up ORFsearch_old_20260923_131019
+  - Cyanidioschyzon_merolae_strain_10D (job 28728435): lyric 5,373 → gffread 5,373
+    → result 5,373 unique (100% three-way match; RefSeq reference annotation
+    4803 mRNA + 521 transcript + 12 rRNA + 37 tRNA, 20 scaffolds, 36m49s);
+    2 candidates, both negative score_diff (weak signal): rna-XM_005534776.1
+    (-1.21), rna-XR_002461538.1 (-0.78); old Apr run backed up
+    ORFsearch_old_20260923_134315
 - Done this session (2026-09-22):
   - [x] Pipeline fixes: sequence_logos per-scaffold overwrite (bb7da54 + e87c972:
         `collectFile` on dirs → `collect()` of files), global publishDir removed
@@ -427,9 +433,17 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
         5,373 transcript-level features (4803 mRNA + 521 transcript + 12 rRNA +
         37 tRNA), all 18-char ids (no >63 risk); 20 scaffolds; old Apr run backed
         up ORFsearch_old_20260923_134315.
+  - [x] Species 8 closed out: 28728435 COMPLETED 0:0 (36m49s); 100% three-way
+        5,373; 2 candidates both negative score_diff (weak signal); work dir
+        removed. Batch 7/46.
+  - [x] Species 9 Cyanidium_caldarium submitted: job 28730609 (14:41).
+        Pre-flight: gidRef DOUBLE-GZ (5th occurrence) — fixed in place, orig kept
+        *_doublegz_backup_20260923; GenBank reference annotation, 4,870 mRNA
+        (all 33-char ids, no >63 risk); 44 orphan CDS lines for
+        FILTER_ORPHAN_CDS; 20 scaffolds; no pre-existing output dir.
 - Next:
-  - [ ] Monitor 28728435 (15-min polls) → verify → analyse → record
-        → next species (Cyanidium_caldarium)
+  - [ ] Monitor 28730609 (15-min polls) → verify → analyse → record
+        → next species (Cylindrotheca_closterium)
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
