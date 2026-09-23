@@ -1,0 +1,8 @@
+lyric_gtf: "/no_backup/rg/references/species/Cylindrotheca_closterium.2856/GCA_933822405.4/Cylindrotheca_closterium_2856_lyricMerged_gidRef.gff.gz"
+genome_fasta: "/no_backup/rg/references/species/Cylindrotheca_closterium.2856/GCA_933822405.4/GCA_933822405.4_Cyc-CA1.15-REFERENCE-ANNOTATED_genomic.fna.gz"
+genome_gtf: "/no_backup/rg/references/species/Cylindrotheca_closterium.2856/GCA_933822405.4/geneidM_complete.gff.gz"
+species_name: "Cylindrotheca_closterium"
+output_dir: "/no_backup/rg/ileahy/Cylindrotheca_closterium/ORFsearch"
+geneid_param: "/no_backup/rg/references/species/Cylindrotheca_closterium.2856/GCA_933822405.4/Cylindrotheca_closterium_2856_lyric.geneid.edit.param"
+max_cpus: 4
+max_memory: 16GB
