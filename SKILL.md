@@ -298,6 +298,13 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   `.command.run` `-B` lines).
 - `params.yaml` in the repo root is a stale single-species example (Leishmania) —
   batch runs use `runs/params_<sp>.yaml` only.
+- **Re-runs in the same work dir need `-resume` to reuse completed task results**
+  (learned 2026-09-23, Conticribra attempt 2): a plain `nextflow run -w <workdir>`
+  re-executes EVERY task even when the previous run completed them. `-resume` picks
+  up the LATEST session for that work dir — after a new (killed/finished) session
+  exists, the older session's cache is no longer reachable. First runs per species
+  use the standard template (no -resume); on a re-submit of a stalled/failed run,
+  add `-resume` to the nextflow command in `submit_<sp>.sh`.
 - Duplicate CSV row: `Pythium_sp._B7052-1` appears twice in `protist_filepaths.csv`;
   run it once.
 - The merged gidRef GFFs can contain **orphan CDS records** (transdecoder ORF scans,
@@ -348,10 +355,11 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
         ran 18–38 parallel (verified via sacct child-job overlap). Previous 4 species
         had ≤162 scaffolds so the bug was masked. Fix e463458 removes the
         process-level maxForks (CI unaffected: github profile sets maxForks=1
-        globally). Attempt 2 = 28713877, reuses the work dir cache (AGAT_G/CLEAN/
-        GFFREAD/RECODE/SECISS 7,719 each already cached); attempt-1 partial output
+        globally). Attempt 2 = 28713877 (submitted 11:34); attempt-1 partial output
         backed up ORFsearch_old_20260923_113417; pre-flight re-passed
-        (all .gz OK, lyric 14,490 mRNA)
+        (all .gz OK, lyric 14,490 mRNA). Caveat: template used plain `nextflow run`
+        → NO cache reuse from attempt 1 (would have needed -resume), all stages
+        re-run but SPLIT now parallel; ETA ~16-25h. See §8 for the -resume rule.
 - Next:
   - [ ] Monitor 28713877 (15-min polls) → verify → analyse → record
         → next species (Cryptosporidium_parvum_Iowa_II)
