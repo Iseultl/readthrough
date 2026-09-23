@@ -1,0 +1,8 @@
+lyric_gtf: "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCF_000091205.1/Cyanidioschyzon_merolae_strain_10D_280699_reference_gidRef.gff.gz"
+genome_fasta: "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCF_000091205.1/GCF_000091205.1_ASM9120v1_genomic.fna.gz"
+genome_gtf: "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCF_000091205.1/geneidM_complete.gff.gz"
+species_name: "Cyanidioschyzon_merolae_strain_10D"
+output_dir: "/no_backup/rg/ileahy/Cyanidioschyzon_merolae_strain_10D/ORFsearch"
+geneid_param: "/no_backup/rg/references/species/Cyanidioschyzon_merolae_strain_10D.280699/GCF_000091205.1/Cyanidioschyzon_merolae_strain_10D_280699_reference.geneid.edit.param"
+max_cpus: 4
+max_memory: 16GB
