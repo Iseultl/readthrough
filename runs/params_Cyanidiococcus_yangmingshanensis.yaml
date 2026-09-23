@@ -1,0 +1,8 @@
+lyric_gtf: "/no_backup/rg/references/species/Cyanidiococcus_yangmingshanensis.2690220/GCA_013995675.1/Cyanidiococcus_yangmingshanensis_2690220_reference_gidRef.gff.gz"
+genome_fasta: "/no_backup/rg/references/species/Cyanidiococcus_yangmingshanensis.2690220/GCA_013995675.1/GCA_013995675.1_ASM1399567v1_genomic.fna.gz"
+genome_gtf: "/no_backup/rg/references/species/Cyanidiococcus_yangmingshanensis.2690220/GCA_013995675.1/geneidM_complete.gff.gz"
+species_name: "Cyanidiococcus_yangmingshanensis"
+output_dir: "/no_backup/rg/ileahy/Cyanidiococcus_yangmingshanensis/ORFsearch"
+geneid_param: "/no_backup/rg/references/species/Cyanidiococcus_yangmingshanensis.2690220/GCA_013995675.1/Cyanidiococcus_yangmingshanensis_2690220_reference.geneid.edit.param"
+max_cpus: 4
+max_memory: 16GB

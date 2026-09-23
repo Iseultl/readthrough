@@ -325,14 +325,14 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 - Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
   15 min → on completion verify → analyse → record → cleanup → next species, no approval
-- Current species: species 6 — Cryptosporidium_parvum_Iowa_II (job 28721317,
-  submitted 2026-09-23 12:43), first run with the seqkit split2 SPLIT module (734f846)
+- Current species: species 7 — Cyanidiococcus_yangmingshanensis (job 28725643,
+  submitted 2026-09-23 13:10)
 - Deferred: species 5 — Conticribra_weissflogii. Attempt 2 (28713877) scancelled
   2026-09-23 12:35 at user decision (16–25 h ETA too slow; user may run it over the
   weekend when the cluster is less busy). Work dir
   `/nfs/scratch01/rg/ileahy/nf_work/Conticribra_weissflogii` KEPT — a re-run with
   `-resume` reuses the attempt-2 partial cache (AGAT stage ~done).
-- Completed: 4 / 46
+- Completed: 5 / 46
   - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
     (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
   - Chaetoceros_neogracilis (job 28633444): lyric 88,400 → gffread 88,400 → result
@@ -346,6 +346,11 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
     attempt 1, 28642581, had 19,907 spurious CDS-only transcripts from transdecoder
     ORF records — user-diagnosed, fixed by FILTER_ORPHAN_CDS; attempt-1 output
     backed up ORFsearch_old_20260922_171225); 3 candidates, top agat-rna-13006 (2.12)
+  - Cryptosporidium_parvum_Iowa_II (job 28721317): lyric 17,956 → gffread 17,956 →
+    result 17,956 unique (100% three-way match; first run with seqkit split2 SPLIT
+    734f846); lyric input was a merged gidRef (AGAT LyRic 14,075 + RefSeq 3,881);
+    8 scaffolds, 18m39s; 119 SECIS found, 0 survived the filter → 0 candidates;
+    old Apr-08 output backed up ORFsearch_old_20260923_123718
 - Done this session (2026-09-22):
   - [x] Pipeline fixes: sequence_logos per-scaffold overwrite (bb7da54 + e87c972:
         `collectFile` on dirs → `collect()` of files), global publishDir removed
@@ -385,9 +390,17 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
          scaffolds → run expected ~30-60 min; local re-run of the GFF chain
          (orphan-CDS 0 removed, AGAT GFF2GTF, gffread per chr) = 17,956 transcripts,
          0 warnings. Old Apr-08 output backed up ORFsearch_old_20260923_123718.
+    - [x] Cryptosporidium closed out: 28721317 COMPLETED 0:0 in 18m39s (12:43→13:03);
+          100% three-way match lyric=gffread=result=17,956; 119 SECIS found, 0
+          survived the filter → 0 candidates; work dir removed. Batch now 5/46.
+    - [x] Species 7 Cyanidiococcus_yangmingshanensis submitted: job 28725643 (13:10).
+          Pre-flight: reference gidRef was DOUBLE-GZ (3rd occurrence) — fixed in
+          place, orig kept *_doublegz_backup_20260923; GenBank reference annotation
+          5,189 mRNA (not a LyRic transcriptome, like Conticribra); 20 scaffolds →
+          fast run expected; old Apr-08 output backed up ORFsearch_old_20260923_131019.
 - Next:
-  - [ ] Monitor 28721317 (15-min polls) → verify → analyse → record
-        → next species (Cyanidiococcus_yangmingshanensis)
+  - [ ] Monitor 28725643 (15-min polls) → verify → analyse → record
+        → next species (Cyanidioschyzon_merolae_strain_10D)
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
