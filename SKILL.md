@@ -312,7 +312,8 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 - Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
   15 min → on completion verify → analyse → record → cleanup → next species, no approval
-- Current species: species 5 — see tracker (submitted/running)
+- Current species: species 5 — Conticribra_weissflogii, **attempt 2** (job 28713877,
+  submitted 2026-09-23 11:34) running after the maxForks fix (e463458)
 - Completed: 4 / 46
   - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
     (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
@@ -339,10 +340,26 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   - [x] Orphan-CDS fix: bin/filter_orphan_cds.py + FILTER_ORPHAN_CDS wired between
         UNZIP and AGAT_SPLITGFF (51610a3); Chlorella re-run 28645869 closed out:
         100% three-way, 3 candidates
+- Done this session (2026-09-23):
+  - [x] Diagnosed Conticribra attempt 1 (28647231): user scancelled 10:12 after a
+        16h16m stall. Root cause: `maxForks 1` in SPLIT_IF_TOO_LARGE (leftover from
+        c0ffc43 "run as github actions") serialized the per-scaffold stage — 7,719
+        scaffolds × ~65s at 1 job at a time ≈ 140h; only 639/7719 done. Other stages
+        ran 18–38 parallel (verified via sacct child-job overlap). Previous 4 species
+        had ≤162 scaffolds so the bug was masked. Fix e463458 removes the
+        process-level maxForks (CI unaffected: github profile sets maxForks=1
+        globally). Attempt 2 = 28713877, reuses the work dir cache (AGAT_G/CLEAN/
+        GFFREAD/RECODE/SECISS 7,719 each already cached); attempt-1 partial output
+        backed up ORFsearch_old_20260923_113417; pre-flight re-passed
+        (all .gz OK, lyric 14,490 mRNA)
 - Next:
-  - [ ] Monitor current species (15-min polls) → verify → analyse → record
-        → next species
+  - [ ] Monitor 28713877 (15-min polls) → verify → analyse → record
+        → next species (Cryptosporidium_parvum_Iowa_II)
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
   section current.
+- Session 2026-09-23 (genoa64-04): code fix e463458 was committed directly in the
+  CLUSTER clone — the local Mac repo
+  (`/Users/iseult/gitlab/SECIS_independent/CascadeProjects/windsurf-project`) needs a
+  `git pull` to pick it up.
