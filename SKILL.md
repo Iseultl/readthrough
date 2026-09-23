@@ -298,6 +298,12 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   `.command.run` `-B` lines).
 - `params.yaml` in the repo root is a stale single-species example (Leishmania) —
   batch runs use `runs/params_<sp>.yaml` only.
+- SPLIT_IF_TOO_LARGE (2026-09-23, after e463458): now a single
+  `seqkit split2 --by-size 40000 ${input_file}` — no pre-check, no prints.
+  Outputs `<input>.fa.split/<base>.part_NNN.fa` (same `part_NNN` naming as the
+  old awk split, so `SELECT_INTERESTING`/`GET_ORIGINAL_PREDICTIONS` id-derivation
+  from geneid file names is unaffected; empty input → empty .split folder, exit 0,
+  no output — verified in the seqkit 2.10.0 container).
 - **Re-runs in the same work dir need `-resume` to reuse completed task results**
   (learned 2026-09-23, Conticribra attempt 2): a plain `nextflow run -w <workdir>`
   re-executes EVERY task even when the previous run completed them. `-resume` picks
@@ -319,8 +325,13 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 - Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
   15 min → on completion verify → analyse → record → cleanup → next species, no approval
-- Current species: species 5 — Conticribra_weissflogii, **attempt 2** (job 28713877,
-  submitted 2026-09-23 11:34) running after the maxForks fix (e463458)
+- Current species: species 6 — Cryptosporidium_parvum_Iowa_II (job 28721317,
+  submitted 2026-09-23 12:43), first run with the seqkit split2 SPLIT module (734f846)
+- Deferred: species 5 — Conticribra_weissflogii. Attempt 2 (28713877) scancelled
+  2026-09-23 12:35 at user decision (16–25 h ETA too slow; user may run it over the
+  weekend when the cluster is less busy). Work dir
+  `/nfs/scratch01/rg/ileahy/nf_work/Conticribra_weissflogii` KEPT — a re-run with
+  `-resume` reuses the attempt-2 partial cache (AGAT stage ~done).
 - Completed: 4 / 46
   - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
     (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
@@ -360,9 +371,23 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
         (all .gz OK, lyric 14,490 mRNA). Caveat: template used plain `nextflow run`
         → NO cache reuse from attempt 1 (would have needed -resume), all stages
         re-run but SPLIT now parallel; ETA ~16-25h. See §8 for the -resume rule.
+   - [x] SPLIT_IF_TOO_LARGE simplified per user: single `seqkit split2 --by-size
+         40000 ${input_file}` (no pre-check, no prints) — commit 734f846. Produces
+         `<input>.fa.split/<base>.part_NNN.fa` — same `part_NNN` naming as the old
+         awk split (verified in the seqkit 2.10.0 container: 85k-seq multi-part and
+         empty-file cases), so downstream id derivation from geneid file names is
+         unaffected.
+   - [x] Conticribra attempt 2 (28713877) scancelled 12:35 at user decision;
+         Conticribra deferred to the weekend (work dir kept for a -resume re-run).
+   - [x] Species 6 Cryptosporidium_parvum_Iowa_II submitted: job 28721317 (12:43).
+         Pre-flight: all 4 inputs OK (single-gz); merged gidRef has 17,956
+         transcript-level features (AGAT LyRic 14,075 + RefSeq 3,881) and only 8
+         scaffolds → run expected ~30-60 min; local re-run of the GFF chain
+         (orphan-CDS 0 removed, AGAT GFF2GTF, gffread per chr) = 17,956 transcripts,
+         0 warnings. Old Apr-08 output backed up ORFsearch_old_20260923_123718.
 - Next:
-  - [ ] Monitor 28713877 (15-min polls) → verify → analyse → record
-        → next species (Cryptosporidium_parvum_Iowa_II)
+  - [ ] Monitor 28721317 (15-min polls) → verify → analyse → record
+        → next species (Cyanidiococcus_yangmingshanensis)
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
