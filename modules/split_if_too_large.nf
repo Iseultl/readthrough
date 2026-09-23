@@ -2,7 +2,6 @@ process SPLIT_IF_TOO_LARGE {
     tag { "split_if_needed_${input_file.baseName}" }
     cpus 1
     memory '4GB'
-    maxForks 1
     label 'splitfasta'
 
     input:
