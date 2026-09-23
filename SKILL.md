@@ -320,6 +320,15 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   Removed by the `FILTER_ORPHAN_CDS` process (`bin/filter_orphan_cds.py`), wired between
   UNZIP_IF_NEEDED and AGAT_SPLITGFF (2026-09-22). If a run shows gffread > lyric
   transcripts, suspect this.
+- **Seblastian rejects fasta identifiers >63 characters** (learned 2026-09-23,
+  Cyanidiococcus attempt 1, 28725643): SECISSEARCH runs `Seblastian.py -t <transcript
+  fasta>` and dies if any header's first word is >63 chars — GenBank `gnl|WGS` ids in
+  the merged gidRef GFFs can be 64-65 chars (2 of 5,189 for Cyanidiococcus). Fixed in
+  760ab22: GFFREAD/GFFREAD_CHR shorten any header >63 chars to first 55 chars + '_' +
+  6-digit rolling hash of the full id (max 62, deterministic, collision-safe in
+  practice); every downstream stage (recoding, split, geneid, secissearch, logos) sees
+  the same shortened names, so joins stay consistent. Conticribra checked: all 14,490
+  ids are 17 chars, unaffected.
 
 ## 9. Status (update every session)
 
@@ -398,8 +407,14 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
           place, orig kept *_doublegz_backup_20260923; GenBank reference annotation
           5,189 mRNA (not a LyRic transcriptome, like Conticribra); 20 scaffolds →
           fast run expected; old Apr-08 output backed up ORFsearch_old_20260923_131019.
+    - [x] Cyanidiococcus attempt 1 (28725643) FAILED 13:14 at SECISSEARCH: Seblastian
+          rejects fasta ids >63 chars (2 GenBank gnl|WGS ids were 64-65 chars). Fixed
+          at the GFFREAD choke point 760ab22 (headers >63 → 55 chars + 6-digit rolling
+          hash, max 62; verified 5189/5189 unique + deterministic). Attempt 2 =
+          28726227 (13:20, -resume reuses UNZIP/AGAT/FILTER tasks).
 - Next:
-  - [ ] Monitor 28725643 (15-min polls) → verify → analyse → record
+  - [ ] Monitor 28726227 (attempt 2, -resume; 15-min polls) → verify → analyse
+        → record
         → next species (Cyanidioschyzon_merolae_strain_10D)
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`

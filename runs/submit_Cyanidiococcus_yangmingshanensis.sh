@@ -11,5 +11,5 @@ set -e
 module load Java
 export NXF_JVM_ARGS="-Xms2g -Xmx5g"
 cd /users/rg/ileahy/git/gitlab/readthrough
-nextflow run main_protists.nf -params-file runs/params_Cyanidiococcus_yangmingshanensis.yaml -profile cluster \
+nextflow run main_protists.nf -resume -params-file runs/params_Cyanidiococcus_yangmingshanensis.yaml -profile cluster \
     --max_cpus 4 --max_memory 16GB -w /nfs/scratch01/rg/ileahy/nf_work/Cyanidiococcus_yangmingshanensis
