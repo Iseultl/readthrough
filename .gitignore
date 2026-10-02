@@ -17,6 +17,8 @@ split_chr/
 relocated_gtf/
 recoded_transcripts/
 output/
+runs/
+analysis/
 
 # macOS specific
 .DS_Store

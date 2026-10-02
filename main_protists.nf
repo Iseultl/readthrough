@@ -11,6 +11,12 @@ params.species_name = params.species_name ?: 'Mus musculus'
 params.output_dir = params.output_dir ?: '/no_backup/rg/ileahy/Mouse_Analysis/secis_independent_output'
 params.geneid_param = params.geneid_param ?: '/Users/iseult/Desktop/Geneid_Recoding/testing_false_positives/human3iso.param'
 params.help = params.help ?: false
+// Number of hash buckets the per-scaffold stages are grouped into
+// (modules/scaffold_batches.nf). Each per-scaffold stage runs once per bucket
+// and loops over its scaffolds inside the job. For large genomes with few big
+// scaffolds most buckets stay empty and behaviour is ~one job per scaffold,
+// as before.
+params.scaffold_batches = params.scaffold_batches ?: 24
 
 // Print help message if no parameters are provided
 def printHelp() {
@@ -64,14 +70,19 @@ def workflowCompletionMessage() {
 // Load modules
 include { UNZIP_IF_NEEDED } from './modules/handle_zipped_input'
 include { FILTER_ORPHAN_CDS } from './modules/filter_orphan_cds'
-include { AGAT_GFF2GTF } from './modules/agat_gff2gtf'
 include { AGAT_SPLITGFF } from './modules/agat_splitgff'
-include { CLEAN_GTF } from './modules/clean_gtf'
 include { RELOCATE_TRANSCRIPTS } from './modules/relocate_transcripts'
 include { SPLITFASTA } from './modules/splitfasta'
+// Batched per-scaffold stages (see modules/scaffold_batches.nf): one job per
+// hash bucket of scaffolds instead of one job per scaffold, to avoid tens of
+// thousands of short SLURM jobs on small-scaffold genomes. The mammal/model
+// pipelines keep the original single-file modules.
+include { AGAT_GFF2GTF_BATCH } from './modules/scaffold_batches'
+include { CLEAN_GTF_BATCH } from './modules/scaffold_batches'
+include { RECODE_TGA_BATCH } from './modules/scaffold_batches'
+include { SPLIT_IF_TOO_LARGE_BATCH } from './modules/scaffold_batches'
+include { SECISSEARCH_BATCH } from './modules/scaffold_batches'
 include { GFFREAD_CHR } from './modules/gffread_chr'
-include { RECODE_TGA } from './modules/recode_tga'
-include { SPLIT_IF_TOO_LARGE } from './modules/split_if_too_large'
 include { RUN_GENEID_ORIGINAL } from './modules/run_geneid_original'
 include { CONCAT_SUMMARY_RESULTS } from './modules/concat_summary_results'
 include { SELECT_INTERESTING } from './modules/select_interesting'
@@ -79,7 +90,6 @@ include { GET_ORIGINAL_PREDICTIONS } from './modules/get_original_predictions'
 include { CREATE_SUMMARY_TABLE } from './modules/create_summary_table'
 include { FILTER_FINAL_TABLE } from './modules/filter_final_table'
 include { EXTRACT_SEQUENCE_LOGOS } from './modules/extract_sequence_logos'
-include { SECISSEARCH } from './modules/secissearch'
 include { FILTER_SECIS } from './modules/filter_secis'
 include { COMBINE_ORFSECIS } from './modules/combine_orfsecis'
 include { CREATE_README } from './modules/create_readme'
@@ -91,12 +101,44 @@ def get_chr_name(file) {
     return file.getBaseName().replaceFirst(/\.fa$|\.gtf$/, '')
 }
 
+// Number of hash buckets the per-scaffold stages are grouped into
+// (modules/scaffold_batches.nf). Each per-scaffold stage runs once per bucket
+// and loops over its scaffolds inside the job (sequential loop, so peak
+// memory is unchanged). For large genomes with few big scaffolds most buckets
+// stay empty and behaviour is ~one job per scaffold, as before.
+def scaffoldBatchCount() {
+    return (params.scaffold_batches ?: 24) as int
+}
+
+// Group a channel of per-scaffold files into hash buckets (see above).
+// Bucket key = hash of the file base name (per-scaffold stages name every
+// file after its scaffold). Stateless, so no ordering assumption is made on
+// the lazy channels; the key only needs to partition the channel — stages do
+// not need to share buckets. Emits: tuple(val bucket, list of files), one
+// item per non-empty bucket.
+def batchByScaffold(ch) {
+    def K = scaffoldBatchCount()
+    return ch
+        .map { f -> tuple(((f.name as String).hashCode() % K).abs(), f) }
+        .groupTuple()
+        .map { bucket, items -> tuple(bucket, items.toList()) }
+}
+
 workflow {
     if (params.help) {
         printHelp()
         return
     }
     printHeader()
+
+    // Scaffold batching: the per-scaffold stages below run via the batched
+    // modules (modules/scaffold_batches.nf, GFFREAD_CHR) grouped by
+    // batchByScaffold() — see the helper definitions above. This avoids tens
+    // of thousands of short SLURM jobs on small-scaffold genomes
+    // (Cylindrotheca: 2,534 scaffolds -> ~15k jobs before the per-part geneid
+    // stages). Every batched process still emits the same per-scaffold output
+    // files, so all downstream name/id derivation is unaffected.
+
     // Step -1: Handle zipped input files
     input_files = Channel.of(
         tuple('genome_fasta', file(params.genome_fasta)),
@@ -145,10 +187,13 @@ workflow {
     gff_files_ch = gff_files_ch.flatten()
 
     // Step 3: Run AGAT_GFF2GTF in parallel to standardise each GFF file
-    gtf_files_ch = AGAT_GFF2GTF(gff_files_ch)
-    
+    // (batched: scaffold_batches jobs, each looping over its bucket; the glob
+    // emit carries one List per job, flatten back to per-scaffold files)
+    gtf_files_ch = AGAT_GFF2GTF_BATCH(batchByScaffold(gff_files_ch)).gtf_file.flatten()
+
     // Create a channel of cleaned GTF files for downstream processing
-    split_gff_dir_ch = CLEAN_GTF(gtf_files_ch)
+    // (batched, flattened as above)
+    split_gff_dir_ch = CLEAN_GTF_BATCH(batchByScaffold(gtf_files_ch)).cleaned_gtf.flatten()
     
     // Create paired channels for GTF and FASTA files
     // First, create a channel for GTF files with chromosome names
@@ -174,14 +219,42 @@ workflow {
     relocated_gtf = RELOCATE_TRANSCRIPTS(concatenated_gtf).relocated_gtf
     relocated_gtf_val = relocated_gtf.first()
 
-    // Step 7: Now pass the paired channel to GFFREAD
-    gffread_out = GFFREAD_CHR(paired_ch)
-     
-    // Step 10. Recode all transcripts 
-    recoded_transcripts = RECODE_TGA(gffread_out.transcripts, 100000)
+    // Step 7: GFFREAD — pass batches of paired (gtf, fasta) scaffolds.
+    // The pair for each scaffold stays in the same bucket (grouped AFTER the
+    // combine, so both files of a matched pair travel together).
+    // The bucket's gtf and fasta files are merged into ONE list input —
+    // two list inputs in one process collide at staging time (see
+    // modules/gffread_chr.nf); the job re-pairs them by filename.
+    // Note: 1-parameter map closures with explicit list indexing — this Nextflow
+    // version passes a combine's 3-element tuple item to the map closure as a
+    // single list argument, which multi-parameter closures cannot be dispatched
+    // against (MissingMethodException at MapOp).
+    gffread_batches = paired_ch
+        .map { item ->
+            tuple(((item[0] as String).hashCode() % scaffoldBatchCount()).abs(), item[1], item[2])
+        }
+        .groupTuple()
+        .map { item ->
+            // NOTE: groupTuple() is COLUMN-WISE — for 3-tuples it emits
+            // (key, List<value1>, List<value2>), NOT (key, List<(v1,v2)>).
+            // So item[1] is the bucket's gtf files, item[2] the fasta files.
+            def gtfs = item[1].toList()
+            def fastas = item[2].toList()
+            // GFFREAD_CHR takes ONE list input (two list inputs in one process
+            // are avoided; see modules/gffread_chr.nf); the job re-pairs
+            // gtf<->fasta by filename.
+            tuple(item[0], gtfs + fastas)
+        }
+    gffread_out = GFFREAD_CHR(gffread_batches)
+    // Glob emit -> one List of per-scaffold files per batch job; flatten back
+    // to a per-scaffold channel (consumed by recode, secissearch and logos).
+    transcripts_ch = gffread_out.transcripts.flatten()
 
-    // Step 11. Split recoded transcripts if too large
-    split_transcripts_ch = SPLIT_IF_TOO_LARGE(recoded_transcripts).split_fasta.flatten()
+    // Step 10. Recode all transcripts (batched)
+    recoded_transcripts = RECODE_TGA_BATCH(batchByScaffold(transcripts_ch), 100000).flatten()
+
+    // Step 11. Split recoded transcripts if too large (batched)
+    split_transcripts_ch = SPLIT_IF_TOO_LARGE_BATCH(batchByScaffold(recoded_transcripts)).split_fasta.flatten()
      
     // Step 12: Run geneid on all the transcript sequences 
     geneid_results_ch = RUN_GENEID_ORIGINAL(split_transcripts_ch, params.geneid_param).geneid_results 
@@ -209,10 +282,10 @@ workflow {
     // (Passing the per-scaffold channel directly would run the process once per
     // scaffold and every instance overwrites the same four output files;
     // collectFile() does not work on dirs: EISDIR.)
-    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, gffread_out.transcripts.collect(), params.species_name)
+    extracted_sequences = EXTRACT_SEQUENCE_LOGOS(ORFsearch_result, transcripts_ch.collect(), params.species_name)
 
-    // Step 19: Run SECISearch on the transcripts
-    secissearch_results = SECISSEARCH(gffread_out.transcripts)
+    // Step 19: Run SECISearch on the transcripts (batched)
+    secissearch_results = SECISSEARCH_BATCH(batchByScaffold(transcripts_ch)).flatten()
     merged_secis_gff = secissearch_results.collectFile(name: 'all_secis_combined.gff')
 
     // Step 20: Filter SECISearch results

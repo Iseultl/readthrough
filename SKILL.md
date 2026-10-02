@@ -6,10 +6,13 @@ of every session, and keep the **Status** section up to date as work progresses.
 
 ## 1. Mission
 
-Run the SecORFsearch Nextflow pipeline (`main_protists.nf`) sequentially for all 46 protist
-species (list + input paths in `protist_filepaths.csv`), **one species at a time**. For each
-species: submit → monitor → verify success → run analysis → record metrics in
-`run_tracker.tsv` → only then move to the next species.
+Run the SecORFsearch Nextflow pipeline (`main_protists.nf`) for all 46 protist species
+(list + input paths in `protist_filepaths.csv`). Since **2026-09-30** this is done in
+**batch format**: one self-contained SLURM job per species (pipeline → verify → analyse →
+work-dir cleanup) and a single wrapper (`runs/submit_all_remaining.sh`) that submits all
+remaining species at once. I no longer trigger species one at a time; instead I monitor
+the batch, and as each job completes I verify its log and record metrics in
+`run_tracker.tsv`.
 
 ## 2. Cluster access & division of labour
 
@@ -27,8 +30,9 @@ species: submit → monitor → verify success → run analysis → record metri
 - **User's roles**:
   1. Optionally push code changes (see above); otherwise just review.
   2. Review my per-species verification report before I submit the next species.
-- Per-run generated files (`runs/params_<sp>.yaml`, `runs/submit_<sp>.sh`) are written
-  **directly on the cluster** by me (run artifacts, not code).
+- Per-run generated files (`runs/params_<sp>.yaml`, `runs/submit_<sp>.sh`) are generated
+  **on the cluster** for all remaining species at once (batch generator, see §5.1);
+  they live in the repo `runs/` dir and count as run artifacts, not code.
 - All remote commands: `ssh login '<cmd>'`. Long monitors: poll, don't block
   (use `timeout` / periodic `squeue` checks between messages).
 
@@ -73,23 +77,76 @@ This layout requires the two `publishDir` fixes already applied in
 - `species_name` = reference dir name **without** the `.taxid` suffix
   (e.g. `Babesia_duncani.323732` → `Babesia_duncani`).
 - `output_dir = /no_backup/rg/ileahy/<sp>/ORFsearch` (see layout above).
-- One species at a time (no parallel runs).
+- **Batch submission (2026-09-30, user decision)**: all remaining species are submitted
+  at once via `runs/submit_all_remaining.sh` (one sbatch job per species); SLURM
+  schedules the main jobs, each job's child tasks schedule themselves. Replacing the old
+  "one species at a time" rule.
 - **No MFE/ML prediction merge** in the analysis — skip that step entirely.
 - Selenoprotein prediction criteria: `score_diff >= -1.8 AND re_score_score >= -1.5`,
   where `score_diff = re_score_score - og_score_score`.
 - Resources: `--max_cpus 4 --max_memory 16GB`, profile `cluster` (SLURM genoa64, qos=pipelines, Singularity).
 
-## 5. Per-species workflow (the core loop)
+## 5. Per-species workflow (batch format, since 2026-09-30)
 
-For the current species `<sp>`, with input dir `REF` and files from `protist_filepaths.csv`:
+One self-contained SLURM job per species does: **backup stale outputs → run pipeline →
+sanity-check result → transcript counts → analysis → remove work dir**. A single wrapper
+(`runs/submit_all_remaining.sh`) submits all remaining species at once. I no longer
+trigger species one at a time; instead I monitor the batch and close out each species as
+its job completes (verify log → record tracker row). The old manual one-species-at-a-time
+loop is kept in §5.6 for reference.
 
-### 5.1 Prepare & submit
-**First: back up any existing outputs** (several species have stale old-layout results):
+### 5.1 Artifacts (generated on the cluster, in `runs/`)
+
+A batch generator (reads `run_tracker.tsv` status + `protist_filepaths.csv`) writes for
+every remaining species:
+
+- `params_<sp>.yaml` — same fields as the legacy template (lyric_gtf, genome_fasta,
+  genome_gtf, species_name, output_dir, geneid_param, max_cpus 4, max_memory 16GB,
+  scaffold_batches 24).
+- `submit_<sp>.sh` — the self-contained job:
+
 ```bash
-[ -d /no_backup/rg/ileahy/<sp>/ORFsearch ] && \
-  mv /no_backup/rg/ileahy/<sp>/ORFsearch /no_backup/rg/ileahy/<sp>/ORFsearch_old_$(date +%Y%m%d_%H%M%S)
+#!/usr/bin/env bash
+#SBATCH --no-requeue
+#SBATCH --mem 16G            # was 4G: the in-job analysis OOM-killed a 180k-row
+#SBATCH -p genoa64          # result (Eimeria, 09-30); job hosts JVM (-Xmx5g) + analysis
+#SBATCH --qos=pipelines
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=ileahy@crg.es
+#SBATCH --output=/no_backup/rg/ileahy/logs/nf_<sp>_%A.out
+#SBATCH --error=/no_backup/rg/ileahy/logs/nf_<sp>_%A.err
+set -euo pipefail
+# 0) back up existing /no_backup/rg/ileahy/<sp>/ORFsearch -> ORFsearch_old_<ts>
+# 1) module load Java; NXF_JVM_ARGS="-Xms2g -Xmx5g"; cd repo
+#    nextflow run main_protists.nf -params-file runs/params_<sp>.yaml -profile cluster \
+#        --max_cpus 4 --max_memory 16GB -w /nfs/scratch01/rg/ileahy/nf_work/<sp>
+#        (Conticribra only: -resume — reuses the attempt-2 partial cache)
+# 2) abort if <sp>_ORFsearch_SECIS.result missing/empty (work dir KEPT on failure)
+# 3) print "Transcript counts: lyric=... gffread=... result=..." — gffread count from
+#    work-dir transcripts_clean_*.fa BEFORE step 5; lyric count = transcript-level
+#    feature types (mRNA/transcript/RNA/rRNA/tRNA/scRNA/circRNA/ncRNA/lncRNA)
+# 4) singularity run ~/singularities/python.sif python analysis/analyse_protist.py \
+#        --result <RESULT> --species <sp> --outdir <OUT>/analysis \
+#        --gffread-count N --lyric-count M
+# 5) rm -rf /nfs/scratch01/rg/ileahy/nf_work/<sp>   (reached only on success)
+#    echo "DONE: <sp> (lyric=... gffread=... result=...)"
 ```
-(Timestamped suffix so a same-day re-run never clobbers an earlier backup.)
+
+- `submit_all_remaining.sh` — **the wrapper**: `sbatch`es every remaining species and
+  prints each job id. Re-running it re-submits EVERY listed species — scancel the
+  previous batch first.
+
+Pre-flight (double-gz) check is no longer done species-by-species up front: a
+double-gzipped input now simply fails that species' job at the UNZIP stage (work dir
+kept, §7). Fix the file in place (keep a `*_doublegz_backup_<date>`), then re-submit that
+one species only (`sbatch runs/submit_<sp>.sh`).
+
+### 5.1a Legacy per-species preparation (reference)
+The old flow backed up existing outputs first (timestamped suffix so a same-day re-run
+never clobbers an earlier backup), then pre-flight-checked every `.gz` input decompresses
+to TEXT with a single gunzip (`zcat <f> | head -c 16 | od -An -tx1`; `1f 8b` =
+double-compressed — recompress in place with `zcat <f> | zcat | gzip -c`), then wrote
+`params_<sp>.yaml` with:
 
 **Pre-flight: verify every `.gz` input decompresses to TEXT with a single gunzip**
 (Chlamydomonas 2026-09-22 had a double-gzipped GFF — one `gunzip` left binary that
@@ -111,60 +168,44 @@ output_dir: "/no_backup/rg/ileahy/<sp>/ORFsearch"
 geneid_param: "<REF>/<param_file>"
 max_cpus: 4
 max_memory: 16GB
+scaffold_batches: 24
 ```
+
+`scaffold_batches` (default 24, since 2026-09-28): the 6 per-scaffold stages of
+`main_protists.nf` (agat gff2gtf, clean gtf, gffread, recode TGA, split, secissearch)
+run as 24 hash-bucket jobs each instead of one job per scaffold (small-scaffold
+genomes like Cylindrotheca/Conticribra used to spawn 15k-46k short SLURM jobs).
+Peak memory is unchanged (sequential loop inside each job). See §8 for the
+NF 26.04.6 channel/staging rules the implementation depends on.
 
 Note: for Entamoeba, Hamiltosporidium, Paramecium_tetraurelia, Vairimorpha the CSV `Path`
 ends in `/` (files sit directly in that dir) — full path is still `Path/<file>`.
 
-Submit script template (`runs/submit_<sp>.sh`):
+The legacy submit template (pipeline only, no analysis/cleanup) is obsolete — the
+batch-format template above (§5.1) supersedes it. Still applies: judge success from the
+Nextflow log / result file, not the sbatch exit code banner; the "Pipeline completed
+successfully!" banner prints at STARTUP (`workflowCompletionMessage()` inline).
+
+### 5.2 Monitor the batch
+Poll directly, don't block the session (check between messages):
 
 ```bash
-#!/usr/bin/env bash
-#SBATCH --no-requeue
-#SBATCH --mem 4G
-#SBATCH -p genoa64
-#SBATCH --qos=pipelines
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=iseult.leahy@crg.eu
-#SBATCH --output=/no_backup/rg/ileahy/logs/nf_<sp>_%A.out
-#SBATCH --error=/no_backup/rg/ileahy/logs/nf_<sp>_%A.err
-set -e
-module load Java
-export NXF_JVM_ARGS="-Xms2g -Xmx5g"
-cd /users/rg/ileahy/git/gitlab/readthrough
-nextflow run main_protists.nf -params-file runs/params_<sp>.yaml -profile cluster \
-    --max_cpus 4 --max_memory 16GB -w /nfs/scratch01/rg/ileahy/nf_work/<sp>
+# progress: which of my jobs are still alive + their names
+squeue -u ileahy --format="%.10i %.2t %.15j %.20T"
+# completion: definitive exit state of a main job
+sacct -j <jobid> --format=JobID,State,ExitCode | head
+# tail the job log (success = the LAST lines, see below)
+tail -n 40 /no_backup/rg/ileahy/logs/nf_<sp>_<jobid>.out
 ```
 
-(The old `submit.sh` had a broken `wait $pid` with `set -u` — the template above removes it.
-Always judge success from the Nextflow log, not the sbatch exit code.)
-
-### 5.2 Monitor
-**Poll every ~15 minutes** until the job leaves the queue (user preference 2026-09-22:
-advance the next steps WITHOUT waiting for user approval). Practical form: a background
-loop that checks `squeue` every 900 s and exits when the job is gone (or re-check
-between messages at ~15-min intervals). On confirmed completion (signals below), go
-straight through §5.3 → §5.4 → §5.5 and submit the next species.
-
-I poll directly (don't block the session; check between messages):
-
-```bash
-# progress: which of my jobs are still alive + their process names
-ssh login 'squeue -u ileahy --format="%.10i %.2t %.15j %.20T"'
-# completion: definitive exit state of the main sbatch job
-ssh login 'sacct -j <jobid> --format=JobID,State,ExitCode | head'
-# tail the pipeline log
-ssh login 'tail -n 40 /no_backup/rg/ileahy/logs/nf_<sp>_<jobid>.out'
-```
-
-**WARNING — do NOT use the log banner as a completion signal.**
-`workflowCompletionMessage()` is called inline in the workflow body
-(`main_protists.nf:213`), so `Pipeline completed successfully!` is printed at
-STARTUP, not on completion. Real completion signals:
-1. Main `submit_<sp>` job gone from `squeue`, AND
-2. `sacct -j <jobid> --format=State,ExitCode` shows `COMPLETED` / `0:0`, AND
-3. Final result file `<sp>_ORFsearch_SECIS.result` exists in the output dir.
-Then run the post-run process audit (below) and move to verify.
+For each species job that leaves the queue, completion = ALL of:
+1. `sacct` shows `COMPLETED` / `0:0`;
+2. the `.out` log's final lines contain the job's own
+   `Transcript counts: lyric=... gffread=... result=...` and `DONE: <sp> ...`
+   (NOT the startup `Pipeline completed successfully!` banner — see §5.1a warning);
+3. the 4 analysis files exist in `/no_backup/rg/ileahy/<sp>/ORFsearch/analysis/`.
+The work dir has already been removed by the job itself (step 5 of the submit script);
+on any failure it is KEPT for §7 debugging.
 
 **Nextflow 25.x layout notes (learned 2026-09-21):**
 - Run metadata lives in the LAUNCH dir, not the work dir:
@@ -178,87 +219,67 @@ Then run the post-run process audit (below) and move to verify.
   `cd /users/rg/ileahy/git/gitlab/readthrough && nextflow log <run-uuid> | tail -40`
 - Requires `module load Java` on the login node first.
 
-### 5.3 Verify (ALL must pass before analysis)
-I run directly:
+### 5.3 Verify (post-hoc, per completed job)
+The job already did: result-file sanity check, transcript counts (printed to the log),
+analysis, and work-dir cleanup. My verification now reads the evidence:
 
 ```bash
-ssh login 'cat /no_backup/rg/ileahy/<sp>/ORFsearch/README.txt'
-ssh login 'ls -la /no_backup/rg/ileahy/<sp>/ORFsearch/'
-ssh login 'wc -l /no_backup/rg/ileahy/<sp>/ORFsearch/<sp>_ORFsearch_SECIS.result'
-# Transcript counts — take all three BEFORE the work-dir cleanup in 5.5:
-# (1) LyRic transcript-level features. Inspect feature types first (format varies
-#     per species), then sum the transcript-level types:
-ssh login "zcat <lyric_gtf> | awk -F'\t' '!/^#/{print \$3}' | sort | uniq -c"
-#     GFF3 merged files (e.g. Babesia_duncani): mRNA + RNA + tRNA
-#     plain GTF files: transcript (+ tRNA if present)
-#     DO NOT use `grep -c 'transcript'` — on GFF3 it matches the transcript_id
-#     attribute on exon/CDS lines and massively over-counts.
-# (2) gffread-extracted transcripts (work dir):
-ssh login "find /nfs/scratch01/rg/ileahy/nf_work/<sp> -path '*/gffread_out/transcripts_clean_*.fa' -exec cat {} + | grep -c '^>'"
-# (3) unique transcripts in the result (row count can exceed this for
-#     SPLIT_IF_TOO_LARGE .pN parts):
-ssh login "cut -d, -f1 /no_backup/rg/ileahy/<sp>/ORFsearch/<sp>_ORFsearch_SECIS.result | tail -n +2 | sort -u | wc -l"
+cat /no_backup/rg/ileahy/<sp>/ORFsearch/README.txt
+ls /no_backup/rg/ileahy/<sp>/ORFsearch/analysis/          # 4 files expected
+tail -n 20 /no_backup/rg/ileahy/logs/nf_<sp>_<jobid>.out  # counts + DONE line
 ```
 
 Checklist:
-- [ ] `sacct` shows main job `COMPLETED` exit `0:0`; `nextflow log` shows no
-      `FAILED`/`ERROR` processes (see 5.2 — the log banner is unreliable)
-- [ ] `README.txt` present; genome length + gene count look sane for the species
-- [ ] `<sp>_ORFsearch_SECIS.result` exists, non-empty
-- [ ] **Transcript counts** (record all three in the tracker):
-      `gffread_transcripts` ≥ 99% of `lyric_transcripts`, and
-      `result_transcripts` ≥ 99% of `gffread_transcripts` (near-1:1 expected).
-      Known quirk (accepted by user, 2026-09-22): gffread occasionally emits broken
-      ~70 bp fragments that `recode_any_TGA.py` then silently drops —
-      Babesia_duncani: lyric 12,133 → gffread 12,133 → result 12,076 (99.5%).
-      A shortfall beyond that → suspect scaffold-name mismatch in the GTF↔FASTA
-      join (`main_protists.nf:164` `combine(by: 0)` silently drops non-matching
-      scaffolds); investigate before accepting the run.
-      Also: transcripts longer than the recode `--limit` are dropped by design
-      (`modules/recode_tga.nf`; protists 100,000 bp ≈ none, mammals 8,000).
-      Chaetoceros (old hardcoded 8,000) lost 1,320 (1.5%) to this — fixed in 43e4aae.
-- [ ] Spot-check `head -3` of the result file: columns `og_score_*`, `re_score_*`,
-      `TGA_site_score`, `all_secis_*`, `filtered_secis_*` present.
+- [ ] `sacct` shows main job `COMPLETED` exit `0:0` and the log has the `DONE:` line
+- [ ] **Transcript counts** (read from the log, record in the tracker):
+      `gffread ≥ 99% of lyric` and `result ≥ 99% of gffread` (near-1:1 expected).
+      Known quirks (accepted, 2026-09-22): gffread emits broken ~70 bp fragments that
+      recode drops (Babesia 99.5%); SPLIT .pN parts can give more result rows than
+      unique transcripts. A shortfall beyond that → suspect scaffold-name mismatch in
+      the GTF↔FASTA join (`main_protists.nf:164` `combine(by: 0)`); investigate via §7
+      (work dir is still there on failure). Also: transcripts longer than the recode
+      `--limit` are dropped by design (protists 100,000 bp ≈ none; fixed 43e4aae).
+      Caveat: the job's automated lyric count is a whitelist of transcript-level
+      feature types (mRNA/transcript/RNA/rRNA/tRNA/scRNA/circRNA/ncRNA/lncRNA) — if a
+      species' GFF uses another transcript-level type the lyric count will be low;
+      recount manually with the §5.1a/§8 feature-type inspection.
+- [ ] `README.txt` present; genome length + gene count look sane
+- [ ] Analysis outputs present: `<sp>_score_diff.png`, `<sp>_summary.csv`,
+      `<sp>_candidates.csv`, `<sp>_result_with_diff.csv`
+- [ ] Spot-check `head -3` of the result: columns `og_score_*`, `re_score_*`,
+      `TGA_site_score`, `all_secis_*`, `filtered_secis_*` present
 
-If any check fails → go to §7 (failure handling). Do NOT proceed to the next species.
+If any check fails → §7 (failure handling). The work dir survives only on failure, so
+debug from log + `nextflow log <run-uuid>` (layout notes below) + the kept work dir.
 
-### 5.4 Analyse
-I run directly (pass the §5.3 counts so the script prints the transcript
-reconciliation):
-```bash
-ssh login 'cd /users/rg/ileahy/git/gitlab/readthrough && \
-  singularity run ~/singularities/python.sif python analysis/analyse_protist.py \
-    --result /no_backup/rg/ileahy/<sp>/ORFsearch/<sp>_ORFsearch_SECIS.result \
-    --species <sp> \
-    --outdir /no_backup/rg/ileahy/<sp>/ORFsearch/analysis \
-    --gffread-count <N> \
-    --lyric-count <M>'
-```
-I check the printed summary:
-- [ ] All 4 output files listed as written
-- [ ] `all_secis` / `filtered_secis` counts ≥ 0 and consistent with result file
-- [ ] Transcript reconciliation printed: `result ≥ 99% of gffread` and
-      `gffread ≥ 99% of lyric` (see §5.3 for the known-quirk tolerance)
-- [ ] Summary tables printed for overall / all_secis / filtered_secis
-- [ ] Candidate list printed (may legitimately be 0)
+### 5.4 Record
+Fill the row for `<sp>` in `run_tracker.tsv` (status, job_id, submitted/finished,
+result_rows, lyric_transcripts, gffread_transcripts, all_secis, filtered_secis,
+predicted_overall/all_secis/filtered_secis, candidates, notes). Metrics come from the
+analysis outputs (`<sp>_summary.csv`, `<sp>_candidates.csv`). No "submit next species"
+step anymore — the whole batch is already queued.
 
-### 5.5 Record & advance
-- I fill the row for `<sp>` in `run_tracker.tsv`
-  (status, job_id, submitted/finished, result_rows, lyric_transcripts,
-  gffread_transcripts, all_secis, filtered_secis, predicted_* counts,
-  candidates, notes).
-- **Cleanup — only when ALL §5.3 checks passed**: remove the Nextflow work dir to
-  save space. Final results live under `/no_backup/...`, and run history/metadata
-  lives in the launch dir, so `nextflow log` still works afterwards:
-  ```bash
-  ssh login 'rm -rf /nfs/scratch01/rg/ileahy/nf_work/<sp>'
-  ```
-  Do the §5.3 gffread count and the `nextflow log <uuid>` audit BEFORE this step.
-  On a FAILED run, keep the work dir for §7 debugging.
-- I send the user a one-page verification report for `<sp>`, then **automatically
-  submit the next species** in `protist_filepaths.csv` order — no approval needed
-  (user preference 2026-09-22). Exception: if any §5.3 check fails, stop at §7 and
-  report to the user before advancing.
+**Nextflow layout notes (still valid, learned 2026-09-21):**
+- Run metadata lives in the LAUNCH dir, not the work dir:
+  `cd /users/rg/ileahy/git/gitlab/readthrough && nextflow log` lists runs (name + UUID +
+  status) — works after the work dir is removed.
+- `nextflow log <run-uuid>` on an ACTIVE run fails with a lock error; while running,
+  monitor via the `.out` log's progress table instead.
+- After completion: `nextflow log <run-uuid> | tail -40` audits process states
+  (count `FAILED`/`ERROR` rows). Requires `module load Java` first.
+- WARNING — do NOT use the log banner as a completion signal:
+  `workflowCompletionMessage()` is called inline in the workflow body
+  (`main_protists.nf:213`), so `Pipeline completed successfully!` is printed at
+  STARTUP, not on completion.
+
+### 5.5 Legacy manual loop (retired 2026-09-30, kept for reference)
+The pre-batch per-species loop was: back up existing outputs → pre-flight double-gz
+check → write params/submit → submit → poll every ~15 min → verify (README, result
+file, three-way transcript counts taken from the work dir BEFORE cleanup) → run
+`analysis/analyse_protist.py` in singularity manually → record tracker row →
+`rm -rf /nfs/scratch01/rg/ileahy/nf_work/<sp>` (only after ALL checks passed) → submit
+the next species without approval (user preference 2026-09-22). Every step of it now
+happens inside the per-species submit job or in §5.2–5.4 above.
 
 ## 6. Batch completion
 
@@ -329,19 +350,41 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   practice); every downstream stage (recoding, split, geneid, secissearch, logos) sees
   the same shortened names, so joins stay consistent. Conticribra checked: all 14,490
   ids are 17 chars, unaffected.
+- **Scaffold batching (2026-09-28, verified by differential toy test)**: the 6
+  per-scaffold stages of `main_protists.nf` now run as `scaffold_batches` (default
+  24) hash-bucket jobs via `modules/scaffold_batches.nf` + batched `GFFREAD_CHR`
+  (`modules/gffread_chr.nf`); mammal/model pipelines untouched. NF 26.04.6 rules the
+  implementation depends on (all verified empirically, 2026-09-28 toy runs):
+  1. A SINGLE list `path` input without `stageAs` stages flat into the task work-dir
+     root, base names preserved (production `EXTRACT_SEQUENCE_LOGOS` pattern) — the
+     batch scripts loop over root globs.
+  2. `stageAs` on a list input stages files as `in/1.ext`, `in/2.ext`, ... —
+     NUMBERED, names lost. Never use it here.
+  3. `groupTuple()` is COLUMN-WISE: for (a,b,c) tuples it emits (a, [b...], [c...]) —
+     NOT (a, [(b,c),...]). Indexing a File/Path object with `it[0]`/`it[1]` returns
+     its PATH COMPONENTS (getName(0)/getName(1)), which is how the "input file name
+     collision: nfs, scratch01" errors arose (channels poisoned with literal
+     `nfs`/`scratch01` paths — it was never a staging bug).
+  4. Every batched process emits the SAME per-scaffold output names as the original
+     one-job-per-scaffold module, so geneid part names and the
+     SELECT_INTERESTING/GET_ORIGINAL_PREDICTIONS replaceAll id chains are unaffected.
+  5. GFFREAD_CHR receives its bucket's gtf+fasta files as ONE merged list and
+     re-pairs by filename (`*.part_<scaffold>.fa`) inside the job.
+  Toy test (30 scaffolds / 60 transcripts, K=4): batched run 157 tasks vs 313
+  unbatched, final `toy_batch_ORFsearch_SECIS.result` byte-identical (sorted diff).
+  First production use: Dunaliella_salina (species 11).
 
 ## 9. Status (update every session)
 
-- Phase: **1 — batch running autonomously** (user-approved 2026-09-22): poll every
-  15 min → on completion verify → analyse → record → cleanup → next species, no approval
-- Current species: species 10 — Cylindrotheca_closterium (job 28732205,
-  submitted 2026-09-23 15:10)
-- Deferred: species 5 — Conticribra_weissflogii. Attempt 2 (28713877) scancelled
-  2026-09-23 12:35 at user decision (16–25 h ETA too slow; user may run it over the
-  weekend when the cluster is less busy). Work dir
-  `/nfs/scratch01/rg/ileahy/nf_work/Conticribra_weissflogii` KEPT — a re-run with
-  `-resume` reuses the attempt-2 partial cache (AGAT stage ~done).
-- Completed: 8 / 46
+- Phase: **2 — batch submitted, monitoring** (since 2026-09-30): ALL 35 remaining
+  species are queued (jobs 29099233–29099267). Per-species jobs self-run pipeline →
+  verify → analyse → cleanup; I poll the batch and close out each species as its job
+  completes (§5.2–5.4). No more manual per-species triggering.
+- Deferred→resubmitted: species 5 — Conticribra_weissflogii, job 29099233 (2026-09-30
+  10:15) with `-resume` — reuses the attempt-2 partial cache in work dir
+  `/nfs/scratch01/rg/ileahy/nf_work/Conticribra_weissflogii` (attempt 2, 28713877, was
+  scancelled 2026-09-23 12:35 at user decision).
+- Completed: 11 / 46
   - Babesia_duncani (job 28607869): lyric 12,133 → gffread 12,133 → result 12,076 unique
     (99.5%, gffread quirk accepted); 1 candidate (agat-rna-5082, score_diff 0.81)
   - Chaetoceros_neogracilis (job 28633444): lyric 88,400 → gffread 88,400 → result
@@ -374,6 +417,21 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   - Cyanidium_caldarium (job 28730609): lyric 4,870 → gffread 4,870 → result
     4,870 unique (100% three-way match; GenBank reference annotation, 20
     scaffolds, 5m34s); 13 SECIS found, 0 survived the filter → 0 candidates
+  - Cylindrotheca_closterium (job 28732205): lyric 67,748 → result 67,748
+    unique (100% of lyric; gffread count not taken — workdir audit declined
+    09-28, workdir kept); 4h12m; 1,015 SECIS found, 14 survived the filter;
+    2 candidate transcripts (gene-/rna-CYCCA115_LOCUS4366, score_diff 2.44)
+  - Dunaliella_salina (job 28945196): lyric 48,450 → gffread 48,450 → result
+    48,450 unique (100% three-way match; 48,452 data rows — 2 transcripts
+    carry 2 rows each); first production run with scaffold_batches=24, 2h12m;
+    404 SECIS found, 9 survived the filter; 3 candidates, top agat-rna-6766
+    (score_diff 5.19); work dir kept (first production scaffold-batched run)
+  - Eimeria_necatrix (job 28964808): COMPLETED 0:0 (1h36m, 2026-09-28 21:55→23:31);
+    lyric 180,391 → gffread 180,391 → result 180,391 unique (100% three-way match;
+    180,438 data rows); largest transcript count so far; 2,176 SECIS found, 78
+    survived the filter; 48 candidate transcripts (predicted + filtered SECIS);
+    old Aug-18 output backed up ORFsearch_old_20260928_215109; work dir removed
+    2026-09-30
 - Done this session (2026-09-22):
   - [x] Pipeline fixes: sequence_logos per-scaffold overwrite (bb7da54 + e87c972:
         `collectFile` on dirs → `collect()` of files), global publishDir removed
@@ -455,9 +513,44 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
         filter → attr-cleanup awk → AGAT GFF2GTF → gffread) = 67,748 unique
         transcripts, 0 warnings → baseline 67,748; all ids ≤26 chars; 2,534
         scaffolds (largest per-scaffold job count so far); no pre-existing output.
+- Done this session (2026-09-28):
+  - [x] Cylindrotheca_closterium closed out (28732205 had COMPLETED 0:0 on
+        09-23, 4h12m): result 67,758 data rows / 67,748 unique (100% of
+        lyric); 1,015 SECIS found, 14 survived the filter; 2 candidate
+        transcripts (gene-/rna-CYCCA115_LOCUS4366, score_diff 2.44; candidates
+        CSV has 4 rows = 2 transcripts x 2 all-SECIS rows each); gffread count
+        not taken (workdir audit declined) — workdir still on /nfs/scratch01.
+  - [x] Dunaliella_salina closed out (28945196, 16:35→18:47, 2h12m): 100%
+        three-way lyric=gffread=result=48,450 (48,452 data rows); 404 SECIS
+        found, 9 survived the filter; 3 candidates, top agat-rna-6766
+        (score_diff 5.19); first production run with scaffold_batches=24 —
+        worked cleanly; workdir KEPT (user declined audit/cleanup).
+  - [x] Species 12 Eimeria_necatrix submitted: job 28964808 (21:55).
+        Pre-flight: all 3 .gz single-compressed (no double-gz); merged gidRef
+        180,391 transcript-level (63,554 mRNA + 116,837 RNA, no tRNA) +
+        328,902 CDS lines (FILTER_ORPHAN_CDS applies); all IDs ≤19 chars (no
+        >63 risk); 3,707 scaffolds; old Aug-18 output backed up
+        ORFsearch_old_20260928_215109. Largest transcript count so far
+        (2.1x Chaetoceros) — long run expected.
+- Done this session (2026-09-30, login node):
+  - [x] Workflow changed to **batch format** (user decision): per-species
+        `runs/submit_<sp>.sh` now does backup → pipeline → result sanity check →
+        transcript counts → analysis (singularity) → `rm -rf` work dir on success;
+        `--mem 16G` (4G OOM-killed Eimeria's 180k-row analysis on the login node).
+  - [x] Eimeria_necatrix closed out (28964808, 100% three-way 180,391); its
+        analysis re-run as SLURM job 29099232 (16G) — COMPLETED 0:0 09-30, all 4
+        analysis files written, tracker row filled; work dir removed.
+  - [x] Generated params+submit for all 35 remaining species (all 140 input files
+        verified to exist) and submitted them all at once via
+        `runs/submit_all_remaining.sh` (2026-09-30 10:15, jobs 29099233–29099267);
+        Conticribra with `-resume`.
+  - [x] SKILL.md restructured for the batch format (§1, §4, §5, §9).
 - Next:
-  - [ ] Monitor 28732205 (15-min polls) → verify → analyse → record
-        → next species (Dunaliella_salina)
+  - [ ] Monitor the 35 batch jobs 29099233–29099267:
+        `squeue -u ileahy --format="%.10i %.2t %.15j %.20T"`;
+        per completed job → §5.3 verify → §5.4 record tracker row
+  - [ ] On any FAILED job: work dir kept → §7 diagnostics (tail .out/.err,
+        `nextflow log <run-uuid>`), fix, re-submit that species only
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
