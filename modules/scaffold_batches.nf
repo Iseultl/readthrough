@@ -220,8 +220,13 @@ process SPLIT_IF_TOO_LARGE_BATCH {
     input:
     tuple val(bucket), path(input_files)
 
+    // optional: a bucket whose input files are ALL empty (transcriptless
+    // scaffolds -> 0-byte recoded fasta) makes seqkit split2 emit NOTHING
+    // (empty input -> empty .split folder, exit 0, verified), and a required
+    // glob would then fail the task with "Missing output file(s)". An empty
+    // bucket must simply contribute no part files downstream.
     output:
-    path "*.fa.split/*.fa", emit: split_fasta
+    path "*.fa.split/*.fa", emit: split_fasta, optional: true
 
     script:
     """
@@ -240,8 +245,14 @@ process SECISSEARCH_BATCH {
     input:
     tuple val(bucket), path(input_fastas)
 
+    // optional: if EVERY file in a bucket is empty (transcriptless scaffolds),
+    // Seblastian is skipped for all of them and NO *.gff is produced; a
+    // required glob then fails the task with "Missing output file(s) *.gff"
+    // (Giardia_duodenalis job 29112739, 2026-10-02: 23 transcriptless
+    // scaffolds, 14 of 24 buckets fully transcriptless). An empty bucket must
+    // simply contribute no secis .gff downstream (collectFile skips it).
     output:
-    path "*.gff"
+    path "*.gff", optional: true
 
     script:
     // Per-file output prefix computed with the exact same Groovy expression

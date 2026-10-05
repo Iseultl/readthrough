@@ -376,10 +376,19 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 ## 9. Status (update every session)
 
-- Phase: **2 — batch submitted, monitoring** (since 2026-09-30): ALL 35 remaining
-  species are queued (jobs 29099233–29099267). Per-species jobs self-run pipeline →
-  verify → analyse → cleanup; I poll the batch and close out each species as its job
-  completes (§5.2–5.4). No more manual per-species triggering.
+- Phase: **4 — final species re-run running** (since 2026-10-05 16:02): the
+  CSV is now 54 unique species (b7bf512 14:17: duplicate Pythium_sp._B7052-1
+  row removed, Paramecium_tetraurelia added back). Status: 54 done, 1 running
+  (Paramecium_tetraurelia, job 29357314 — re-run on the new Oct-02 reference
+  inputs; the 09-29 run 28990791 used the stale pre-swap set and its output
+  is backed up by the job), 1 failed & removed from analysis
+  (Vairimorpha_ceranae, user-confirmed 2026-10-04). All 55 previously
+  completed species still have their full outputs on disk. WARNING: at
+  15:53 the cluster branch was reset to origin/main (b7bf512), which DROPPED
+  cluster-local commits 135ffcc (empty-bucket optional-output fix), 8581354
+  (splitfasta 4GB) and aedeb26 (morning status updates); the code fixes +
+  status files were restored to the working tree from the orphaned commits
+  but are NOT committed — origin/main (Mac repo) still lacks them.
 - Deferred→resubmitted: species 5 — Conticribra_weissflogii, job 29099233 (2026-09-30
   10:15) with `-resume` — reuses the attempt-2 partial cache in work dir
   `/nfs/scratch01/rg/ileahy/nf_work/Conticribra_weissflogii` (attempt 2, 28713877, was
@@ -545,12 +554,165 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
         `runs/submit_all_remaining.sh` (2026-09-30 10:15, jobs 29099233–29099267);
         Conticribra with `-resume`.
   - [x] SKILL.md restructured for the batch format (§1, §4, §5, §9).
+- Done this session (2026-10-04, genoa64-01):
+  - [x] Log audit + close-out of 12 species (sacct + `DONE:`/`Transcript counts:`
+        log lines + all 4 analysis files each): 09-30 re-run batch —
+        Emiliania_huxleyi_CCMP1516 (7 candidates, top 12.94), Giardia_muris,
+        Micractinium_conductrix, Plasmodium_falciparum_3D7,
+        Toxoplasma_gondii_ME49 (2 cands, top 7.30), Trichomonas_vaginalis;
+        10-02 new-species batch — Asterionellopsis_glacialis, Effrenium_voratum,
+        Heterosigma_akashiwo (CDS-materialized extra transcripts, 3 cands),
+        Monocercomonoides_exilis (10 cands, top 2.11),
+        Phaeodactylum_tricornutum_CCAP (18 cands; largest three-way run,
+        212,994), Trichomonas_tenax. Tracker rows filled with all metrics +
+        README genome info.
+  - [x] Conticribra_weissflogii tracker re-pointed to 29099233: the "dup" job was
+        NOT cancelled — it COMPLETED 09-30 22:07 (0:0) and overwrote the
+        28990774 output (backed up ORFsearch_old_20260930_101821); final result
+        identical (14,495 rows, 1 candidate rna-WR49_08545-RA, score_diff -0.15).
+  - [x] Diagnostics closed on the 2 Oct-02 failures: Giardia_duodenalis 29112739
+        FAILED at SECISSEARCH_BATCH bucket 12 "Missing output file(s) *.gff"
+        (all-empty bucket of transcriptless scaffolds; FIXED in cluster clone
+        135ffcc — optional outputs in SECISSEARCH_BATCH + SPLIT_IF_TOO_LARGE_BATCH);
+        Paulinella_micropora 29202405 crashed mid-run (3h49m) in Nextflow's
+        internal leveldb ("Cannot invoke ...Version.retain() because
+        this.version is null") — work-dir cache corruption, fix = rm work dir +
+        fresh run (no -resume).
+  - [x] 10-species CSV extension (2026-10-02) absorbed: params+submit generated
+        for the 3 not-yet-run species (Eimeria_stiedae, Euglena_gracilis,
+        Pyrocystis_lunula); pre-flight passed (all 4 inputs present each, no
+        double-gz).
+  - [x] Paramecium_bursaria pre-submission fixes: (1) user's "changed parameter
+        file" = the reference geneid edit param (updated 10-02 12:51) — suspected
+        id-join cause of the 28990790 header-only anomaly; (2) the Oct-02
+        reference-dir swap had DELETED the Sep-29 lyricMerged inputs, so the
+        stale 09-29 runs/params yaml was re-pointed to the existing reference_*
+        files per CSV; (3) the new reference_gidRef was DOUBLE-GZ (6th
+        occurrence) — fixed in place, orig kept *_doublegz_backup_20261004
+        (21,279 transcript-level features vs 39,534 in the old input); (4) the
+        new submit script hardens step 2: header-only result (≤1 line) → abort +
+        KEEP work dir (the 28990790 0-row result slipped past the plain -s check
+        and the work dir was removed).
+  - [x] Vairimorpha_ceranae REMOVED FROM ANALYSIS (user-confirmed 2026-10-04) —
+        no re-run planned; tracker row marked.
+  - [x] Batch 2 submitted 2026-10-04 15:49: Eimeria_stiedae 29294874,
+        Pyrocystis_lunula 29294875, Giardia_duodenalis 29294876 (-resume, cached
+        stages from 29112739), Paulinella_micropora 29294877 (fresh; script
+        removes the corrupted work dir first), Paramecium_bursaria 29294878
+        (fresh, hardened check). Euglena_gracilis EXCLUDED from the submission —
+        user will sbatch runs/submit_Euglena_gracilis.sh themselves when space is
+        available.
+  - [x] run_tracker.tsv updated to 56 rows (49 done / 5 running / 1
+        failed-removed / 1 not_run); CSV ordering preserved, new rows anchored
+        alphabetically.
+- Done this session (2026-10-05, genoa64-01):
+  - [x] Closed out the 5 overnight batch-2 jobs (all sacct COMPLETED 0:0):
+        Eimeria_stiedae 29294874 (18m56s; 100% three-way 20,111; 3 candidates,
+        top agat-rna-7805, 11.99), Pyrocystis_lunula 29294875 (1h53m; 690
+        three-way; 0 candidates; LyRic annotation sparse vs the 212,360
+        geneidM-annotated genes), Paulinella_micropora 29294877 (6h31m; 100%
+        three-way 41,063; 3 candidates, top agat-rna-16600, 4.06),
+        Paramecium_bursaria 29294878 (23m37s; 21,279 three-way — the 28990790
+        header-only anomaly is RESOLVED with the user's geneid param fix +
+        Oct-02 reference inputs; 0 candidates; hardened check passed).
+  - [x] Euglena_gracilis closed out (user-submitted): first attempt 29296571
+        (01:04, 2m01s) FAILED 1:0 — SPLITFASTA seqkit killed 137 on the 2.3 GB
+        genome (cluster-profile default 8G; likely transient node memory
+        pressure right after the Paramecium job ended); user resubmitted
+        29346859 at 10:16 with -resume (reused UNZIP/AGAT cache from the
+        crashed session), 19m41s, 100% three-way 47,697, 0 candidates.
+  - [x] Giardia_duodenalis 3rd attempt (29294876, -resume, 8m04s) COMPLETED 0:0
+        but produced a HEADER-ONLY result (0 data rows) — 3rd occurrence of the
+        combine anomaly (Paramecium_bursaria 28990790, Vairimorpha 28990808);
+        the script's plain -s check passed on the header line and REMOVED the
+        work dir (diagnostic material lost). All stages green; gffread 10182 =
+        2x lyric 5091 (same CDS-materialization pattern as the successful
+        Giardia_muris, so likely not the cause).
+  - [x] Giardia reference dir swapped by jizquierdo 2026-10-04 23:56: old
+        reference_gidRef + reference.geneid.edit.param (attempts 1-3, incl. the
+        09-30 double-gz + mixed-strand fixes and their backups) replaced by the
+        LyRic-merged set (lyricMerged_gidRef, 24,647 transcript-level features;
+        geneidM_complete re-placed 23:59). Pre-flight on the new .gz inputs
+        passed (single-gz).
+  - [x] 4th Giardia attempt submitted: job 29348044 (10:45) — fresh run (no
+        cache left), params re-pointed to the new inputs, geneid_param =
+        user-created lyric.geneid.edit.param (10:38, same pattern as the
+        successful Paramecium/Eimeria re-runs), submit script hardened
+        (header-only → abort + KEEP work dir for diagnosis).
+  - [x] 4th Giardia attempt 29348044 FAILED at 2m59s: Seblastian "duplicate
+        fasta identifier (rna-XM_001707761.2)" in SECISSEARCH_BATCH bucket 20.
+        Root cause: two RefSeq trans-spliced genes in the new LyRic-merged GFF
+        have parts on OPPOSITE strands (XM_001707761.2/NC_051859.1,
+        XM_038045910.1/NC_051860.1); gffread materializes each as TWO FASTA
+        entries — same failure class as the 09-30 mixed-strand removal applied
+        to the old reference file, which the new merged set lacked. Work dir
+        kept (hardened check); duplicates verified from it (both ids x2 across
+        the 25 gffread_out files; the 3rd trans-spliced gene XM_001707939.2 is
+        same-strand and harmless).
+  - [x] Fixed derived input created:
+        Giardia_duodenalis_5741_lyricMerged_gidRef.mixedstrand_removed_20261005
+        .gff.gz (jizquierdo's original untouched; 10 lines removed = 2 mRNA +
+        4 exon + 4 CDS; gene lines kept — one still parents an AGAT
+        transcript; 24,647 → 24,645 transcripts); params + submit script
+        re-pointed.
+  - [x] 5th Giardia attempt submitted: job 29348682 (11:01) — genome-side
+        stages auto-resume from the kept attempt-4 work dir; GFFREAD +
+        downstream re-run on the fixed GFF.
+  - [x] 5th Giardia attempt 29348682 SUCCEEDED (19m32s, COMPLETED 0:0) — the
+        first successful Giardia run: 100% three-way lyric=result=24,645
+        (gffread 49,294 ≈ 2x — the known CDS-materialization pattern, same as
+        Giardia_muris); 180 SECIS found (15 predicted), 6 survived the filter
+        (0 predicted) → 0 candidates; README genome 12,078,186 bp (5 NC_
+        chromosomes + 30 NW_ gap-fillers — the established input set, same
+        fna as attempts 1-3), 4,492 annotated genes; workdir removed after
+        the hardened check passed.
+  - [x] run_tracker.tsv updated: 55 done / 1 failed-removed — ALL 55 CSV
+        species now have a successful run + analysis.
+  - [x] 15:53 git regression: the cluster branch was reset to origin/main
+        (b7bf512, the user's 14:17 CSV commit), discarding cluster-local
+        commits 135ffcc (empty-bucket optional-output fix in
+        modules/scaffold_batches.nf + analysis/preflight_new_species.py),
+        8581354 (splitfasta memory 2GB→4GB) and aedeb26 (this morning's
+        SKILL.md + tracker status updates). origin/main (Mac repo) never
+        contained the two code fixes. Restored to the working tree from the
+        orphaned commits: modules/scaffold_batches.nf +
+        analysis/preflight_new_species.py (from 135ffcc), modules/splitfasta.nf
+        (from 8581354), SKILL.md + run_tracker.tsv (from aedeb26). NOT
+        committed — the user manages git; the two code fixes must be merged
+        back into origin/main so Mac and cluster stop diverging.
+  - [x] Paramecium_tetraurelia re-run submitted (job 29357314, 16:02): the
+        10-02 CSV rework had dropped this species (the duplicate
+        Pythium_sp._B7052-1 row occupied its slot) — the user removed the
+        duplicate and added Paramecium_tetraurelia back (b7bf512). Its 09-29
+        run (28990791) used the OLD pre-swap reference set (LyRic_complete,
+        8,933 transcripts) — stale after the Oct-02 ref-dir swap, so a fresh
+        re-run on the new inputs (lyricMerged_gidRef 101,610
+        transcript-level, GCF fna, geneidM_complete, user-created
+        lyric.geneid.edit.param 14:15). runs/params + runs/submit
+        regenerated (hardened header-only check; job backs up the stale
+        09-29 output). Pre-flight (restored preflight_new_species.py)
+        PASSED: 0 transcriptless paired scaffolds → NO empty-bucket risk,
+        so the job is safe even though it was submitted while the working
+        tree still lacked the 135ffcc fix (the in-memory pipeline of a
+        launched session does not see on-disk .nf edits); 0 orphan CDS,
+        max id 18 chars, genome 72 MB / 697 scaffolds (15 unannotated —
+        dropped at the combine, never reach gffread).
 - Next:
-  - [ ] Monitor the 35 batch jobs 29099233–29099267:
-        `squeue -u ileahy --format="%.10i %.2t %.15j %.20T"`;
-        per completed job → §5.3 verify → §5.4 record tracker row
-  - [ ] On any FAILED job: work dir kept → §7 diagnostics (tail .out/.err,
-        `nextflow log <run-uuid>`), fix, re-submit that species only
+  - [ ] Monitor the Paramecium_tetraurelia re-run 29357314
+        (`squeue -u ileahy --format="%.10i %.2t %.15j %.20T"`);
+        on completion → §5.3 verify → §5.4 record tracker row. If the result
+        is header-only the work dir is KEPT: diagnose the join chain
+        (ORFsearch.filter → filter_final_table.py → add_SECIS_annotation.py)
+        before any re-run.
+  - [ ] Merge the restored code fixes (135ffcc empty-bucket optional
+        outputs, 8581354 splitfasta 4GB) back into origin/main / the Mac
+        repo — origin/main currently lacks both.
+  - [ ] Cross-species analysis of the 56 result sets under
+        /no_backup/rg/ileahy/<sp>/ORFsearch/ (see the candidates column in
+        run_tracker.tsv) once the last species closes.
+  - [ ] If any species ever needs a re-run: §7 diagnostics (work dir kept →
+        tail .out/.err, `nextflow log <run-uuid>`), fix, re-submit that
+        species only.
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
