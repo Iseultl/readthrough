@@ -255,8 +255,12 @@ debug from log + `nextflow log <run-uuid>` (layout notes below) + the kept work 
 ### 5.4 Record
 Fill the row for `<sp>` in `run_tracker.tsv` (status, job_id, submitted/finished,
 result_rows, lyric_transcripts, gffread_transcripts, all_secis, filtered_secis,
-predicted_overall/all_secis/filtered_secis, candidates, notes). Metrics come from the
-analysis outputs (`<sp>_summary.csv`, `<sp>_candidates.csv`). No "submit next species"
+predicted_overall/all_secis/filtered_secis, candidates, trnasec_found, notes). Metrics
+come from the analysis outputs (`<sp>_summary.csv`, `<sp>_candidates.csv`).
+`trnasec_found` (yes/no) = whether secmarker found a tRNAsec: `trnasec.fa` present
+(non-empty) in `<sp>/ORFsearch/secmarker/secmarker_output/` (the dir also holds
+`infernal.out`; `trnasec.fa/.gff/.ss` appear only on a hit). Column added 2026-10-07,
+backfilled for all 55 species from the published secmarker outputs. No "submit next species"
 step anymore — the whole batch is already queued.
 
 **Nextflow layout notes (still valid, learned 2026-09-21):**
@@ -286,6 +290,57 @@ happens inside the per-species submit job or in §5.2–5.4 above.
 After all 46: build a consolidated table from `run_tracker.tsv` (species, transcripts,
 all/filtered SECIS, predicted counts, candidate count) and flag species with 0 candidates,
 0 filtered SECIS, or unusual transcript counts for follow-up.
+
+## 6a. Positive protein extraction (2026-10-18)
+
+Standalone post-processing (NOT part of the Nextflow pipeline) that writes the protein
+sequences of all positive, SECIS-containing transcripts:
+
+- **Selection** (per species, from `<sp>_ORFsearch_SECIS.result`):
+  `positive = score_diff >= -1.8 AND re_score_score >= -1.5` (same as
+  `bin/extract_sequence_logos.py`) **plus `all_secis_start` not NA** (user chose ANY
+  SECISearch hit, not the filtered ≥15/15 set), deduped on transcript.
+- **Extraction**: `gffread -F -w` (singularity `~/singularities/gffread.sif`) on the
+  ORIGINAL genome FASTA + LyRic GFF from `runs/params_<sp>.yaml`; then
+  `bin/extract_positive_proteins.py` (singularity `~/singularities/python.sif`) slices
+  `seq[re_score_start-1 : re_score_end]`, translates (standard code) and replaces the
+  in-frame TGA at `TGA_site_score` (0-based in the table; 1-based = +1) with **U**,
+  ±1 nt tolerance as in the logos script.
+- **Run**: `bash bin/run_extract_positive_proteins.sh [--parallel N] [--per-scaffold]
+  [--agat-chain] [--combine-only] [species ...]`
+  (no species = all `runs/params_*.yaml`; zero-target species skip gffread via a
+  `--select-only` fast path). Outputs in `/no_backup/rg/ileahy/positive_proteins/`:
+  `<sp>_positive_proteins.fa`, `<sp>_extraction_summary.tsv`, `<sp>_extraction_log.tsv`,
+  `<sp>_targets.tsv`, combined `all_species_positive_proteins.fa` +
+  `extraction_summary.tsv`, `.failed_species` (empty = all OK). `--combine-only`
+  rebuilds the combined files over ALL species (safe after a subset re-run).
+- Verified facts (don't re-derive, 2026-10-18):
+  - Direct gffread on the original (pre-AGAT) GFF yields the SAME transcript ids as the
+    pipeline (the merged gidRef GFFs already carry `agat-rna-*`/RefSeq ids) — Babesia
+    12,133/12,133 incl. candidate `agat-rna-5082`.
+  - The original CDS contains exactly ONE in-frame stop: the TGA itself (only it was
+    recoded to TGC in the pipeline). Any other in-frame stop ⇒ skip + log. Every
+    extracted protein is additionally verified (M start, single in-frame stop at the
+    annotated TGA) — these checks are why a wrong re-extracted sequence cannot pass
+    silently.
+  - `TGA_site_score` is 0-based; in-frame ⇔ `(TGA_site_score + 1 - re_score_start) % 3 == 0`.
+  - `runs/params_*.yaml` is the source of truth for per-species inputs (incl. the
+    Oct-02 reference swaps, e.g. Giardia's mixed-strand-removed GFF).
+  - **Whole-genome gffread OOMs in the login-node user memory cgroup** on the two
+    largest genomes — use `--per-scaffold` (GFF/FASTA split by scaffold, gffread in
+    batches of 50, same re-pairing logic as GFFREAD_CHR): Haematococcus_lacustris
+    (820 scaffolds), Plasmodium_vivax (2748). Phaeodactylum (213k transcripts) runs
+    fine whole-genome.
+  - **EMBL-style GFFs need `--agat-chain`** (orphan-CDS filter → AGAT gff2gtf →
+    clean_gtf → gffread, i.e. the pipeline's exact chain): when CDS features are
+    parented to `gene` (siblings of the mRNA), AGAT reconstructs the exons from the
+    CDS, so DIRECT gffread gives a different sequence (Heterosigma
+    `gene-PHAE_HAKA_17.48.1`: 922 bp via chain with TGA@700 vs 1828 bp direct with no
+    TGA). Survey 2026-10-18: only Heterosigma_akashiwo (40,884 such CDS lines) and
+    Chaetoceros_neogracilis (2 lines, 1 gene `gene-CNG_g01292` — NOT a target) are
+    affected; all other 53 species are structurally safe.
+- Final run state (2026-10-18): all 55 species processed; combined
+  `all_species_positive_proteins.fa` ≈ 5.9k proteins (see extraction_summary.tsv).
 
 ## 7. Failure handling
 
@@ -332,6 +387,25 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
   exists, the older session's cache is no longer reachable. First runs per species
   use the standard template (no -resume); on a re-submit of a stalled/failed run,
   add `-resume` to the nextflow command in `submit_<sp>.sh`.
+- **`-resume` can silently re-run EVERYTHING, and work-dir-wide counts then
+  double-count** (learned 2026-10-07, Trichomonas_vaginalis 29112744): a -resume
+  run that started 1 min after another species' run (same 09-30 13:55 batch)
+  attached to that fresh shared session (both runs share session UUID
+  67557a73) instead of the species' own failed session, so the old session's
+  cache was unreachable and the WHOLE pipeline re-executed in fresh task dirs
+  (verify: compare UNZIP task-dir paths in the two runs' logs) while the old
+  session's completed GFFREAD task dirs stayed in the work dir. The submit
+  script's work-dir-wide `find ... transcripts_clean_*.fa | grep -c '^>'` count
+  then summed BOTH generations → reported gffread 259,952 = exactly 2x the true
+  129,976. The tracker's original "CDS materialized – Conticribra pattern"
+  attribution was WRONG for this species (all 100,733 CDS lines have valid
+  transcript Parents; orphan filter removes 0; the chain reproduces 1:1 on 4
+  scaffolds). Submit scripts (all 45, 2026-10-07) now count UNIQUE headers
+  (`| grep '^>' | awk '{print $1}' | sort -u | wc -l`), immune to stale
+  generations with identical inputs (duplicate ids cannot occur in a successful
+  run — Seblastian rejects them). If a reported gffread count is ~2x lyric,
+  suspect this and re-derive the true count as unique ids across the gffread
+  outputs.
 - Duplicate CSV row: `Pythium_sp._B7052-1` appears twice in `protist_filepaths.csv`;
   run it once.
 - The merged gidRef GFFs can contain **orphan CDS records** (transdecoder ORF scans,
@@ -376,19 +450,31 @@ all/filtered SECIS, predicted counts, candidate count) and flag species with 0 c
 
 ## 9. Status (update every session)
 
-- Phase: **4 — final species re-run running** (since 2026-10-05 16:02): the
+- Phase: **4 — final species re-run COMPLETE** (2026-10-05 19:06): the
   CSV is now 54 unique species (b7bf512 14:17: duplicate Pythium_sp._B7052-1
-  row removed, Paramecium_tetraurelia added back). Status: 54 done, 1 running
-  (Paramecium_tetraurelia, job 29357314 — re-run on the new Oct-02 reference
-  inputs; the 09-29 run 28990791 used the stale pre-swap set and its output
-  is backed up by the job), 1 failed & removed from analysis
-  (Vairimorpha_ceranae, user-confirmed 2026-10-04). All 55 previously
-  completed species still have their full outputs on disk. WARNING: at
+  row removed, Paramecium_tetraurelia added back). Status: 55 done, 0 running,
+  0 failed (verified 2026-10-06: all 54 CSV species + Hamiltosporidium_tvaerminnensis
+  have non-empty `<sp>_ORFsearch_SECIS.result` and full 4-file analysis dirs;
+  CSV legacy names Leishmania_infantum / Plasmodium_vivax_ map to the
+  _JPCM5 / un-suffixed tracker dirs). Paramecium_tetraurelia finished
+  2026-10-05 19:06 (job 29357314, 9h26m59s, 2885 tasks, 0 failed): re-run on
+  the new Oct-02 reference inputs, 100% three-way lyric=gffread=result=101,610
+  (101,611 data rows), 376 SECIS / 3 filtered / 0 candidates, README 72,094,543 bp
+  + 40,865 genes, work dir removed; the 09-29 run 28990791 used the stale
+  pre-swap set and its output is backed up by the job. Vairimorpha_ceranae
+  (1 failed, user-confirmed 2026-10-04) was removed from analysis. WARNING: at
   15:53 the cluster branch was reset to origin/main (b7bf512), which DROPPED
   cluster-local commits 135ffcc (empty-bucket optional-output fix), 8581354
   (splitfasta 4GB) and aedeb26 (morning status updates); the code fixes +
   status files were restored to the working tree from the orphaned commits
   but are NOT committed — origin/main (Mac repo) still lacks them.
+- Done this session (2026-10-07, genoa64-05):
+  - [x] Diagnosed the Trichomonas_vaginalis gffread 259,952 = exactly 2x tracker
+        value: counting artifact, not CDS materialization (see the new §8 bullet).
+        Corrected the tracker row to gffread=129976 (100% three-way
+        lyric=gffread=result); hardened all 45 batch-format `runs/submit_*.sh`
+        GFFREAD counts to dedupe by header; no pipeline code changes needed
+        (result file was already correct: 130,005 rows / 129,976 unique).
 - Deferred→resubmitted: species 5 — Conticribra_weissflogii, job 29099233 (2026-09-30
   10:15) with `-resume` — reuses the attempt-2 partial cache in work dir
   `/nfs/scratch01/rg/ileahy/nf_work/Conticribra_weissflogii` (attempt 2, 28713877, was
