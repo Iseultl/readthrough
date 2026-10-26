@@ -85,6 +85,15 @@ This layout requires the two `publishDir` fixes already applied in
 - Selenoprotein prediction criteria: `score_diff >= -1.8 AND re_score_score >= -1.5`,
   where `score_diff = re_score_score - og_score_score`.
 - Resources: `--max_cpus 4 --max_memory 16GB`, profile `cluster` (SLURM genoa64, qos=pipelines, Singularity).
+- **Input-set re-runs keep the old tracker row (2026-10-19, user decision)**: when a
+  species is re-run with a DIFFERENT lyric input, never overwrite its tracker row —
+  the old row (with its old metrics) stays for comparison. The tracker therefore has
+  **one row per (species, lyric_file)**, not per species: the `lyric_file` column
+  (last column, added 2026-10-19) is the basename of that row's `lyric_gtf` input.
+  The re-run gets a NEW `queued` row inserted directly below the old row, in CSV order.
+  Old results on disk are preserved automatically: `submit_<sp>.sh` step 0 backs up
+  the existing `/no_backup/rg/ileahy/<sp>/ORFsearch` to `ORFsearch_old_<ts>` before the
+  re-run — record that exact `<ts>` in the new row's notes when submitting.
 
 ## 5. Per-species workflow (batch format, since 2026-09-30)
 
@@ -121,6 +130,11 @@ set -euo pipefail
 #    nextflow run main_protists.nf -params-file runs/params_<sp>.yaml -profile cluster \
 #        --max_cpus 4 --max_memory 16GB -w /nfs/scratch01/rg/ileahy/nf_work/<sp>
 #        (Conticribra only: -resume — reuses the attempt-2 partial cache)
+#    SINCE 2026-10-20: step 1 is wrapped in a retry loop that retries ONLY on the
+#    transient Nextflow session-lock race (concurrent starts from this launch dir on
+#    NFS: "Unable to acquire lock on session" / "No locks available"). Backoff
+#    2m/4m/6m/8m, max 5 attempts. ANY other failure aborts immediately (work dir
+#    kept) — a genuinely broken run must not be blindly re-executed up to 5x. See §7.4.
 # 2) abort if <sp>_ORFsearch_SECIS.result missing/empty (work dir KEPT on failure)
 # 3) print "Transcript counts: lyric=... gffread=... result=..." — gffread count from
 #    work-dir transcripts_clean_*.fa BEFORE step 5; lyric count = transcript-level
@@ -263,6 +277,20 @@ come from the analysis outputs (`<sp>_summary.csv`, `<sp>_candidates.csv`).
 backfilled for all 55 species from the published secmarker outputs. No "submit next species"
 step anymore — the whole batch is already queued.
 
+**Tracker schema (since 2026-10-19):** the last column is `lyric_file` — the basename
+of that row's `lyric_gtf` input. One row per **(species, lyric_file)** input set, NOT
+one per species. When a species is re-run on a new input set:
+1. The old row is preserved untouched (its metrics are the comparison baseline).
+2. A new `queued` row is inserted directly below it (CSV order); `lyric_file` = the new
+   input's basename; notes explain the input change and say the previous output will be
+   auto-backed up to `ORFsearch_old_<ts>` by submit step 0.
+3. On submission, fill job_id/submitted in the NEW row and append the actual
+   `ORFsearch_old_<ts>` backup dir name to its notes (that dir is where the old
+   results — result file + analysis/ — are kept for comparison).
+4. On completion, fill the new row per the checklist in §5.3; the old row's `done`
+   status and metrics stay as-is. Compare new vs old by the two rows for the same
+   species (and on disk: `<sp>/ORFsearch/` vs `<sp>/ORFsearch_old_<ts>/`).
+
 **Nextflow layout notes (still valid, learned 2026-09-21):**
 - Run metadata lives in the LAUNCH dir, not the work dir:
   `cd /users/rg/ileahy/git/gitlab/readthrough && nextflow log` lists runs (name + UUID +
@@ -341,6 +369,44 @@ sequences of all positive, SECIS-containing transcripts:
     affected; all other 53 species are structurally safe.
 - Final run state (2026-10-18): all 55 species processed; combined
   `all_species_positive_proteins.fa` ≈ 5.9k proteins (see extraction_summary.tsv).
+  NOTE: positive proteins are derived from the CURRENT `runs/params_*.yaml` inputs —
+  after the 2026-10-19 lyric-input swap the combined file reflects input set 1; if the
+  user wants it re-derived from the new runs' outputs, re-run `--combine-only` after
+  the re-run batch closes.
+
+## 6b. LyRic input-set re-run (2026-10-19, "input set 2")
+
+The user re-runs the WHOLE protist set on a new LyRic GFF per species:
+`protist_filepaths.csv` gained a `LyRic_File` column (file lives in the same species
+dir as the other inputs). On 2026-10-19 I updated the `lyric_gtf` of all 54
+`runs/params_<sp>.yaml` accordingly (verified each target exists on disk):
+
+- **52 species** → `<species dir>/LyRic_complete.gff.gz`
+- **Leishmania_infantum_JPCM5** → `.../GCF_000002875.2/IsoQuant.gff.gz` (per CSV)
+- **Conticribra_weissflogii** → `.../GCA_036940025.2/LyRic_clean.gff.gz` — the CSV
+  cell said `LyRic_complete.gff.gz` which does not exist in that dir; user chose
+  `LyRic_clean.gff.gz` and the CSV cell was corrected to match.
+- **Entamoeba_histolytica** → same basename `LyRic_complete.gff.gz` as before, but now
+  from the live `GCF_000208925.1` dir (the old param pointed at the
+  `GCA_000208925.2` dir deleted in the Oct-02 ref swap).
+- **Giardia_duodenalis** → drops the custom
+  `mixedstrand_removed_20261005` file, back to plain `LyRic_complete.gff.gz`.
+- Repo-root `params.yaml` (Leishmania dev file) also re-pointed.
+- Hamiltosporidium_tvaerminnensis + Vairimorpha_ceranae (not in the CSV) were already
+  on `LyRic_complete.gff.gz` — untouched.
+
+Consequences for tracking (see §4 decision + §5.4 schema):
+- `run_tracker.tsv` now has **one row per (species, lyric_file)**: the original 54
+  `done` rows (input set 1, gidRef/merged inputs — metrics are the comparison
+  baseline) each followed by a new `queued` row (input set 2, 54 rows, 2026-10-19).
+- Old results are preserved automatically: each `submit_<sp>.sh` step 0 backs up the
+  existing `ORFsearch/` → `ORFsearch_old_<ts>` BEFORE the re-run. Record the exact
+  `<ts>` in the new row's notes at submission time. Comparison after close-out:
+  new `<sp>/ORFsearch/<sp>_ORFsearch_SECIS.result` (+ `analysis/`) vs the same files
+  in `<sp>/ORFsearch_old_<ts>/`.
+- Pre-flight for input set 2 is the same as a fresh species: the new GFFs were
+  user-provided 2026-10-19 — expect the usual double-gz / >63-char-id /
+  duplicate-header / empty-bucket failure classes (§8); on any of them, §7.
 
 ## 7. Failure handling
 
@@ -359,6 +425,104 @@ sequences of all positive, SECIS-containing transcripts:
 3. Fix locally (params, or code if a bug). Code fixes → sync to cluster (see §2: scp or
    git); params/script fixes → I rewrite them on the cluster directly. Re-submit the same
    species before moving on. Record the issue + fix in the tracker `notes` column.
+
+### 7.4 New failure classes (2026-10-19/20 input-set-2 batch)
+
+- **Nextflow session-lock race at startup** (transient, NOT a code bug): when several
+  `nextflow run`s initialize near-simultaneously from the same launch dir on NFS, they can
+  race on the shared `.nextflow` session lock and die <30s after start with
+  `ERROR ~ Unable to acquire lock on session with ID <uuid>` or `No locks available
+  (ENOLCK)`. 4 jobs in the 2026-10-19 batch lost this race (30631952/58/59 in the 17:14
+  submit burst, 30631962 at 20:03:07 — 1s after another run's session closed). Sacct shows
+  `FAILED 1:0`, the log is ~11-15 lines, and set-1 output is UNTOUCHED (step 0 either ran
+  and backed up, or never ran). A single later start succeeds even while other runs are
+  alive. **Mitigation (2026-10-20)**: every regenerated `submit_<sp>.sh` wraps `nextflow
+  run` in a retry loop (max 5 attempts, backoff 2m/4m/6m/8m) that retries ONLY when the
+  `.out` log contains the lock-error string; any other failure aborts immediately. If you
+  ever see this again on an un-hardened script, just re-submit that one species.
+- **Apptainer cannot bind-mount a path containing `:`** (Entamoeba, 30631968): the
+  species' official strain dir is `Entamoeba_histolytica_HM-1:IMSS.5759/` (colon in the
+  name — legitimate, the user's committed CSV uses it). Apptainer FATALs: `unable to add
+  .../Entamoeba_histolytica_HM-1 to mount list: destination must be an absolute path`
+  (it splits the path at the `:`). Step 0 had already backed up set-1. **Fix**: copy the
+  input to the NO-colon sibling dir (`Entamoeba_histolytica_HM-1IMSS.5759/`, which already
+  holds the other 3 no-colon inputs) and re-point `lyric_gtf` in `params_<sp>.yaml` to the
+  no-colon path. Do NOT edit the user's CSV (the colon row is their committed data) and do
+  NOT rename the reference dir.
+- **Exon-only LyRic GFF (no transcript-level records)** (Emiliania 30631969 + the 8
+  legacy-script species): a `LyRic_complete.gff.gz` that contains ONLY `exon` lines
+  (e.g. Emiliania 73,566 exons / 0 transcript-level; verified by
+  `zcat f | awk -F'\t' '!/^#/{print $3}' | sort | uniq -c`). AGAT's gff2gtf then synthesizes
+  gene/transcript records from the exons (self-ID / self-`Parent` records — gffread accepts
+  those), and the in-job lyric count depends on the submit script's `LYRIC_GTF` count
+  source: scripts that count the species' gidRef gene reference report that number
+  (Galdieria 14,524; Emiliania 38,559 — same as set-1, keeping the two sets comparable),
+  others count the exon-only input → 0. gffread materializes the synthesized transcripts
+  fine — the 8 legacy species' results are valid (just a different transcript set than
+  set-1). Emiliania's GFFREAD failure was NOT a general rejection of this format: its only
+  bad record was a truncated last line (next bullet). Flag these in the tracker
+  (lyric_transcripts column + note) rather than silently treating the count as a real
+  transcript census. NOTE the 8 legacy species' files had 100% contig overlap with their
+  genomes (GFF contigs ⊆ genome headers — the normal "unannotated scaffolds absent"
+  pattern).
+- **AGAT_SPLITGFF silently drops single-exon-only transcripts on exon-only inputs**
+  (verified 2026-10-26 on ALL 24 remaining set-2 inputs): `modules/agat_splitgff.nf`
+  removes per-scaffold GFF files with ≤1 line ("header-only or empty" per its comment)
+  after the awk split. On EXON-ONLY inputs (previous bullet) AGAT's gff2gtf synthesizes
+  one GFF line per transcript, so any scaffold whose (only) transcript is single-exon
+  produces a 1-line file that gets deleted — the transcript is silently lost, no warning,
+  the job still exits COMPLETED 0:0. Predicted survivors (distinct transcript_ids on
+  scaffolds with ≥2 exon lines; `/tmp/pred_surv.awk`) matched the OBSERVED gffread counts
+  EXACTLY on all 24 inputs (e.g. Toxoplasma 18 input tx → 2 materialized; local A/B chain
+  on scaffolds NW_017382951.1/NW_017382970.1 in /tmp/31164020/toxo_test). Consequence: on
+  exon-only inputs the result/gffread count under-counts the input transcript census by
+  exactly the N single-exon-only transcripts — record "X/Y input transcripts materialized
+  - N single-exon-only dropped by AGAT_SPLITGFF single-line removal" in the tracker notes
+  rather than treating it as a mismatch. Toxoplasma_gondii_ME49 (20 exon lines / 18 tx on
+  18 genome-matching scaffolds → only 2 two-exon tx materialized) is the extreme case:
+  near-total coverage loss, FLAGGED in its tracker row.
+- **GCF vs GCA: two versions of the SAME assembly** (2026-10-20, Entamoeba + Emiliania
+  pre-flight): RefSeq species dirs hold BOTH the `GCF_x.y` (curated) and `GCA_x.z` (original
+  submission) versions of the same assembly — identical total length and scaffold count
+  (Entamoeba: 1,529 each, 20,835,395 bp; Emiliania: 7,795 each, 167,675,649 bp) but RENAMED
+  scaffolds (GCF uses NW_*/accession names). Comparing a LyRic GFF against the WRONG version
+  yields a false "0% overlap / different assembly" diagnosis. Entamoeba's params genuinely
+  pointed at the GCA stack while its LyRic + the CSV `Genome_File_` are GCF (a real params
+  bug, not an assembly problem) → fixed to the full GCF stack per the user (2026-10-20: GCF
+  fna md5-verified vs the colon-dir original, geneidM_complete.gff.gz, geneid param copied
+  colon-free), resubmitted 30751430. Emiliania's "0% overlap" was a false alarm — its params
+  were already on GCF (3,609/3,609 contigs match); its failure was a truncated file (below).
+  **Pre-flight check (do this for ANY new/changed LyRic before submitting, and ALWAYS against
+  the genome `params_<sp>.yaml` actually points to — read the yaml first!)**:
+  `comm -12 <(zcat lyric.gff.gz | awk -F'\t' '!/^#/{print $1}' | sort -u) \
+           <(zcat genome.fna.gz | grep '^>' | sed 's/^>//' | awk '{print $1}' | sort -u) | wc -l`
+  must be > 0 (in practice ≈ all GFF contigs: 686/686 Entamoeba, 3,609/3,609 Emiliania vs
+  their GCF genomes).
+- **Truncated input file (Emiliania — the real root cause of 30631969)**: the last record
+  of `LyRic_complete.gff.gz` was cut off mid-attribute (unterminated `transcript_id`, no
+  trailing newline — the file copy was truncated). The pipeline's awk attr preproc kept the
+  fragment, AGAT's gff2gtf synthesized a malformed `transcript_id ""ont_HpreCap_0+;"`, and
+  gffread died with `Error: no valid ID found for GFF record` (GFFREAD batch 10; within that
+  batch the ~37 scaffold GTFs before the bad one had already passed — the error is
+  per-record, not per-format). Find such records with a full-file anomaly scan (empty /
+  missing / odd-char gene_id + transcript_id, bad coords) plus a last-line integrity check:
+  `zcat f | tail -1 | grep -c 'spliced "[01]";$'` (must be 1 — a complete tmerge record ends
+  that way) and `zcat f | tail -c 1 | od -c` (must end in `\n`). Fix:
+  `LyRic_complete.trunc_fixed.gff.gz` (first 73,566 complete records; the truncated record
+  ...NAM_TM_000000914679 dropped), A/B-verified locally with the same containers (per-scaffold
+  GFF → awk preproc → agat_convert_sp_gff2gtf.pl → gffread on the genome part: original
+  reproduces the exact error on NW_005197128.1, fixed file passes with 466 transcripts).
+  Resubmitted 30751429.
+- **Legacy pipeline-only submit scripts published set-2 into the set-1 dir** (the 8 species
+  whose `runs/submit_<sp>.sh` pre-dated the 2026-09-30 batch-format template): the job ran
+  ONLY `nextflow run` (no backup/analysis/cleanup), so the new result/README/secmarker/logos
+  were published INTO the live set-1 `ORFsearch/` (overwriting set-1's same-named result CSV
+  + secmarker trnasec.* + logos), with the old set-1 `analysis/` intact. Recovery (2026-10-20):
+  move the old top-level `analysis/` (and any old nested logo files) to
+  `ORFsearch_old_<ts>`; keep the set-2 files in the canonical dir; re-run the analysis
+  post-hoc; recount gffread from the (still-present, un-cleaned) work dir BEFORE removing it.
+  Lesson: before submitting a batch, verify each `submit_<sp>.sh` is the batch format
+  (has `set -euo pipefail` + the `Backed up` step), not the legacy pipeline-only one.
 
 ## 8. Known quirks (context, not action items)
 
@@ -450,7 +614,20 @@ sequences of all positive, SECIS-containing transcripts:
 
 ## 9. Status (update every session)
 
-- Phase: **4 — final species re-run COMPLETE** (2026-10-05 19:06): the
+- Phase: **5 — LyRic input-set re-run (input set 2) COMPLETE (2026-10-26)**: all 54
+  set-2 tracker rows are `done` (set-1 rows preserved for comparison, untouched). 25
+  batch-format jobs verified on completion; 8 legacy-script species recovered post-hoc
+  (5 closed 2026-10-20; Cylindrotheca/Dunaliella/Eimeria_necatrix closed 2026-10-26 via
+  `legacy3_recovery.sh`, Cylindrotheca/Dunaliella gffread counts CORRECTED as stale
+  set-1-generation counting artifacts); the 19 retry-hardened resubmissions
+  (30731644–30731662) + Entamoeba 30751430 + Emiliania 30751429 + Storeatula 30631991
+  all COMPLETED 0:0 and closed 2026-10-23/24/26 with full §5.3 verification. All set-2
+  exon-only inputs drop single-exon-only transcripts via AGAT_SPLITGFF single-line
+  removal (new §7.4 bullet — verified exact on all 24 inputs). Open: set-2 vs set-1
+  comparison + cross-species candidate analysis; merge restored code fixes into
+  origin/main. Hamiltosporidium + Vairimorpha (not in CSV) excluded.
+  Input set 1 baseline status below.
+- Phase 4 — final species re-run COMPLETE (2026-10-05 19:06): the
   CSV is now 54 unique species (b7bf512 14:17: duplicate Pythium_sp._B7052-1
   row removed, Paramecium_tetraurelia added back). Status: 55 done, 0 running,
   0 failed (verified 2026-10-06: all 54 CSV species + Hamiltosporidium_tvaerminnensis
@@ -783,22 +960,141 @@ sequences of all positive, SECIS-containing transcripts:
         launched session does not see on-disk .nf edits); 0 orphan CDS,
         max id 18 chars, genome 72 MB / 697 scaffolds (15 unannotated —
         dropped at the combine, never reach gffread).
+- Done this session (2026-10-19, local machine — user present):
+  - [x] User added a `LyRic_File` column to `protist_filepaths.csv` (new per-species
+        LyRic GFF in each species dir, same as the other inputs).
+  - [x] Re-pointed `lyric_gtf` in all 54 `runs/params_<sp>.yaml` to `<Path>/<LyRic_File>`
+        (52 → `LyRic_complete.gff.gz`; Leishmania_infantum_JPCM5 → `IsoQuant.gff.gz`;
+        Conticribra → `LyRic_clean.gff.gz` after the user picked it because
+        `LyRic_complete.gff.gz` is absent in its dir — the CSV cell was corrected to
+        match). Every target verified to exist on disk. Also fixed two param quirks:
+        Entamoeba's stale `GCA_000208925.2` dir path → live `GCF_000208925.1`, and
+        Haematococcus (CSV spells the species `..._lacustis`; param file is
+        `params_Haematococcus_lacustris.yaml`). Root `params.yaml` (Leishmania dev
+        file) re-pointed to `LyRic_complete.gff.gz` too. Hamiltosporidium +
+        Vairimorpha (not in CSV) already on `LyRic_complete.gff.gz` — untouched.
+        Details in §6b.
+  - [x] `run_tracker.tsv` re-laid out for the re-run (user wants old results kept for
+        comparison): new last column `lyric_file`; the 54 input-set-1 rows preserved
+        with their old lyric input backfilled; 54 new `queued` rows (input set 2)
+        inserted directly below each old row. Convention documented in §4 + §5.4 + §6b.
+  - [x] SKILL.md updated: §4 decision (input-set re-runs keep the old row), §5.4
+        tracker schema, new §6b (input set 2), §6a positive-proteins staleness note,
+        §9 phase line.
+- Done this session (2026-10-20, genoa64 cluster login node, user ileahy):
+   - [x] **Audited all 33 "COMPLETED" set-2 jobs** (sacct alone is misleading — `COMPLETED
+         0:0` only means nextflow exited 0; the spooled script decides what actually ran).
+         Found **8 species ran the LEGACY pipeline-only `submit_<sp>.sh`** (pre-2026-09-30
+         template: no backup/analysis/cleanup) → their set-2 result/README/secmarker/logos
+         were published INTO the live set-1 `ORFsearch/`, overwriting set-1's same-named
+         result CSV + secmarker trnasec.* + logos; the old set-1 `analysis/` was intact.
+         The other 25 used the batch-format script and are clean (each has a
+         `ORFsearch_old_20261019/20_*` backup, DONE line, 4 analysis files, work dir gone).
+   - [x] **Discovered the 8 legacy species' new LyRic files are EXON-ONLY** (0
+         transcript-level records: Cyanidioschyzon 45,986 exons, Chlamydomonas 331,832,
+         Eimeria_necatrix 751,614, …) — same shape as Emiliania's. AGAT synthesized
+         transcripts from the exons and gffread materialized them (e.g. Cyanidioschyzon
+         33,582 transcripts vs set-1's 5,373). In-job lyric count = 0 (correct). New
+         failure class documented in §7.4.
+   - [x] **Recovered the 8 legacy species**: moved the old set-1 `analysis/` (+ old nested
+         logo file) to `ORFsearch_old_20261020_121914` per species; recounted gffread/result
+         from the still-present (un-cleaned) work dirs BEFORE removing them; re-ran
+         `analyse_protist.py` post-hoc into a fresh `analysis/`; removed the work dirs.
+         5 closed (Cyanidioschyzon 33,582 / 16 cands top 7.93; Cyanidium 353 / 0 cands;
+         Chlamydomonas 62,823 / 4 cands top 0.37; Chlorella 26,460 / 3 cands top 2.12;
+         Cryptosporidium 10,584 / 0 cands); Cylindrotheca + Dunaliella + Eimeria_necatrix
+         counts were still running at write-up.
+   - [x] **Verified the 25 batch-format jobs**: `Transcript counts:` + `DONE:` in each log,
+         4 analysis files each, set-1 backup dir recorded. Notable lyric≠gffread ratios
+         (input-content, not failures): Leishmania_infantum_JPCM5 30,150→361 (IsoQuant
+         input, most scaffolds unmapped); Micractinium 10,070→132,336; Haematococcus
+         377,068→274,021. Top-candidate score_diffs match set-1 (e.g. Haematococcus 26.32,
+         Pythium 2.05) — good internal consistency (same genome regions, new ID namespace).
+   - [x] **Diagnosed all 6 failures** (see §7.4): 30631952/58/59 session-lock race (17:14
+         burst), 30631962 session-lock race (20:03, after step-0 backup), 30631968 Entamoeba
+         apptainer `:`-path mount, 30631969 Emiliania GFFREAD rejected exon-only input.
+   - [x] **Entamoeba fixed**: copied `LyRic_complete.gff.gz` (md5-verified) from the colon
+         dir `Entamoeba_histolytica_HM-1:IMSS.5759/` to the no-colon sibling
+         `Entamoeba_histolytica_HM-1IMSS.5759/GCF_000208925.1/`; re-pointed `lyric_gtf` in
+         `runs/params_Entamoeba_histolytica_HM-1IMSS.yaml` (all 4 params paths now no-colon).
+         User's CSV left untouched.
+   - [x] **Hardened all 19 to-be-resubmitted `submit_<sp>.sh`** (3 legacy regenerated in full
+         batch format; 16 batch-format got the retry loop): retry ONLY on the session-lock
+         race (max 5 attempts, backoff 2m/4m/6m/8m), any other failure aborts immediately.
+         `bash -n` clean on all 19.
+   - [x] **Cancelled the 14 unprotected pending jobs (30631992–30632005)** and **resubmitted
+         all 19** retry-hardened, Cyanidiococcus/Rhodophyta first → new jobs
+         **30731644 (Cyanidiococcus) … 30731662 (Paramecium_tetraurelia)**. Removed the 4
+         failed/empty resubmit work dirs (Cyanidiococcus/Chaetoceros/Conticribra empty,
+         Entamoeba 32M partial). Emiliania's 881M work dir LEFT (awaiting user).
+   - [x] SKILL.md updated: §5.1 retry-loop note, new §7.4 (4 new failure classes), §9 phase
+         line + this block.
+   - [x] Tracker: 51 of 54 set-2 rows updated (30 done = 25 batch + 5 legacy,
+         2 failed = Emiliania + Entamoeba (scaffold mismatch, see below), 18
+         resubmitted with new job_ids 30731644–30731662 — 30731648 Entamoeba later
+         cancelled — Storeatula running). The 3 legacy-pending rows
+         (Cylindrotheca/Dunaliella/Eimeria_necatrix) close once `legacy3_recovery.sh`
+         lands — the count background jobs were killed by an opencode server restart
+         ~13:05, so the recovery runs detached (setsid+nohup) with per-species done
+         markers (log `/no_backup/rg/ileahy/legacy3_recovery.log`).
+   - [x] **Pre-flight scaffold check caught 2 bad inputs (0% contig overlap)**: the new
+         LyRic files for Entamoeba + Emiliania were generated against DIFFERENT
+         assemblies — their GFF contigs have ZERO intersection with the genome FASTA
+         headers in params (Entamoeba 686 GCF_000208925.1 vs 1,529 GCA_000208925.2
+         headers; Emiliania 3,609 NW_* transcriptome contigs vs 7,795 KB* scaffolds).
+         Entamoeba's resubmission 30731648 CANCELLED before start; Emiliania had already
+         failed at GFFREAD (its file is a tmerge transcriptome output, 73,567
+         single-exon "transcripts", also rejected structurally). The 8 legacy + 25 batch
+         species all pass the check (GFF contigs ⊆ genome headers). Documented as a §7.4
+         failure class with the one-liner pre-flight `comm -12` command.
 - Next:
-  - [ ] Monitor the Paramecium_tetraurelia re-run 29357314
-        (`squeue -u ileahy --format="%.10i %.2t %.15j %.20T"`);
-        on completion → §5.3 verify → §5.4 record tracker row. If the result
-        is header-only the work dir is KEPT: diagnose the join chain
-        (ORFsearch.filter → filter_final_table.py → add_SECIS_annotation.py)
-        before any re-run.
-  - [ ] Merge the restored code fixes (135ffcc empty-bucket optional
-        outputs, 8581354 splitfasta 4GB) back into origin/main / the Mac
-        repo — origin/main currently lacks both.
-  - [ ] Cross-species analysis of the 56 result sets under
-        /no_backup/rg/ileahy/<sp>/ORFsearch/ (see the candidates column in
-        run_tracker.tsv) once the last species closes.
-  - [ ] If any species ever needs a re-run: §7 diagnostics (work dir kept →
-        tail .out/.err, `nextflow log <run-uuid>`), fix, re-submit that
-        species only.
+  - [x] Monitor the 20 queued resubmissions - DONE 2026-10-26: all 20 (18
+          resubmissions 30731644–30731662 minus 30731648, + 30751429 Emiliania +
+          30751430 Entamoeba, + Storeatula 30631991 which finished 2026-10-23 04:50,
+          2d17h30m) verified COMPLETED 0:0 and closed per §5.3/§5.4 - see the
+          "Done this session (2026-10-26)" block.
+  - [x] Close the last 3 set-2 rows - DONE 2026-10-26: Cylindrotheca (gffread
+          78,102→10,354 CORRECTED), Dunaliella (65,343→18,517 CORRECTED),
+          Eimeria_necatrix (analysis rc=0, workdir removed 10:31:55) - all 3 rows
+          filled `done` with legacy-style notes; see the 2026-10-26 block.
+  - [x] Emiliania + Entamoeba (USER decision 2026-10-20 ~15:50: correct assemblies are
+        the GCF genomes for both). Entamoeba: params bug (GCA→GCF stack fixed),
+        resubmitted 30751430. Emiliania: params were already correct (GCF) — the real
+        cause was a truncated last record, fixed via `LyRic_complete.trunc_fixed.gff.gz`
+        (A/B-verified, §7.4), resubmitted 30751429. CORRECTION: my earlier report
+        claiming Emiliania's LyRic was a "transcriptome assembly / 0% overlap / needs
+        GCA input" was wrong — GCF and GCA are the same assembly with renamed scaffolds.
+- Done this session (2026-10-26, genoa64-01 login node):
+  - [x] Verified all 20 remaining set-2 jobs COMPLETED 0:0 via sacct (squeue clean)
+        and closed each per §5.3 (`Transcript counts:` + `DONE:` log lines, 4 analysis
+        files, trnasec check, backup dir): the 18 retry-hardened resubmissions
+        30731644–30731662 (minus 30731648) finished 2026-10-23/24; Storeatula_major
+        30631991 finished 2026-10-23 04:50 (2d17h30m); Entamoeba 30751430 finished
+        2026-10-24 18:27; Emiliania 30751429 finished 2026-10-24 17:56.
+  - [x] run_tracker.tsv: all 24 remaining set-2 rows filled `done` - now 54/54
+        set-2 rows closed; set-1 rows untouched.
+  - [x] NEW failure class verified + documented in §7.4: AGAT_SPLITGFF single-line
+        removal silently drops single-exon-only transcripts on exon-only inputs -
+        predicted survivors matched observed gffread counts EXACTLY on all 24
+        inputs; every new set-2 note records "X/Y materialized - N dropped".
+        Toxoplasma_gondii_ME49 flagged (18 input tx -> 2 materialized, near-total
+        coverage loss).
+  - [x] Legacy3 recovery finished: Eimeria_necatrix manual finisher
+        (`/tmp/eimeria_finish.sh`, appended to /no_backup/rg/ileahy/legacy3_recovery.log)
+        - gff=117,067 (clean fresh-run count), 117,108 rows/117,067 unique,
+        1559 SECIS/59 filtered, 39 candidates, top
+        ont_HpreCap_0+_SRR14561351.NAM_TM_000000239362 (3.48), analysis rc=0, marker
+        `.legacy3_done_Eimeria_necatrix` touched, workdir removed 10:31:55.
+        Cylindrotheca (78,102→10,354) and Dunaliella (65,343→18,517) gffread counts
+        CORRECTED as stale set-1-generation counting artifacts (same class as
+        Trichomonas_vaginalis 2026-10-07).
+  - Next:
+    - [ ] After the batch closes: per-species comparison input set 2 vs set 1
+          (tracker row pairs; on disk `<sp>/ORFsearch/` vs `<sp>/ORFsearch_old_<ts>/`),
+          then the cross-species analysis of the result sets (candidates column).
+    - [ ] Merge the restored code fixes (135ffcc empty-bucket optional outputs,
+          8581354 splitfasta 4GB) back into origin/main / the Mac repo - origin/main
+          currently lacks both.
 - Notes: this session ran **directly on the cluster login node** (genoa64-05, user
   ileahy) — no `ssh login` prefix needed; from the local machine use the `ssh login`
   forms as written. Re-read this file at the start of each session and keep this
