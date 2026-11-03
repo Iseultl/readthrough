@@ -1,4 +1,4 @@
-lyric_gtf: "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.5807/GCF_000165345.1/Cryptosporidium_parvum_Iowa_II_5807_lyricMerged_gidRef.gff.gz"
+lyric_gtf: "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.5807/GCF_000165345.1/LyRic_complete.gff.gz"
 genome_fasta: "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.5807/GCF_000165345.1/GCF_000165345.1_ASM16534v1_genomic.fna.gz"
 genome_gtf: "/no_backup/rg/references/species/Cryptosporidium_parvum_Iowa_II.5807/GCF_000165345.1/geneidM_complete.gff.gz"
 species_name: "Cryptosporidium_parvum_Iowa_II"

@@ -1,4 +1,4 @@
-lyric_gtf: "/no_backup/rg/references/species/Cyanidium_caldarium.2771/GCA_026184775.1/Cyanidium_caldarium_2771_reference_gidRef.gff.gz"
+lyric_gtf: "/no_backup/rg/references/species/Cyanidium_caldarium.2771/GCA_026184775.1/LyRic_complete.gff.gz"
 genome_fasta: "/no_backup/rg/references/species/Cyanidium_caldarium.2771/GCA_026184775.1/GCA_026184775.1_ASM2618477v1_genomic.fna.gz"
 genome_gtf: "/no_backup/rg/references/species/Cyanidium_caldarium.2771/GCA_026184775.1/geneidM_complete.gff.gz"
 species_name: "Cyanidium_caldarium"

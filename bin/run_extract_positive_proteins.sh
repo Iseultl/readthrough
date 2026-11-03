@@ -32,7 +32,7 @@ set -euo pipefail
 REPO="/users/rg/ileahy/git/gitlab/readthrough"
 SIF_GFFREAD="${SIF_GFFREAD:-$HOME/singularities/gffread.sif}"
 SIF_PYTHON="${SIF_PYTHON:-$HOME/singularities/python.sif}"
-OUTDIR="/no_backup/rg/ileahy/positive_proteins"
+OUTDIR="/no_backup/rg/ileahy/positive_proteins_lyric"
 PAR=4
 TMPROOT="/nfs/scratch01/rg/ileahy/positive_proteins_tmp"
 COMBINE_ONLY=0
